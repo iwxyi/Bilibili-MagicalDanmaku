@@ -512,6 +512,26 @@ void MainWindow::initView()
     ui->vipDatabaseButton->setBgColor(Qt::white);
     ui->vipDatabaseButton->setRadius(rt->fluentRadius);
 
+    // 子账号系统
+    ui->subAccountTableWidget->verticalHeader()->hide();
+    ui->addSubAccountButton->setLeaveAfterClick(true);
+    QList<InteractiveButtonBase*> subAccountButtons = {
+        ui->addSubAccountButton,
+        ui->refreshSubAccountButton,
+        ui->subAccountDescButton
+    };
+    foreach (auto btn, subAccountButtons)
+    {
+        btn->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+        btn->setBorderColor(Qt::lightGray);
+        btn->setSquareSize();
+        btn->setRadius(0);
+        btn->setFixedForePos();
+        btn->setCursor(Qt::PointingHandCursor);
+        btn->setBgColor(Qt::white);
+    }
+    ui->horizontalLayout_8->activate();
+    
     // 数据中心页面
 
 
@@ -1251,6 +1271,9 @@ void MainWindow::initLiveService()
         ui->positiveVoteCheck->setChecked(like);
     });
 
+    // 子账号
+    connect(liveService, &LiveRoomService::signalSubAccountChanged, this, &MainWindow::slotSubAccountChanged);
+
 }
 
 /// 读取 settings 中的变量，并进行一系列初始化操作
@@ -1874,6 +1897,9 @@ void MainWindow::readConfig()
     // 恢复游戏数据
     restoreGameNumbers();
     restoreGameTexts();
+
+    // 子账号系统
+    restoreSubAccount();
 }
 
 /**
@@ -4477,6 +4503,85 @@ QVariant MainWindow::getCookies() const
     QVariant var;
     var.setValue(cookies);
     return var;
+}
+
+void MainWindow::saveSubAccount()
+{
+    us->setValue("subAccount/count", us->subAccounts.size());
+    for (int i = 0; i < us->subAccounts.size(); i++)
+    {
+        auto subAccount = us->subAccounts[i];
+        us->setValue("subAccount/r" + QString::number(i) + "/uid", subAccount.uid);
+        us->setValue("subAccount/r" + QString::number(i) + "/nickname", subAccount.nickname);
+        us->setValue("subAccount/r" + QString::number(i) + "/cookie", subAccount.cookie);
+        us->setValue("subAccount/r" + QString::number(i) + "/loginTime", subAccount.loginTime);
+    }
+    qInfo() << "保存子账号" << us->subAccounts.size() << "个";
+}
+
+void MainWindow::restoreSubAccount()
+{
+    int count = us->value("subAccount/count", 0).toInt();
+    for (int i = 0; i < count; i++)
+    {
+        SubAccount subAccount;
+        subAccount.uid = us->value("subAccount/r" + QString::number(i) + "/uid").toString();
+        subAccount.nickname = us->value("subAccount/r" + QString::number(i) + "/nickname").toString();
+        subAccount.cookie = us->value("subAccount/r" + QString::number(i) + "/cookie").toString();
+        subAccount.loginTime = us->value("subAccount/r" + QString::number(i) + "/loginTime").toLongLong();
+        us->subAccounts.append(subAccount);
+    }
+    qInfo() << "恢复子账号" << us->subAccounts.size() << "个";
+    updateSubAccount();
+}
+
+void MainWindow::updateSubAccount()
+{
+    ui->subAccountTableWidget->clear();
+    ui->subAccountTableWidget->setColumnCount(5);
+    ui->subAccountTableWidget->setHorizontalHeaderLabels(QStringList() << "序号" << "UID" << "昵称" << "时间" << "状态");
+    ui->subAccountTableWidget->setRowCount(us->subAccounts.size());
+    ui->subAccountTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    for (int i = 0; i < us->subAccounts.size(); i++)
+    {
+        auto subAccount = us->subAccounts[i];
+        ui->subAccountTableWidget->setItem(i, 0, new QTableWidgetItem(snum(i + 1)));
+        ui->subAccountTableWidget->setItem(i, 1, new QTableWidgetItem(subAccount.uid));
+        ui->subAccountTableWidget->setItem(i, 2, new QTableWidgetItem(subAccount.nickname));
+        ui->subAccountTableWidget->setItem(i, 3, new QTableWidgetItem(QDateTime::fromSecsSinceEpoch(subAccount.loginTime).toString("yyyy-MM-dd HH:mm:ss")));
+        ui->subAccountTableWidget->setItem(i, 4, new QTableWidgetItem(subAccount.status));
+    }
+}
+
+/**
+ * 按顺序更新账号的信息
+ */
+void MainWindow::refreshUndetectedSubAccount()
+{
+    // 查找第一个没有检测过的
+    int firstIndex = -1;
+    for (int i = 0; i < us->subAccounts.size(); i++)
+    {
+        if (!us->subAccounts[i].hasDetected)
+        {
+            firstIndex = i;
+            break;
+        }
+    }
+
+    if (firstIndex == -1)
+    {
+        qInfo() << "所有子账号可用性检查完毕";
+        _flag_detectingAllSubAccount = false;
+        ui->refreshSubAccountButton->setEnabled(true);
+        return ;
+    }
+
+    // 更新账号信息
+    // 延迟，避免太快遭到屏蔽
+    QTimer::singleShot(2000, this, [=]{
+        liveService->getAccountByCookie(us->subAccounts[firstIndex].cookie);
+    });
 }
 
 QString MainWindow::getDomainPort() const
@@ -11095,3 +11200,189 @@ void MainWindow::on_UAButton_clicked()
     us->setValue("debug/userAgent", ua);
 }
 
+void MainWindow::slotSubAccountChanged(const QString& cookie, const SubAccount& subAccount)
+{
+    bool changed = false;
+    // 如果有相同cookie，那么可能是手动修改账号cookie，进行更新
+    int index = -1;
+    for (int i = 0; i < us->subAccounts.size(); i++)
+    {
+        if (us->subAccounts[i].cookie == cookie)
+        {
+            if (us->subAccounts[i].uid != subAccount.uid)
+            {
+                changed = true;
+                qInfo() << "子账号" << (i+1) << "：" << subAccount.uid << subAccount.nickname << "变更为" << us->subAccounts[i].uid << us->subAccounts[i].nickname;
+            }
+            index = i;
+            break;
+        }
+    }
+
+    // 如果不是相同cookie，也有可能是刷新账号的cookie，比如重新登录
+    if (index == -1)
+    {
+        for (int i = 0; i < us->subAccounts.size(); i++)
+        {
+            if (us->subAccounts[i].uid == subAccount.uid)
+            {
+                if (us->subAccounts[i].cookie != cookie)
+                {
+                    changed = true;
+                    qInfo() << "子账号" << (i+1) << "：" << subAccount.uid << subAccount.nickname << "刷新了Cookie";
+                }
+                index = i;
+                break;
+            }
+        }
+    }
+
+    // 保存到列表
+    if (subAccount.uid.isEmpty()) // 失效的
+    {
+        if (index == -1)
+        {
+            showError("添加子账号", subAccount.status);
+        }
+        else
+        {
+            us->subAccounts[index].status = subAccount.status;
+            qInfo() << "检测到失效的子账号" << (index+1) << "：" << subAccount.uid << subAccount.nickname;
+        }
+    }
+    else // 可用
+    {
+        SubAccount sa = subAccount;
+        sa.loginTime = QDateTime::currentSecsSinceEpoch();
+        sa.hasDetected = true;
+        if (index == -1)
+        {
+            sa.status = "已登录";
+            us->subAccounts.append(sa);
+            qInfo() << "添加子账号：" << subAccount.uid << subAccount.nickname;
+        }
+        else
+        {
+            sa.status = "可用";
+            us->subAccounts[index] = sa;
+        }
+    }
+
+    if (changed)
+    {
+        saveSubAccount();
+    }
+    updateSubAccount();
+
+    if (_flag_detectingAllSubAccount)
+        refreshUndetectedSubAccount();
+}
+
+
+void MainWindow::on_addSubAccountButton_clicked()
+{
+    if (!hasPermission())
+    {
+        on_actionBuy_VIP_triggered();
+        return ;
+    }
+
+    newFacileMenu;
+    menu->addAction("通过Cookie添加", [=]{
+        menu->close();
+        bool ok;
+        QString cookie = QInputDialog::getText(this, "Cookie", "请输入Cookie", QLineEdit::Normal, "", &ok);
+        if (!ok || cookie.isEmpty())
+            return ;
+        
+        // 检查账号信息
+        qInfo() << "添加子账号Cookie：" << (cookie.left(20) + "...");
+        if (cookie.contains("bili_jct="))
+        {
+            // 通过Cookie添加
+            QString jct = cookie.split("bili_jct=").last().split(";").first();
+            if (jct.isEmpty())
+            {
+                QMessageBox::warning(this, "错误", "Cookie格式错误，无法获取 bili_jct，请检查");
+                return ;
+            }
+            
+            // 联网判断账号
+            liveService->getAccountByCookie(cookie);
+        }
+        else
+        {
+            QMessageBox::warning(this, "错误", "Cookie格式错误，请检查");
+        }
+    });
+    menu->addAction("通过二维码添加", [=]{
+        menu->close();
+
+        // 显示二维码窗口
+        QRCodeLoginDialog* dialog = new QRCodeLoginDialog(this);
+        connect(dialog, &QRCodeLoginDialog::logined, this, [=](QString s){
+            liveService->getAccountByCookie(s);
+        });
+        dialog->exec();
+    });
+    menu->exec();
+}
+
+/**
+ * 刷新所有子账号
+ * 通过已有Cookie更新信息，主要是判断Cookie有没有过期
+ * 主要信息的UID、昵称依旧保留
+ */
+void MainWindow::on_refreshSubAccountButton_clicked()
+{
+    if (!hasPermission())
+    {
+        on_actionBuy_VIP_triggered();
+        return ;
+    }
+    
+    // 清空已有状态
+    for (int i = 0; i < us->subAccounts.size(); i++)
+    {
+        us->subAccounts[i].hasDetected = false;
+        us->subAccounts[i].status = "";
+    }
+    updateSubAccount();
+    _flag_detectingAllSubAccount = true;
+    ui->refreshSubAccountButton->setEnabled(false);
+
+    // 刷新所有子账号
+    refreshUndetectedSubAccount();
+}
+
+
+void MainWindow::on_subAccountDescButton_clicked()
+{
+
+}
+
+
+void MainWindow::on_subAccountTableWidget_customContextMenuRequested(const QPoint &pos)
+{
+    int index = ui->subAccountTableWidget->currentRow();
+    if (index == -1)
+        return ;
+
+    newFacileMenu;
+    menu->addAction("设置Cookie", [=]{
+        bool ok;
+        const QString cookie = QInputDialog::getText(this, "Cookie", "请输入Cookie", QLineEdit::Normal, us->subAccounts[index].cookie, &ok);
+        if (!ok || cookie.isEmpty())
+            return ;
+        us->subAccounts[index].cookie = cookie;
+        us->setValue("subAccount/r" + QString::number(index) + "/cookie", cookie);
+        liveService->getAccountByCookie(cookie);
+        saveSubAccount();
+    });
+    menu->addAction("删除", [=]{
+        us->subAccounts.removeAt(index);
+        saveSubAccount();
+        updateSubAccount();
+    });
+    menu->exec();
+}

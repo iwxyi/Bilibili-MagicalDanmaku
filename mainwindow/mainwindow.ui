@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1017</width>
-    <height>1962</height>
+    <width>913</width>
+    <height>732</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -232,7 +232,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1871,8 +1871,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>935</width>
-             <height>1803</height>
+             <width>831</width>
+             <height>560</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2303,7 +2303,8 @@ margin: 40px;</string>
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;需要显示实时弹幕&lt;/p&gt;&lt;p&gt;开启后，发送AI回复的弹幕&lt;/p&gt;&lt;p&gt;否则只是本地显示&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>是否回复自己的弹幕（不包含自动发送的，但是可能会误识别）
+开启后，容易导致机器人不断回复自己</string>
                </property>
                <property name="text">
                 <string>回复自己</string>
@@ -7555,14 +7556,7 @@ margin: 40px;</string>
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="toolTip">
-                <string>保存以下交互操作到数据库，随时查询与统计：
-- 弹幕
-- 礼物
-- 舰长
-- 进入
-- 点歌
-
-数据库默认位置：安装目录/database.db</string>
+                <string>为所有活跃粉丝自动生成档案记录</string>
                </property>
                <property name="text">
                 <string>启用【捐赠版】</string>
@@ -9969,7 +9963,7 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>4</number>
           </property>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
@@ -10364,6 +10358,146 @@ QTabBar::tab:selected
                </widget>
               </item>
              </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab">
+           <attribute name="title">
+            <string>子账号</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_94">
+            <property name="spacing">
+             <number>-1</number>
+            </property>
+            <property name="leftMargin">
+             <number>20</number>
+            </property>
+            <property name="topMargin">
+             <number>12</number>
+            </property>
+            <property name="rightMargin">
+             <number>20</number>
+            </property>
+            <property name="bottomMargin">
+             <number>20</number>
+            </property>
+            <item>
+             <widget class="QWidget" name="subAccountDescWidget" native="true">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">#subAccountDescWidget
+{
+	background: #ffffff;
+	border: none;
+	border-radius: 5px;
+}</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_95">
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_80">
+                 <property name="spacing">
+                  <number>12</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="InteractiveButtonBase" name="addSubAccountButton">
+                   <property name="toolTip">
+                    <string>添加子账号</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../resources/resource.qrc">
+                     <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="InteractiveButtonBase" name="refreshSubAccountButton">
+                   <property name="toolTip">
+                    <string>检查所有子账号的登录状态
+用来判断哪些账号已过期</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../resources/resource.qrc">
+                     <normaloff>:/icons/refresh</normaloff>:/icons/refresh</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_46">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="InteractiveButtonBase" name="subAccountDescButton">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="toolTip">
+                    <string>子账号功能的说明</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../resources/resource.qrc">
+                     <normaloff>:/icons/help</normaloff>:/icons/help</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QLabel" name="label_90">
+                 <property name="text">
+                  <string>可通过弹幕代码中添加选项“(ac:?/ID/UID/昵称)”来随机或指定账号来发送。
+捐赠版仅绑定主账号，其默认ID为0。</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="subAccountTableWidget">
+              <property name="contextMenuPolicy">
+               <enum>Qt::CustomContextMenu</enum>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">#subAccountTreeWidget
+{
+	background: #ffffff;
+	border: none;
+	border-radius: 5px;
+}</string>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -10964,8 +11098,8 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1017</width>
-     <height>24</height>
+     <width>913</width>
+     <height>37</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

@@ -802,7 +802,10 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             if (roomId == ac->roomId)
                 cr->addNoReplyDanmakuText(msg);
-            liveService->sendRoomMsg(roomId, msg);
+
+            const QString subAccountArg = danmaku.getSubAccount();
+            QString cookie = us->getSubAccountCookie(subAccountArg);
+            liveService->sendRoomMsg(roomId, msg, cookie);
             return true;
         }
     }
@@ -820,7 +823,9 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             if (roomId == ac->roomId)
                 cr->addNoReplyDanmakuText(msg);
-            liveService->sendRoomEmoji(roomId, msg);
+            const QString subAccountArg = danmaku.getSubAccount();
+            QString cookie = us->getSubAccountCookie(subAccountArg);
+            liveService->sendRoomEmoji(roomId, msg, cookie);
             return true;
         }
     }
@@ -833,7 +838,9 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString msg = caps.at(1);
             qInfo() << "执行命令：" << caps;
-            liveService->sendRoomEmoji(ac->roomId, msg);
+            const QString subAccountArg = danmaku.getSubAccount();
+            QString cookie = us->getSubAccountCookie(subAccountArg);
+            liveService->sendRoomEmoji(ac->roomId, msg, cookie);
             return true;
         }
     }

@@ -4,6 +4,17 @@
 #include "mysettings.h"
 #include "externalblockuser.h"
 
+struct SubAccount
+{
+    QString uid;
+    QString nickname;
+    QString cookie;
+    qint64 loginTime;
+
+    bool hasDetected = false; // 是否检测过有效
+    QString status; // 状态
+};
+
 class UserSettings : public MySettings
 {
 public:
@@ -71,6 +82,8 @@ public:
     QString chatgpt_analysis_format;
     QString chatgpt_analysis_action;
 
+    QList<SubAccount> subAccounts;
+
     bool localMode = false;   // 本地调试模式
     bool debugPrint = false;  // 调试输出模式
     bool complexCalc = false; // 启动复杂计算（禁用，有大bug）
@@ -82,6 +95,8 @@ public:
             return localNicknames.value(uid);
         return "";
     }
+
+    QString getSubAccountCookie(const QString& arg) const;
 };
 
 extern UserSettings *us;

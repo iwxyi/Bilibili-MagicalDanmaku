@@ -1,14 +1,18 @@
-### v5.1.1 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.1.1)
+### v5.2.0 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.2.0)
 
-- 新增自定义UserAgent
+- 新增子账号功能（捐赠版），可使用不同的账号来发送弹幕
+- 新增自定义 UserAgent
+- 优化 `sendRoomMsg()` 等命令也支持子账号
+- 修复部分 UID 长的账号会一直 AI 回复自己的问题
 - 修复部分网络连接UA的问题
-以下感谢用户 @TiAmoPlus 的PR：
+- 修复 Mac 上恰饭窗口偶尔崩溃的问题
+以下感谢用户 @TiAmoPlus 的 PR：
+- 优化 PostJson 函数中换行的处理
+- 优化礼物 ID 列表接口，适配直播间礼物列表
 - 修复直播间标题多行时的情况
-- 优化PostJson函数中换行的处理
-- 修复PK时无法获取到最佳助攻的问题
-- 修改礼物ID列表接口，适配直播间礼物列表
-- 修复默认代码中PK_FINAL的遗留问题
-- 修复README中下播事件写作PREPARE的问题
+- 修复 PK 时无法获取到最佳助攻的问题
+- 修复默认代码中 PK_FINAL 的遗留问题
+- 修复 README 中下播事件写作 PREPARE 的问题
 
 
 
@@ -19,12 +23,12 @@
 
 - 新增代码支持 JavaScript、Python、Lua 三种编程语言，并且可参与读写配置数据
 - 新增模型名称可以自由输入
-- 新增GPT输入消息JSON中添加键值对UID，以便大模型识别
+- 新增 GPT 输入消息 JSON 中添加键值对 UID，以便大模型识别
 - 优化远程开关粉丝档案时忽略未改变的情况
-- 优化代码编辑器的tab宽度为4个空格宽度
-- 优化未登录时-352报错显示需要登录的提示
-- 修复模型自定义API无法保存的问题
-- 修复初次上船FIRST_GUARD反过来的问题
+- 优化代码编辑器的 tab 宽度为4个空格宽度
+- 优化未登录时 -352 报错显示需要登录的提示
+- 修复模型自定义 API 无法保存的问题
+- 修复初次上船 FIRST_GUARD 反过来的问题
 - 修复代码页切换无法保存的问题
 
 

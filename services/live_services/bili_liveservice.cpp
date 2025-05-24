@@ -211,6 +211,32 @@ void BiliLiveService::getCookieAccount()
     });
 }
 
+void BiliLiveService::getAccountByCookie(const QString& cookie)
+{
+    get("https://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            showError("子账号登录返回不为0", json.value("message").toString());
+            SubAccount sa;
+            sa.status = json.value("message").toString();
+            emit signalSubAccountChanged(cookie, sa);
+            return ;
+        }
+
+        // 获取用户信息
+        QJsonObject dataObj = json.value("data").toObject();
+        ac->cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
+        ac->cookieUname = dataObj.value("uname").toString();
+        qInfo() << "获取子账号信息：" << ac->cookieUid << ac->cookieUname;
+        
+        SubAccount subAccount;
+        subAccount.uid = ac->cookieUid;
+        subAccount.nickname = ac->cookieUname;
+        subAccount.cookie = cookie;
+        emit signalSubAccountChanged(cookie, subAccount);
+    }, cookie);
+}
+
 void BiliLiveService::getNavInfo(NetVoidFunc finalFunc)
 {
     get("https://api.bilibili.com/x/web-interface/nav", [=](QJsonObject json){
@@ -4480,7 +4506,7 @@ void BiliLiveService::processNewDayData()
 /**
  * 发送单条弹幕的原子操作
  */
-void BiliLiveService::sendMsg(const QString& msg)
+void BiliLiveService::sendMsg(const QString& msg, const QString& cookie)
 {
     if (us->localMode)
     {
@@ -4488,13 +4514,13 @@ void BiliLiveService::sendMsg(const QString& msg)
         return ;
     }
 
-    sendRoomMsg(ac->roomId, msg);
+    sendRoomMsg(ac->roomId, msg, cookie);
 }
 
 /**
  * 向指定直播间发送弹幕
  */
-void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg)
+void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg, const QString& cookie)
 {
     if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
     {
@@ -4578,6 +4604,53 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg)
         posr = s.length();
     s.replace(posl, posr-posl, roomId);
 
+    // 子账号
+    if (!cookie.isEmpty())
+    {
+        // 提取 csrf（key 为 bili_jct）
+        posl = cookie.indexOf("bili_jct=");
+        if (posl == -1)
+        {
+            showError("发送弹幕", "子账号Cookie中没有找到 bili_jct");
+            qWarning() << "子账号Cookie中没有找到 bili_jct";
+            return ;
+        }
+        posl += 9;
+        posr = cookie.indexOf(";", posl);
+        if (posr == -1)
+            posr = cookie.length();
+        QString csrf = cookie.mid(posl, posr-posl);
+        
+        // 替换 csrf=xxx
+        posl = s.indexOf("csrf=");
+        if (posl == -1)
+        {
+            s += "&csrf=";
+            posl = s.length();
+        }
+        else
+            posl += 5;
+        posr = s.indexOf(";", posl);
+        if (posr == -1)
+            posr = s.length();
+        s.replace(posl, posr-posl, csrf);
+        
+        // 替换 csrf_token=xxx
+        posl = s.indexOf("csrf_token=");
+        if (posl == -1)
+        {
+            s += "&csrf_token=";
+            posl = s.length();
+        }
+        else
+            posl += 10;
+        posr = s.indexOf("&", posl);
+        if (posr == -1)
+            posr = s.length();
+        s.replace(posl, posr-posl, csrf);
+    }
+
+    // 回复用户
     if (!reply_mid.isEmpty())
     {
         qInfo() << "回复用户：" << reply_mid;
@@ -4655,7 +4728,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg)
                 localNotify("[错误]" + errorMsg);
             }
         }
-    });
+    }, cookie);
 }
 
 /**
@@ -4663,7 +4736,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg)
  * 示例：https://api.live.bilibili.com/msg/send,
  * bubble=0&msg=official_147&color=16777215&mode=1&dm_type=1&fontsize=25&rnd=1657851774&roomid=%room_id%&csrf=%csrf%&csrf_token=%csrf%
  */
-void BiliLiveService::sendRoomEmoji(QString roomId, const QString &id)
+void BiliLiveService::sendRoomEmoji(QString roomId, const QString &id, const QString& cookie)
 {
     if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
     {
@@ -4676,8 +4749,27 @@ void BiliLiveService::sendRoomEmoji(QString roomId, const QString &id)
     if (ac->roomId.isEmpty())
         return ;
 
+    // 子账号
+    QString csrf = ac->csrf_token;
+    if (!cookie.isEmpty())
+    {
+        // 提取 csrf（key 为 bili_jct）
+        int posl = cookie.indexOf("bili_jct=");
+        if (posl == -1)
+        {
+            showError("发送弹幕", "子账号Cookie中没有找到 bili_jct");
+            qWarning() << "子账号Cookie中没有找到 bili_jct";
+            return ;
+        }
+        posl += 9;
+        int posr = cookie.indexOf(";", posl);
+        if (posr == -1)
+            posr = cookie.length();
+        csrf = cookie.mid(posl, posr-posl);
+    }
+
     QString data = QString("bubble=0&msg=%1&color=16777215&mode=1&dm_type=1&fontsize=25&rnd=1657851774&roomid=%2&csrf=%3&csrf_token=%4")
-        .arg(id).arg(roomId).arg(ac->csrf_token).arg(ac->csrf_token);
+        .arg(id).arg(roomId).arg(csrf).arg(csrf);
 
     // #连接槽
     post("https://api.live.bilibili.com/msg/send", data.toStdString().data(), [=](QJsonObject json){
@@ -4695,7 +4787,7 @@ void BiliLiveService::sendRoomEmoji(QString roomId, const QString &id)
                 errorDesc = "包含直播间屏蔽词";
             }
 
-            showError("发送弹幕失败", errorDesc);
+            showError("发送表情失败", errorDesc);
             localNotify(errorDesc + " -> " + id);
 
             // 重试
@@ -4721,7 +4813,7 @@ void BiliLiveService::sendRoomEmoji(QString roomId, const QString &id)
                 localNotify("[错误]" + errorMsg);
             }
         }
-    });
+    }, cookie);
 }
 
 void BiliLiveService::pullLiveDanmaku()

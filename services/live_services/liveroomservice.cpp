@@ -674,7 +674,7 @@ bool LiveRoomService::mergeGiftCombo(const LiveDanmaku &danmaku)
  */
 void LiveRoomService::receiveDanmaku(LiveDanmaku &danmaku)
 {
-    int uid = danmaku.getUid();
+    qint64 uid = danmaku.getUid();
     QString uname = danmaku.getNickname();
     QString msg = danmaku.getText();
 

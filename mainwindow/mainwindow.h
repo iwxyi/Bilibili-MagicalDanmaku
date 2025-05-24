@@ -133,6 +133,8 @@ public slots:
     void processRemoteCmd(QString msg, bool response = true);
     bool execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse& res, int& resVal);
 
+    void slotSubAccountChanged(const QString& cookie, const SubAccount& subAccount);
+
 private slots:
     void on_DiangeAutoCopyCheck_stateChanged(int);
 
@@ -740,6 +742,14 @@ private slots:
 
     void on_UAButton_clicked();
 
+    void on_addSubAccountButton_clicked();
+
+    void on_refreshSubAccountButton_clicked();
+
+    void on_subAccountDescButton_clicked();
+
+    void on_subAccountTableWidget_customContextMenuRequested(const QPoint &pos);
+
 private:
     void initView();
     void initStyle();
@@ -790,6 +800,10 @@ private:
 
     void autoSetCookie(const QString &s);
     QVariant getCookies() const;
+    void saveSubAccount();
+    void restoreSubAccount();
+    void updateSubAccount();
+    void refreshUndetectedSubAccount();
     QString getDomainPort() const;
     void startConnectIdentityCode();
     void startConnectRoom();
@@ -1008,6 +1022,9 @@ private:
 
     // 粉丝档案
     FansArchivesService* fansArchivesService = nullptr;
+
+    // 子账号
+    bool _flag_detectingAllSubAccount = false;
 };
 
 class RequestBodyHelper : public QObject

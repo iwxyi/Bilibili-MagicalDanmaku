@@ -111,7 +111,17 @@ public:
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
         request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent());
         if (cookies.isValid())
-            request->setHeader(QNetworkRequest::CookieHeader, cookies);
+        {
+            // 如果是字符串
+            if (cookies.type() == QVariant::String)
+            {
+                QString c = cookies.toString();
+                if (!c.isEmpty())
+                    request->setRawHeader("Cookie", c.toUtf8());
+            }
+            else
+                request->setHeader(QNetworkRequest::CookieHeader, cookies);
+        }
 
         QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
             func(reply);
@@ -177,7 +187,17 @@ public:
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
         request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent());
         if (cookies.isValid())
-            request->setHeader(QNetworkRequest::CookieHeader, cookies);
+        {
+            // 如果是字符串
+            if (cookies.type() == QVariant::String)
+            {
+                QString c = cookies.toString();
+                if (!c.isEmpty())
+                    request->setRawHeader("Cookie", c.toUtf8());
+            }
+            else
+                request->setHeader(QNetworkRequest::CookieHeader, cookies);
+        }
         QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
             func(reply);
 
@@ -239,8 +259,18 @@ public:
         setUrlCookie(url, request);
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
         request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent());
-        if (cookies.isValid())
-            request->setHeader(QNetworkRequest::CookieHeader, cookies);
+        if (cookies.isValid() && !cookies.isNull())
+        {
+            // 如果是字符串
+            if (cookies.type() == QVariant::String)
+            {
+                QString c = cookies.toString();
+                if (!c.isEmpty())
+                    request->setRawHeader("Cookie", c.toUtf8());
+            }
+            else
+                request->setHeader(QNetworkRequest::CookieHeader, cookies);
+        }
 
         // 连接槽
         QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
@@ -261,7 +291,17 @@ public:
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
         request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent());
         if (cookies.isValid())
-            request->setHeader(QNetworkRequest::CookieHeader, cookies);
+        {
+            // 如果是字符串
+            if (cookies.type() == QVariant::String)
+            {
+                QString c = cookies.toString();
+                if (!c.isEmpty())
+                    request->setRawHeader("Cookie", c.toUtf8());
+            }
+            else
+                request->setHeader(QNetworkRequest::CookieHeader, cookies);
+        }
 
         // 连接槽
         QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
