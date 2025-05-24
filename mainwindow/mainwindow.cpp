@@ -4578,10 +4578,7 @@ void MainWindow::refreshUndetectedSubAccount()
     }
 
     // 更新账号信息
-    // 延迟，避免太快遭到屏蔽
-    QTimer::singleShot(2000, this, [=]{
-        liveService->getAccountByCookie(us->subAccounts[firstIndex].cookie);
-    });
+    liveService->getAccountByCookie(us->subAccounts[firstIndex].cookie);
 }
 
 QString MainWindow::getDomainPort() const
@@ -11274,8 +11271,14 @@ void MainWindow::slotSubAccountChanged(const QString& cookie, const SubAccount& 
     }
     updateSubAccount();
 
+    // 继续更新下一个
     if (_flag_detectingAllSubAccount)
-        refreshUndetectedSubAccount();
+    {
+        // 延迟，避免更新太频繁
+        QTimer::singleShot(1000, this, [=]{
+            refreshUndetectedSubAccount();
+        });
+    }
 }
 
 
