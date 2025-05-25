@@ -13,6 +13,8 @@
 #include "textinputdialog.h"
 #include "fileutil.h"
 #include "httpuploader.h"
+#include "rsautil.h"
+#include "debounce.h"
 
 BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
 {
@@ -331,6 +333,9 @@ void BiliLiveService::getRobotInfo()
 
             // 设置到Robot头像
             emit signalRobotHeadChanged(p);
+
+            // 判断是否需要刷新Cookie
+            refreshCookie();
         });
     });
 
@@ -4304,6 +4309,103 @@ void BiliLiveService::sendXliveHeartBeatX(QString s, qint64 timestamp)
             if (xliveHeartBeatTimer)
                 xliveHeartBeatTimer->stop();
     });
+}
+
+void BiliLiveService::refreshCookie()
+{
+    if (ac->browserData.isEmpty())
+        return;
+    if (!ac->browserCookie.contains("ac_time_value"))
+    {
+        qInfo() << "Cookie不带有refresh_token，不刷新";
+        return;
+    }
+    
+    // 1. 检查是否需要刷新
+    MyJson checkJson = getToJson("https://passport.bilibili.com/x/passport-login/web/cookie/info");
+    if (checkJson.code() != 0 || !checkJson.data().b("refresh"))
+    {
+        qDebug() << "不需要刷新Cookie";
+        return;
+    }
+    qInfo() << "准备刷新Cookie：" << checkJson;
+    
+    // 2. 生成 CorrespondPath
+    qint64 timestamp = checkJson.data().l("timestamp");
+    
+    // 使用 RSA-OAEP 加密
+    /* QString message = QString("refresh_%1").arg(timestamp);
+    QByteArray publicKeyPEM = "-----BEGIN PUBLIC KEY-----\n"
+                             "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDLgd2OAkcGVtoE3ThUREbio0Eg"
+                             "Uc/prcajMKXvkCKFCWhJYJcLkcM2DKKcSeFpD/j6Boy538YXnR6VhcuUJOhH2x71"
+                             "nzPjfdTcqMz7djHum0qSZA0AyCBDABUqCrfNgCiJ00Ra7GmRj+YCK1NJEuewlb40"
+                             "JNrRuoEUXpabUzGB8QIDAQAB\n"
+                             "-----END PUBLIC KEY-----";
+    
+    QByteArray encrypted = RSAUtil::rsaEncrypt(message.toUtf8(), publicKeyPEM);
+    QString correspondPath = encrypted.toHex();
+    qDebug() << "生成的correspondPath：" << encrypted << correspondPath;*/
+
+    // 因为算法问题，直接使用在线的
+    MyJson rsaJson = getToJson("https://wasm-rsa.vercel.app/api/rsa?t=" + snum(timestamp));
+    if (rsaJson.code() != 0)
+    {
+        qWarning() << "获取RSA失败：" << rsaJson.msg();
+        return;
+    }
+    // {"timestamp":"1748193134073","hash":"bdfa1f141078f79245f7457d70787eef7504a396efa0a1a038f5a05776ffb9d5b9a1c1e0481089813fbe8dbd87bd39e5a079b7d240a5d73439efe0927796345b6e061842f19e0bea4c284e1cd6a3cf8b8b4e8e21201d9099d693e99d15c97121285216c6c5e123725fba6906b49d385f807b0b1726290fe9c1ce4ef6f766ae40","code":0}
+    QString correspondPath = rsaJson.s("hash");
+    qDebug() << "生成的correspondPath：" << correspondPath;
+
+    // 3. 获取 refresh_csrf
+    QByteArray html = getToBytes(QString("https://www.bilibili.com/correspond/1/%1").arg(correspondPath));
+    QString refresh_csrf = QString(html).split("id=\"1-name\">").last().split("<").first();
+    if (refresh_csrf.isEmpty())
+    {
+        qWarning() << "无法获取refresh_csrf" << html;
+        return;
+    }
+    
+    // 4. 刷新 Cookie
+    QString oldRefreshToken = ac->browserCookie.split("ac_time_value=").last().split(";").first();
+    qDebug() << "旧的refresh_token:" << oldRefreshToken;
+    QByteArray postData = QString("csrf=%1&refresh_csrf=%2&source=main_web&refresh_token=%3")
+        .arg(ac->csrf_token)
+        .arg(refresh_csrf)
+        .arg(oldRefreshToken)
+        .toUtf8();
+    
+    MyJson refreshJson = postToJson("https://passport.bilibili.com/x/passport-login/web/cookie/refresh", postData, "",
+                                    QList<QPair<QString, QString>>{{"content-type", "application/x-www-form-urlencoded"}});
+    if (refreshJson.code() != 0)
+    {
+        qWarning() << "刷新Cookie失败:" << refreshJson.msg();
+        return;
+    }
+    
+    // 5. 确认更新
+    QString newRefreshToken = refreshJson.data().s("refresh_token");
+    postData = QString("csrf=%1&refresh_token=%2")
+        .arg(ac->csrf_token)
+        .arg(oldRefreshToken)
+        .toUtf8();
+    
+    MyJson confirmJson = postToJson("https://passport.bilibili.com/x/passport-login/web/confirm/refresh", postData);
+    if (confirmJson.code() != 0)
+    {
+        qWarning() << "确认更新失败:" << confirmJson.msg();
+        return;
+    }
+    
+    // 6. 更新 Cookie
+    QString newCookie = ac->browserCookie;
+    newCookie.replace(QRegularExpression("bili_jct=[^;]*"), "bili_jct=" + ac->csrf_token);
+    newCookie.replace(QRegularExpression("ac_time_value=[^;]*"), "ac_time_value=" + newRefreshToken);
+    ac->browserCookie = newCookie;
+    
+    // 7. 更新 csrf_token
+    ac->csrf_token = ac->browserCookie.split("bili_jct=").last().split(";").first();
+    qInfo() << "设置新的csrf：" << ac->csrf_token;
 }
 
 void BiliLiveService::appointAdmin(qint64 uid)

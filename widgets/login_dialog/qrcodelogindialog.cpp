@@ -79,7 +79,7 @@ void QRCodeLoginDialog::getLoginInfo()
         int jsoni(data, code);
         if (code == 0) // 成功
         {
-            ui->statusLabel->setText("扫描成功，5秒钟后登录");
+            ui->statusLabel->setText("扫描成功，即将登录");
             QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
             QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie> >(variantCookies);
             QStringList sl;
@@ -89,6 +89,10 @@ void QRCodeLoginDialog::getLoginInfo()
                 if (s.contains("expires"))
                     sl << s;
             }
+
+            QString refresh_token = data.s("refresh_token");
+            sl << "ac_time_value=" + refresh_token;
+            qDebug() << "设置refresh_token:" << refresh_token;
 
             QTimer::singleShot(1000, [=]{
                 emit logined(sl.join(";"));

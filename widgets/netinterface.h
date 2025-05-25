@@ -8,7 +8,9 @@
 #include <QJsonParseError>
 #include <QJsonObject>
 #include <QObject>
+#include <QEventLoop>
 #include "myjson.h"
+
 
 typedef std::function<void()> const NetVoidFunc;
 typedef std::function<void(QString)> const NetStringFunc;
@@ -24,6 +26,7 @@ public:
     }
     virtual ~NetInterface(){}
 
+    /// 非阻塞形式，Lambda连接
     void get(QString url, NetStringFunc func, QVariant cookies = QVariant())
     {
         get(url, [=](QNetworkReply* reply){
@@ -319,6 +322,103 @@ public:
         postJson(url, QJsonDocument(json).toJson(), func, cookies);
     }
 
+    /// 阻塞形式的，返回JSON
+    QByteArray getToBytes(QString url, QVariant cookies = QVariant(), QList<QPair<QString, QString>> headers = {})
+    {
+        QNetworkAccessManager* manager = new QNetworkAccessManager;
+        QNetworkRequest* request = new QNetworkRequest(url);
+        setUrlCookie(url, request);
+        request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent());
+        foreach (auto p, headers)
+        {
+            request->setRawHeader(p.first.toUtf8(), p.second.toUtf8());
+        }
+        if (cookies.isValid())
+        {
+            if (cookies.type() == QVariant::String)
+            {
+                QString c = cookies.toString();
+                if (!c.isEmpty())
+                    request->setRawHeader("Cookie", c.toUtf8());
+            }
+            else
+                request->setHeader(QNetworkRequest::CookieHeader, cookies);
+        }
+        QNetworkReply* reply = manager->get(*request);
+        QEventLoop loop;
+        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        loop.exec();
+        QByteArray data = reply->readAll();
+        return data;
+    }
+    
+    MyJson getToJson(QString url, QVariant cookies = QVariant(), QList<QPair<QString, QString>> headers = {})
+    {
+        QByteArray data = getToBytes(url, cookies, headers);
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qCritical() << "解析返回文本JSON错误：" << error.errorString() << url << data;
+            return MyJson();
+        }
+        return document.object();
+    }
+
+    QByteArray postToBytes(QString url, QByteArray ba, QVariant cookies = QVariant(), QList<QPair<QString, QString>> headers = {})
+    {
+        QNetworkAccessManager* manager = new QNetworkAccessManager;
+        QNetworkRequest* request = new QNetworkRequest(url);
+        setUrlCookie(url, request);
+        request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent());
+        foreach (auto p, headers)
+        {
+            request->setRawHeader(p.first.toUtf8(), p.second.toUtf8());
+        }
+        if (cookies.isValid())
+        {
+            if (cookies.type() == QVariant::String)
+            {
+                QString c = cookies.toString();
+                if (!c.isEmpty())
+                    request->setRawHeader("Cookie", c.toUtf8());
+            }
+            else
+                request->setHeader(QNetworkRequest::CookieHeader, cookies);
+        }
+        QNetworkReply* reply = manager->post(*request, ba);
+        QEventLoop loop;
+        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        loop.exec();
+        QByteArray data = reply->readAll();
+        return data;
+    }
+
+    QByteArray postToBytes(QString url, QJsonObject json, QVariant cookies = QVariant(), QList<QPair<QString, QString>> headers = {})
+    {
+        return postToBytes(url, QJsonDocument(json).toJson(), cookies, headers);
+    }
+
+    MyJson postToJson(QString url, QByteArray ba, QVariant cookies = QVariant(), QList<QPair<QString, QString>> headers = {})
+    {
+        QByteArray data = postToBytes(url, ba, cookies, headers);
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qCritical() << "解析返回文本JSON错误：" << error.errorString() << url << data;
+            return MyJson();
+        }
+        return document.object();
+    }
+
+    MyJson postToJson(QString url, QJsonObject json, QVariant cookies = QVariant(), QList<QPair<QString, QString>> headers = {})
+    {
+        return postToJson(url, QJsonDocument(json).toJson(), cookies, headers);
+    }
+    
+
+    /// Cookie相关
     virtual void setUrlCookie(const QString& url, QNetworkRequest* request)
     {
         Q_UNUSED(url)

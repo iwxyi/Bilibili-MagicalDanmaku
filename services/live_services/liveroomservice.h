@@ -175,6 +175,8 @@ public slots:
     /// 大乱斗
     virtual void slotPkEndingTimeout() {}
     virtual void slotPkEnding() {}
+    /// 刷新Cookie
+    virtual void refreshCookie() {}
 
 public:
     /// 获取机器人账号信息

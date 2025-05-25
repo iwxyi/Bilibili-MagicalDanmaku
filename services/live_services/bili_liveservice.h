@@ -107,6 +107,9 @@ public:
     void sendXliveHeartBeatX();
     void sendXliveHeartBeatX(QString s, qint64 timestamp);
 
+    /// 刷新Cookie
+    void refreshCookie() override;
+
     /// 一些事件
     void processNewDayData() override;
 
