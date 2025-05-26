@@ -367,6 +367,7 @@ protected:
     bool gettingRoom = false;
     bool gettingUser = false;
     bool gettingUp = false;
+    bool gettingDanmu = false;
 
     // 房间信息
     QList<LiveDanmaku> roomDanmakus;

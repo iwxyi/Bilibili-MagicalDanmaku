@@ -34,6 +34,8 @@ BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
                 getRobotInfo();
             if (!ac->upUid.isEmpty() && upFace.isNull())
                 getUpInfo(ac->upUid);
+            if (!ac->roomId.isEmpty() && !gettingDanmu)
+                getDanmuInfo();
         });
     });
 }
@@ -602,7 +604,8 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         }
 
         // 获取弹幕信息
-        getDanmuInfo();
+        if (!this->wbiMixinKey.isEmpty())
+            getDanmuInfo();
 
         // 录播
         emit signalCanRecord();
@@ -619,13 +622,15 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
  */
 void BiliLiveService::getDanmuInfo()
 {
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+ac->roomId+"&type=0";
+    gettingDanmu = true;
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?" + toWbiParam("id="+ac->roomId+"&type=0");
     get(url, [=](QJsonObject json) {
+        gettingDanmu = false;
         int code = json.value("code").toInt();
         if (code != 0)
         {
             qCritical() << s8("获取弹幕信息返回结果不为0：") << json.value("message").toString();
-            // -352尝试触发封控解除
+            // -352尝试触发风控解除
             if (code == -352)
             {
                 
