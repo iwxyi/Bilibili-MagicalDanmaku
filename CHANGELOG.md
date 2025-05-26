@@ -1,8 +1,10 @@
 ### v5.2.0 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.2.0)
 
 - 新增子账号功能（捐赠版），可使用不同的账号来发送弹幕
+- 新增自动刷新Cookie（捐赠版，仅限扫码登录）
 - 新增自定义 UserAgent
 - 优化 `sendRoomMsg()` 等命令也支持子账号
+- 修复无法获取弹幕信息的问题
 - 修复部分 UID 长的账号会一直 AI 回复自己的问题
 - 修复部分网络连接UA的问题
 - 修复 Mac 上恰饭窗口偶尔崩溃的问题
