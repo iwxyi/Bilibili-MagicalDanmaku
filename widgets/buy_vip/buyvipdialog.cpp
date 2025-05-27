@@ -35,6 +35,8 @@ BuyVIPDialog::BuyVIPDialog(QString dataPath, QString roomId, QString upId, QStri
         "关键词回复",
         "监听直播间事件",
         "功能代码咨询",
+        "保持账号登录",
+        "多账号发送弹幕",
         "弹幕过滤",
         "观众氪金排行",
         "大乱斗赛季记录",

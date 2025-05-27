@@ -337,9 +337,6 @@ void BiliLiveService::getRobotInfo()
 
             // 设置到Robot头像
             emit signalRobotHeadChanged(p);
-
-            // 判断是否需要刷新Cookie
-            refreshCookie();
         });
     });
 

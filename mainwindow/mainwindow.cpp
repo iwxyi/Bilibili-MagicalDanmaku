@@ -1921,6 +1921,18 @@ void MainWindow::readConfig2()
     ui->fansArchivesByRoomCheck->setChecked(us->fansArchivesByRoom = us->value("us/fansArchivesByRoom", false).toBool());
     if (us->fansArchives)
         initFansArchivesService();
+
+    if (hasPermission())
+    {
+        static bool first = true;
+        if (first)
+        {
+            first = false;
+            QTimer::singleShot(60000, liveService, [=]{
+                liveService->refreshCookie();
+            });
+        }
+    }
 }
 
 void MainWindow::initDanmakuWindow()
