@@ -868,8 +868,19 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
             return ba;
         }
 
+        QString format = params.value("format").toLower();
         QString key = QByteArray::fromPercentEncoding(params.value("key", "").toUtf8());
-        if (key.isEmpty())
+        if (format == "json") // 读取所有的key-value对，并且转换成JSON格式
+        {
+            auto keys = us->allKeys();
+            MyJson json;
+            foreach (auto k, keys)
+            {
+                json.insert(k, us->value(k).toJsonValue());
+            }
+            ba = json.toBa();
+        }
+        else if (key.isEmpty())
         {
             qInfo() << "获取所有配置";
             ba = readTextFileAutoCodec(rt->dataPath + "settings.ini").toUtf8();
