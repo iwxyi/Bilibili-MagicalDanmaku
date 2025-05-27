@@ -232,7 +232,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1871,8 +1871,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>974</width>
-             <height>1765</height>
+             <width>972</width>
+             <height>1731</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -9963,7 +9963,7 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
@@ -10240,7 +10240,7 @@ QTabBar::tab:selected
                     <cursorShape>PointingHandCursor</cursorShape>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许来自网页的消息反向控制神奇弹幕&lt;/p&gt;&lt;p&gt;请仅在必要且确认安全的情况下启用&lt;/p&gt;&lt;p&gt;包括但不限于：发送弹幕、修改设置、禁言用户、发送私信、调用B站API等所有函数命令&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许来自网页的消息反向控制神奇弹幕，请仅在必要且确认安全的情况下启用！&lt;/p&gt;&lt;p&gt;包括但不限于：发送弹幕、读写设置、禁言用户、发送私信、调用B站API等所有操作。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
                     <string>解锁安全限制</string>
@@ -11099,7 +11099,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1054</width>
-     <height>26</height>
+     <height>37</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
