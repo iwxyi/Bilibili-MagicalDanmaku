@@ -2926,7 +2926,9 @@ JSON 格式：
 }
 ```
 
-### JS语言支持
+### 多语言支持
+
+#### JS语言
 
 本程序的代码框中均支持 `JavaScript`  编程语言的语法。
 
@@ -2940,7 +2942,7 @@ JSON 格式：
 
 **使用方式**：在代码框中使用 `js:` 开头，后面的代码就会视作 JavaScript 代码来执行，返回值（`return` 一个字符串）作为发送的字符串，或者要执行的命令。自动回复等所需数据的变量名为 `danmaku`。
 
-#### JS语法示例
+##### JS语法示例
 
 ```js
 js:
@@ -2958,7 +2960,7 @@ else
 >
 > 本质上是定义了一个 function，其返回值就是要发送的弹幕，所以直接 `return 弹幕` 即可。
 
-#### 弹幕接口列表
+##### 弹幕接口列表
 
 默认变量 `danmaku` 的所有参数如下（按消息类型，很多值都不一定有，务必先输出看看）：
 
@@ -3013,7 +3015,7 @@ String getFaceUrl() // 头像URL
 | 13   | 醒目留言   |
 | 14   | 其他       |
 
-#### 处理配置文件
+##### 处理配置文件
 
 默认嵌入了应用配置 `settings` 和用户变量 `heaps`，使用 `read` 和 `write` 函数来读写相应的数据。
 
@@ -3031,13 +3033,13 @@ console.log(heaps.read("test"))
 
 
 
-### Lua语言支持
+#### Lua语言
 
 > 同 JS，代码前缀为 `lua:`。建议使用前者，与本应用结合得更好。
 >
 > 使用的版本为 Lua 5.2.4。
 
-#### Lua语法示例
+##### Lua语法示例
 
 ```lua
 lua:
@@ -3051,7 +3053,7 @@ else
 end
 ```
 
-#### 处理配置文件
+##### 处理配置文件
 
 因为 Lua 使用了第三方库，仅支持标准类型的读写，且无法重载，`read` 和 `write` 必须指明类型，均添加了相应后缀，例如 `readString`、`writeInt` 等等。
 
@@ -3070,7 +3072,7 @@ end
 
 
 
-### Python语言支持
+#### Python语言
 
 前缀为`python`（允许简写为 `py`）、`python3`，分别调用对应的命令。
 
@@ -3094,7 +3096,7 @@ end
 
 > `应用数据路径` 如果是绿色版，那么就是安装路径；如果是单文件版，那么按照系统设置会不同。
 
-#### Python示例
+##### Python示例
 
 与 js 和 lua 不同的是，使用 `print()` 的输出来作为返回的弹幕。
 
@@ -3150,7 +3152,7 @@ if __name__ == "__main__":
         print("Error: No data received from C++.")
 ```
 
-#### 处理配置文件
+##### 处理配置文件
 
 通过本地命令行的方式将弹幕的 JSON 传入 Python，不同于前面的 JavaScript 和 Lua 是直接嵌入到应用程序中，也因此无法直接共享配置文件等信息，而是通过 ini 配置文件来修改，并同步回去。
 
@@ -3187,6 +3189,64 @@ try:
 except configparser.Error as e:
     print(f"Error Settings INI file: {e}")
 ```
+
+
+
+#### 从代码文件导入
+
+在代码框中，使用 `<file:文件名>` 的标签，该标签会被替换为 `文件名` 表示的代码文件。
+
+其中 `文件名` 可以是：
+
+- 程序 `数据路径/codes/` 文件夹下的代码文件，可以是带后缀，亦或是不带后缀。
+- 本地绝对路径 / 相对路径的代码文件
+- 以 `http(s)://` 开头的网络代码文件（用以配置同步）
+
+##### 代码文件示例
+
+签到打卡，回复的表达式：`^(签到|打卡)$`，
+
+执行的代码使用 `js:` 开头，表示执行 JS 代码；代码从文件中读取：
+
+```
+js:
+<file:打卡>
+```
+
+`数据路径/codes/打卡.js` 文件内容：
+
+```js
+if (settings.read("daka_today_" + danmaku.getUid()) == 1)
+    return "您已打过卡";
+
+// 开始打卡
+count_all = settings.read("daka");
+if (count_all == null)
+    count_all = 0;
+count_all = count_all + 1;
+settings.write("daka", count_all);
+settings.write("daka_today_" + danmaku.getUid(), 1);
+return "打卡成功，您是今天第" + count_all + "位打卡用户";
+```
+
+##### 代码文件中使用变量
+
+这需要在主程序的代码框中添加前缀 `var:js:`：
+
+```
+var:js:
+<file:打卡>
+```
+
+这样会执行变量替换操作，`打卡.js` 就可以写作：
+
+```js
+if (settings.read("daka_today_%uid%") == 1)
+    return "您已打过卡";
+// ... 剩下的打卡代码 ...
+```
+
+`"daka_today_%uid%"` 相比原先的 `"daka_today_" + danmaku.getUid()"` 就简短了许多。
 
 
 

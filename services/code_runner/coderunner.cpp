@@ -10,6 +10,7 @@
 #include "replywidget.h"
 #include "fileutil.h"
 #include "ImageSimilarityUtil.h"
+#include "netutil.h"
 
 CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
 {
@@ -96,6 +97,48 @@ void CodeRunner::releaseData()
 }
 
 /**
+ * 从文件名获取到对于的文件
+ * @param name URL、绝对路径、相对路径、文件名简写等等
+ * @return 文件内容
+ */
+QString CodeRunner::getCodeContentFromFile(QString name)
+{
+    /// 如果是 URL，网络文件
+    if (name.startsWith("http://") || name.startsWith("https://"))
+    {
+        static QMap<QString, QString> cache; // 网络文件的代码的缓存
+        if (cache.contains(name))
+            return cache[name];
+        QByteArray data = NetUtil::getWebFile(name);
+        QString content = QString::fromUtf8(data);
+        cache[name] = content;
+        return content;
+    }
+    
+    /// 如果是文件，那么不进行缓存，因为随时有可能进行修改
+    // 如果是绝对路径或相对路径
+    if (QFile::exists(name))
+        return readTextFileAutoCodec(name);
+
+    /// 如果是文件简写，可以是带后缀，或者不带后缀的
+    // 获取 dataPath/codes/ 下的所有文件名（先是带后缀的）
+    QDir dir(rt->dataPath + "codes/");
+    QStringList files = dir.entryList(QDir::Files | QDir::NoDotAndDotDot);
+    foreach (QString file, files)
+    {
+        if (file == name)
+            return readTextFileAutoCodec(dir.absoluteFilePath(file));
+    }
+    // 再是不带后缀的
+    foreach (QString file, files)
+    {
+        if (file.left(file.lastIndexOf(".")) == name)
+            return readTextFileAutoCodec(dir.absoluteFilePath(file));
+    }
+    return readTextFileAutoCodec(name);
+}
+
+/**
  * 发送带有变量的弹幕或者执行代码
  * @param msg       多行，带变量
  * @param danmaku   参数
@@ -106,55 +149,63 @@ void CodeRunner::releaseData()
  */
 bool CodeRunner::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int channel, bool manual, bool delayMine)
 {
+    // 文件判断
+    if (msg.contains("<file:"))
+    {
+        QRegularExpression re("\\s*<\\s*file\\s*:\\s*(.*)\\s*>\\s*");
+        QRegularExpressionMatch match;
+        if (msg.contains(re, &match))
+        {
+            QString placeholder = match.captured(0);
+            QString name = match.captured(1); // 文件名/文件路径
+            qDebug() << "加载代码文件：" << name;
+            QString content = getCodeContentFromFile(name);
+            return sendVariantMsg(msg.replace(placeholder, content), danmaku, channel, manual, delayMine);
+        }
+    }
+
     // 判断是否是自定义编程语言
     if (msg.startsWith("var:"))
     {
         QString code = msg.mid(4);
         code = processDanmakuVariants(code, danmaku);
-        sendVariantMsg(code, danmaku, channel, manual, delayMine);
-        return true;
+        return sendVariantMsg(code, danmaku, channel, manual, delayMine);
     }
     else if (msg.startsWith("js:"))
     {
         QString code = msg.mid(3);
         QString result = jsEngine->runCode(danmaku, code);
-        sendVariantMsg(result, danmaku, channel, manual, delayMine);
-        return true;
+        return sendVariantMsg(result, danmaku, channel, manual, delayMine);
     }
     else if (msg.startsWith("javascript:"))
     {
         QString code = msg.mid(11);
         QString result = jsEngine->runCode(danmaku, code);
-        sendVariantMsg(result, danmaku, channel, manual, delayMine);
-        return true;
+        return sendVariantMsg(result, danmaku, channel, manual, delayMine);
     }
     else if (msg.startsWith("lua:"))
     {
         QString code = msg.mid(4);
         QString result = luaEngine->runCode(danmaku, code);
-        sendVariantMsg(result, danmaku, channel, manual, delayMine);
-        return true;
+        return sendVariantMsg(result, danmaku, channel, manual, delayMine);
     }
     else if (msg.startsWith("python:"))
     {
         QString code = msg.mid(7);
         QString result = pythonEngine->runCode(danmaku, "python", code);
-        sendVariantMsg(result, danmaku, channel, manual, delayMine);
-        return true;
+        return sendVariantMsg(result, danmaku, channel, manual, delayMine);
     }
     else if (msg.startsWith("python3:"))
     {
         QString code = msg.mid(8);
         QString result = pythonEngine->runCode(danmaku, "python3", code);
-        sendVariantMsg(result, danmaku, channel, manual, delayMine);
-        return true;
+        return sendVariantMsg(result, danmaku, channel, manual, delayMine);
     }
     else if (msg.startsWith("py:"))
     {
         QString code = msg.mid(3);
         QString result = pythonEngine->runCode(danmaku, "python", code);
-        sendVariantMsg(result, danmaku, channel, manual, delayMine);
-        return true;
+        return sendVariantMsg(result, danmaku, channel, manual, delayMine);
     }
     
     

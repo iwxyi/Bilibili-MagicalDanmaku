@@ -63,6 +63,8 @@ public:
     void setVoiceService(VoiceService* vs);
     void releaseData();
 
+    QString getCodeContentFromFile(QString name);
+
 signals:
     void signalTriggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug);
     void signalLocalNotify(const QString& text, qint64 uid);

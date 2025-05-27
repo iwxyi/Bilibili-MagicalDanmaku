@@ -49,6 +49,7 @@ QString JSEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
     // 检查错误
     if (result.isError()) {
         qWarning() << "JS engine error:" << result.toString();
+        qDebug() << "代码：" << code;
         emit signalError(result.toString());
         return "";
     }
