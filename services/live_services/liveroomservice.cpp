@@ -257,15 +257,28 @@ void LiveRoomService::releaseLiveData(bool prepare)
     _guardJudged = false;
 }
 
-QList<LiveDanmaku> LiveRoomService::getDanmusByUID(qint64 uid)
+QList<LiveDanmaku> LiveRoomService::getDanmusByUID(qint64 uid, int count) const
 {
     QList<LiveDanmaku> dms;
     for (int i = 0; i < roomDanmakus.size(); i++)
     {
         if (roomDanmakus.at(i).getUid() == uid && roomDanmakus.at(i).is(MessageType::MSG_DANMAKU))
+        {
             dms.append(roomDanmakus.at(i));
+            if (count > 0 && dms.size() >= count)
+                break;
+        }
     }
+    
     return dms;
+}
+
+QList<LiveDanmaku> LiveRoomService::getAllDanmus(int count) const
+{
+    if (count == 0)
+        return roomDanmakus;
+    else
+        return roomDanmakus.mid(roomDanmakus.size() - count, count);
 }
 
 void LiveRoomService::setSqlService(SqlService *service)

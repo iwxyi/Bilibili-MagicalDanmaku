@@ -44,7 +44,8 @@ public:
 
     virtual void releaseLiveData(bool prepare);
 
-    QList<LiveDanmaku> getDanmusByUID(qint64 uid);
+    QList<LiveDanmaku> getDanmusByUID(qint64 uid, int count = 0) const;
+    QList<LiveDanmaku> getAllDanmus(int count = 0) const;
 
     void setSqlService(SqlService* service);
 
