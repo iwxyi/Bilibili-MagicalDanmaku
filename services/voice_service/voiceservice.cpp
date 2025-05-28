@@ -5,7 +5,7 @@
 
 VoiceService::VoiceService(QObject *parent) : QObject(parent), NetInterface(this)
 {
-
+    connect(this, &VoiceService::signalInit, this, &VoiceService::initTTS);
 }
 
 void VoiceService::initTTS()
