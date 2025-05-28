@@ -9,12 +9,28 @@ MicrosoftTTS::MicrosoftTTS(QString dataPath, QString areaCode, QString key, QObj
     QDir dir(savedDir);
     dir.mkpath(savedDir);
 
-    fmt.setSampleRate(24000);  //设定播放采样频率为44100Hz的音频文件
-    fmt.setSampleSize(16);     //设定播放采样格式（采样位数）为16位(bit)的音频文件。QAudioFormat支持的有8/16bit，即将声音振幅化为256/64k个等级
-    fmt.setChannelCount(1);    //设定播放声道数目为2通道（立体声）的音频文件。mono(平声道)的声道数目是1，stero(立体声)的声道数目是2
-    fmt.setCodec("audio/pcm"); //播放PCM数据（裸流）得设置编码器为"audio/pcm"。"audio/pcm"在所有的平台都支持，也就相当于音频格式的WAV,以线性方式无压缩的记录捕捉到的数据。如想使用其他编码格式 ，可以通过QAudioDeviceInfo::supportedCodecs()来获取当前平台支持的编码格式
-    fmt.setByteOrder(QAudioFormat::LittleEndian); //设定字节序，以小端模式播放音频文件
-    fmt.setSampleType(QAudioFormat::UnSignedInt); //设定采样类型。根据采样位数来设定。采样位数为8或16位则设置为QAudioFormat::UnSignedInt
+    fmt.setSampleRate(24000);  // 与微软TTS服务输出匹配
+    fmt.setSampleSize(16);     // 16位采样
+    fmt.setChannelCount(1);    // 单声道
+    fmt.setCodec("audio/pcm"); // 使用PCM格式
+    fmt.setByteOrder(QAudioFormat::LittleEndian);
+    fmt.setSampleType(QAudioFormat::SignedInt);
+
+    // 检查音频格式是否支持
+    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+
+    if (!info.isFormatSupported(fmt))
+    {
+        qWarning() << "MicrosoftTTS 不支持的音频格式，尝试使用最接近的格式";
+        fmt = info.nearestFormat(fmt);
+        qDebug() << "MicrosoftTTS 使用最接近的格式:";
+        qDebug() << "  采样率:" << fmt.sampleRate();
+        qDebug() << "  采样大小:" << fmt.sampleSize();
+        qDebug() << "  声道数:" << fmt.channelCount();
+        qDebug() << "  编码格式:" << fmt.codec();
+        qDebug() << "  字节序:" << fmt.byteOrder();
+        qDebug() << "  采样类型:" << fmt.sampleType();
+    }
 
     refreshTimer = new QTimer(this);
     refreshTimer->setInterval(9 * 60 * 1000); // 9分钟
@@ -110,11 +126,50 @@ void MicrosoftTTS::speakNext()
     }
 
     // 保存文件
-    QString filePath = savedDir + QString::number(QDateTime::currentMSecsSinceEpoch()) + ".mp3";
+    QString filePath = savedDir + QString::number(QDateTime::currentMSecsSinceEpoch()) + ".wav";
     QFile file(filePath);
     file.open(QFile::WriteOnly);
-    QDataStream stream(&file);
-    stream << ba;
+    
+    // 写入WAV文件头
+    // RIFF header
+    file.write("RIFF", 4);
+    // 文件大小（不包括RIFF和大小字段）
+    quint32 fileSize = ba.size() + 36;
+    file.write(reinterpret_cast<char*>(&fileSize), 4);
+    file.write("WAVE", 4);
+    
+    // fmt chunk
+    file.write("fmt ", 4);
+    // fmt chunk size
+    quint32 fmtSize = 16;
+    file.write(reinterpret_cast<char*>(&fmtSize), 4);
+    // 音频格式（1表示PCM）
+    quint16 audioFormat = 1;
+    file.write(reinterpret_cast<char*>(&audioFormat), 2);
+    // 声道数
+    quint16 numChannels = 1;
+    file.write(reinterpret_cast<char*>(&numChannels), 2);
+    // 采样率
+    quint32 sampleRate = 24000;
+    file.write(reinterpret_cast<char*>(&sampleRate), 4);
+    // 字节率
+    quint32 byteRate = sampleRate * numChannels * 2;
+    file.write(reinterpret_cast<char*>(&byteRate), 4);
+    // 块对齐
+    quint16 blockAlign = numChannels * 2;
+    file.write(reinterpret_cast<char*>(&blockAlign), 2);
+    // 位深度
+    quint16 bitsPerSample = 16;
+    file.write(reinterpret_cast<char*>(&bitsPerSample), 2);
+    
+    // data chunk
+    file.write("data", 4);
+    // data chunk size
+    quint32 dataSize = ba.size();
+    file.write(reinterpret_cast<char*>(&dataSize), 4);
+    
+    // 写入PCM数据
+    file.write(ba);
     file.flush();
     file.close();
     qInfo() << "MicrosoftTTS 保存文件：" << ba.size() << filePath;
@@ -131,21 +186,39 @@ void MicrosoftTTS::playFile(QString filePath, bool deleteAfterPlay)
 
     audio = new QAudioOutput(fmt);
     connect(audio, &QAudioOutput::stateChanged, this, [=](QAudio::State state) {
+        qDebug() << "MicrosoftTTS 音频状态变化:" << state;
         if (state == QAudio::IdleState)
         {
             audio->stop();
             audio->deleteLater();
+            audio = nullptr;
             inputFile->close();
             if (deleteAfterPlay)
                 inputFile->remove();
             inputFile->deleteLater();
-            audio->deleteLater();
-            audio = nullptr;
 
             // 播放下一个
             speakNext();
         }
+        else if (state == QAudio::StoppedState)
+        {
+            if (audio->error() != QAudio::NoError)
+            {
+                qWarning() << "MicrosoftTTS 音频播放错误:" << audio->error();
+                emit signalError("音频播放错误: " + QString::number(audio->error()));
+            }
+        }
     });
+
+    // 检查音频格式是否支持
+    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+    if (!info.isFormatSupported(fmt))
+    {
+        qWarning() << "MicrosoftTTS 不支持的音频格式，尝试使用最接近的格式";
+        fmt = info.nearestFormat(fmt);
+        qInfo() << "使用格式:" << fmt;
+    }
+
     audio->start(inputFile);
 }
 
