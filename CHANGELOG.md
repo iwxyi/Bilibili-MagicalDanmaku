@@ -1,7 +1,7 @@
-### v5.2.0 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.2.0)
+### v5.2.0 [子账号、修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.2.0)
 
 - 新增子账号功能（捐赠版），可使用不同的账号来发送弹幕
-- 新增自动刷新Cookie（捐赠版，仅限扫码登录）
+- 新增保持账号登录功能（捐赠版，仅限扫码登录）
 - 新增自定义 UserAgent
 - 优化 `sendRoomMsg()` 等命令也支持子账号
 - 修复无法获取弹幕信息的问题
@@ -50,8 +50,10 @@
 - 新增全屏弹幕的显示器选择
 - 新增发送常规的@符号，使用"\@"代替
 - 新增远程控制命令“开启粉丝档案/关闭粉丝档案”
+    
     > 结合定时任务，可以实现DeepSeek错峰使用
 - 修复SQL浏览器无法执行多行的问题
+    
     > 因为该文本格式中，换行符使用的是特殊的 Unicode 字符 U+2029 (Paragraph Separator)，而不是常规的 \n 字符
 - 修复弹幕在失败重发时丢失@用户的问题
 

@@ -493,7 +493,7 @@ void MainWindow::syncMagicalRooms()
             latestVersion.replace(0, 1, "");
         rt->appNewVersion = latestVersion;
 
-        if (compareVersion(latestVersion, appVersion) > 0)
+        if (compareVersion(latestVersion, appVersion) > 0) // 有更新
         {
             rt->appDownloadUrl = json.value("download_url").toString();
             ui->actionUpdate_New_Version->setText("有新版本：" + rt->appNewVersion);
@@ -524,6 +524,14 @@ void MainWindow::syncMagicalRooms()
                     localNotify("【有新版本】" + appVersion + " -> " + latestVersion);
                 }
             }
+            else
+            {
+                rt->appNewVersion = ""; // 不显示出来，不管它
+            }
+        }
+        else
+        {
+            rt->appNewVersion = ""; // 没有更新
         }
 
         QString code = json.value("code").toString();
