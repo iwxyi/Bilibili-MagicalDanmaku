@@ -2356,7 +2356,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>1140</y>
+              <y>1180</y>
               <width>171</width>
               <height>301</height>
              </rect>
@@ -2679,9 +2679,9 @@ QPushButton:pressed
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>1460</y>
+              <y>1520</y>
               <width>211</width>
-              <height>301</height>
+              <height>331</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -6615,7 +6615,7 @@ QPushButton:pressed
               <x>190</x>
               <y>970</y>
               <width>161</width>
-              <height>91</height>
+              <height>111</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -6707,7 +6707,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>1010</y>
               <width>161</width>
-              <height>121</height>
+              <height>151</height>
              </rect>
             </property>
             <property name="styleSheet">

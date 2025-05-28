@@ -9326,10 +9326,18 @@ void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
                 reply = reply.right(reply.length() - index);
             }
         }
+        if (!reply.endsWith("}"))
+        {
+            int index = reply.lastIndexOf("}");
+            if (index > -1)
+            {
+                reply = reply.left(index + 1);
+            }
+        }
         MyJson json(reply.toUtf8());
         if (json.isEmpty())
         {
-            qWarning() << "无法解析的GPT回复格式：" << reply.toUtf8();
+            qWarning() << "无法解析的GPT回复格式：" << reply;
             return;
         }
         triggerCmdEvent(GPT_TASK_RESPONSE_EVENT, danmaku.with(json));
