@@ -2072,6 +2072,7 @@ void MainWindow::initEvent()
 
 void MainWindow::initCodeRunner()
 {
+    qInfo() << "初始化 CodeRunner";
     connect(cr, &CodeRunner::signalTriggerCmdEvent, this, [=](const QString& cmd, const LiveDanmaku& danmaku, bool debug) {
         triggerCmdEvent(cmd, danmaku, debug);
     });
@@ -2094,6 +2095,7 @@ void MainWindow::initCodeRunner()
 
 void MainWindow::initWebServer()
 {
+    qInfo() << "初始化 WebService";
     webServer = new WebServer(this);
     webServer->wwwDir = QDir(rt->dataPath + "www");
     cr->setWebServer(webServer);
@@ -2101,6 +2103,7 @@ void MainWindow::initWebServer()
 
 void MainWindow::initVoiceService()
 {
+    qInfo() << "初始化 VoiceService";
     voiceService = new VoiceService(this);
     cr->setVoiceService(voiceService);
     connect(voiceService, &VoiceService::signalError, this, [=](QString title, QString msg) {
@@ -2110,6 +2113,7 @@ void MainWindow::initVoiceService()
 
 void MainWindow::initChatService()
 {
+    qInfo() << "初始化 ChatService";
     chatService = new ChatService(this);
     chatService->setLiveService(this->liveService);
 }

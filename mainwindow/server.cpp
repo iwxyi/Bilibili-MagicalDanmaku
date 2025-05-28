@@ -821,7 +821,7 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         /* if (!ui->allowWebControlCheck->isChecked())
         {
             qWarning() << "api/event: 需要解锁安全限制";
-            ba = "{ \"cmd\": \"event\", \"code\": \"1\", \"msg\": \"需要解锁安全限制\" }";
+            ba = "{ \"cmd\": \"event\", \"code\": \"-1\", \"msg\": \"需要解锁安全限制\" }";
             return ba;
         } */
 
@@ -866,6 +866,74 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
             danmaku.with(json);
         triggerCmdEvent(eventName, danmaku);
         ba = "{ \"cmd\": \"event\", \"code\": \"0\", \"msg\": \"ok\" }";
+    }
+    else if (url == "readConfig" || url == "getConfig") // 获取所有或者单个配置
+    {
+        if (!ui->allowWebControlCheck->isChecked())
+        {
+            qWarning() << "api/" + url + ": 需要解锁安全限制";
+            ba = "{ \"cmd\": \"api\", \"code\": \"-1\", \"msg\": \"需要解锁安全限制\" }";
+            return ba;
+        }
+
+        QString format = params.value("format").toLower();
+        QString key = QByteArray::fromPercentEncoding(params.value("key", "").toUtf8());
+        if (format == "json") // 读取所有的key-value对，并且转换成JSON格式
+        {
+            auto keys = us->allKeys();
+            MyJson json;
+            foreach (auto k, keys)
+            {
+                json.insert(k, us->value(k).toJsonValue());
+            }
+            ba = json.toBa();
+        }
+        else if (key.isEmpty())
+        {
+            qInfo() << "获取所有配置";
+            ba = readTextFileAutoCodec(rt->dataPath + "settings.ini").toUtf8();
+        }
+        else
+        {
+            qInfo() << "获取配置：" << key;
+            ba = us->value(key).toByteArray();
+        }
+    }
+    else if (url == "writeConfig" || url == "setConfig") // 设置单个配置
+    {
+        if (!ui->allowWebControlCheck->isChecked())
+        {
+            qWarning() << "api/" + url + ": 需要解锁安全限制";
+            ba = "{ \"cmd\": \"api\", \"code\": \"-1\", \"msg\": \"需要解锁安全限制\" }";
+            return ba;
+        }
+        QString key = QByteArray::fromPercentEncoding(params.value("key", "").toUtf8());
+        QString value = QByteArray::fromPercentEncoding(params.value("value", "").toUtf8());
+        bool autoReload = !params.value("reload").isEmpty();
+        if (key.isEmpty())
+        {
+            return ba = "未包含指定参数“key”";
+        }
+        qInfo() << "设置配置：" << key << "=" << value;
+        us->set(key, value);
+        us->sync();
+
+        if (autoReload)
+        {
+            qInfo() << "重新读取配置";
+            readConfig();
+        }
+    }
+    else if (url == "reloadConfig")
+    {
+        if (!ui->allowWebControlCheck->isChecked())
+        {
+            qWarning() << "api/" + url + ": 需要解锁安全限制";
+            ba = "{ \"cmd\": \"api\", \"code\": \"-1\", \"msg\": \"需要解锁安全限制\" }";
+            return ba;
+        }
+        qInfo() << "重新读取配置";
+        readConfig();
     }
 
     return ba;

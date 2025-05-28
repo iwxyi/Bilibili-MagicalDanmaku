@@ -288,6 +288,8 @@ void BiliLiveService::getNavInfo(NetVoidFunc finalFunc)
  */
 QString BiliLiveService::toWbiParam(QString params) const
 {
+    if (wbiMixinKey.isEmpty())
+        return params;
     if (!params.contains("wts"))
         params += "&wts=" + snum(QDateTime::currentSecsSinceEpoch());
     QString md5 = QCryptographicHash::hash((params + wbiMixinKey).toLocal8Bit(), QCryptographicHash::Md5).toHex().toLower();
@@ -3276,7 +3278,7 @@ void BiliLiveService::connectPkSocket()
     if (pkRoomId.isEmpty())
         return ;
 
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+pkRoomId+"&type=0";
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?" + toWbiParam("id="+pkRoomId+"&type=0");
     get(url, [=](QJsonObject json) {
         if (json.value("code").toInt() != 0)
         {
