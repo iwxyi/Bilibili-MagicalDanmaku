@@ -562,6 +562,35 @@ void MainWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
     connect(helper, SIGNAL(finished(QHttpRequest *, QHttpResponse *)), this, SLOT(requestHandle(QHttpRequest *, QHttpResponse *)));
 }
 
+QHash<QString, QString> parseUrlParams(const QString& paramString, bool urlDecode = true)
+{
+    QHash<QString, QString> params;
+    QStringList sl = paramString.split("&"); // a=1&b=2的参数
+    foreach (auto s, sl)
+    {
+        int pos = s.indexOf("=");
+        if (pos == -1)
+        {
+            params.insert(QByteArray::fromPercentEncoding(s.toUtf8()), "");
+            continue;
+        }
+
+        QString key = s.left(pos);
+        QString val = s.right(s.length() - pos - 1);
+        if (urlDecode)
+        {
+            params.insert(QByteArray::fromPercentEncoding(key.toUtf8()),
+                          QByteArray::fromPercentEncoding(val.toUtf8()));
+        }
+        else
+        {
+            params.insert(key, val);
+        }
+
+    }
+    return params;
+}
+
 void MainWindow::requestHandle(QHttpRequest *req, QHttpResponse *resp)
 {
     // 解析参数
@@ -572,21 +601,7 @@ void MainWindow::requestHandle(QHttpRequest *req, QHttpResponse *resp)
     {
         int pos = fullUrl.indexOf("?");
         urlPath = fullUrl.left(pos);
-        QStringList sl = fullUrl.right(fullUrl.length() - pos - 1).split("&"); // a=1&b=2的参数
-        foreach (auto s, sl)
-        {
-            int pos = s.indexOf("=");
-            if (pos == -1)
-            {
-                params.insert(QByteArray::fromPercentEncoding(s.toUtf8()), "");
-                continue;
-            }
-
-            QString key = s.left(pos);
-            QString val = s.right(s.length() - pos - 1);
-            params.insert(QByteArray::fromPercentEncoding(key.toUtf8()),
-                          QByteArray::fromPercentEncoding(val.toUtf8()));
-        }
+        params = parseUrlParams(fullUrl.right(fullUrl.length() - pos - 1));
     }
 
     // 路径
@@ -872,11 +887,18 @@ QByteArray MainWindow::processApiRequest(QString url, QHash<QString, QString> pa
         QString key = QByteArray::fromPercentEncoding(params.value("key", "").toUtf8());
         if (format == "json") // 读取所有的key-value对，并且转换成JSON格式
         {
-            auto keys = us->allKeys();
             MyJson json;
-            foreach (auto k, keys)
+            if (!key.isEmpty())
             {
-                json.insert(k, us->value(k).toJsonValue());
+                json.insert(key, us->value(key).toString());
+            }
+            else
+            {
+                auto keys = us->allKeys();
+                foreach (auto k, keys)
+                {
+                    json.insert(k, us->value(k).toJsonValue());
+                }
             }
             ba = json.toBa();
         }
@@ -899,9 +921,41 @@ QByteArray MainWindow::processApiRequest(QString url, QHash<QString, QString> pa
             ba = "{ \"cmd\": \"api\", \"code\": \"-1\", \"msg\": \"需要解锁安全限制\" }";
             return ba;
         }
+
+        // get的参数
         QString key = params.value("key", "");
         QString value = params.value("value", "");
         bool autoReload = !params.value("reload").isEmpty();
+
+        // post的参数
+        if (key.isEmpty())
+        {
+            const QByteArray& body = req->body();
+            if (!body.isEmpty())
+            {
+                MyJson json(body);
+                if (!json.isEmpty()) // post json
+                {
+                    key = json.value("key").toString();
+                    value = json.value("value").toString();
+                    autoReload = json.value("reload").toBool();
+                }
+                else // post raw
+                {
+                    qDebug() << "解析URL参数：" << body;
+                    // 一些body不会进行URL编码，这样会导致多一次解码，容易出问题
+                    auto params = parseUrlParams(body, false);
+                    key = params.value("key", "");
+                    value = params.value("value", "");
+                    autoReload = !params.value("reload").isEmpty();
+                }
+            }
+            else
+            {
+                qWarning() << "设置配置：post 的 body 为空";
+            }
+        }
+
         if (key.isEmpty())
         {
             return ba = "未包含指定参数“key”";
@@ -915,6 +969,7 @@ QByteArray MainWindow::processApiRequest(QString url, QHash<QString, QString> pa
             qInfo() << "重新读取配置";
             readConfig();
         }
+        *contentType = "application/json";
         ba = "{\"code\": 0}";
     }
     else if (url == "reloadConfig")
@@ -925,8 +980,12 @@ QByteArray MainWindow::processApiRequest(QString url, QHash<QString, QString> pa
             ba = "{ \"cmd\": \"api\", \"code\": \"-1\", \"msg\": \"需要解锁安全限制\" }";
             return ba;
         }
-        qInfo() << "重新读取配置";
-        readConfig();
+        QTimer::singleShot(100, this, [=]{
+            qInfo() << "重新读取配置";
+            readConfig();
+        });
+        *contentType = "application/json";
+        ba = "{\"code\": 0}";
     }
 
     return ba;
