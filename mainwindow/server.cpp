@@ -640,7 +640,7 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
     // ========== 各类接口 ==========
     if (urlPath.startsWith("api/"))
     {
-        doc = getApiContent(urlPath.right(urlPath.length() - 4), params, &contentType, req, resp);
+        doc = processApiRequest(urlPath.right(urlPath.length() - 4), params, &contentType, req, resp);
     }
     // ========== 固定类型 ==========
     else if (urlPath == "danmaku") // 弹幕姬
@@ -721,7 +721,7 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
 /// 一些header相关的
 /// @param url 不包括前缀api/，直达动作本身
 /// 示例地址：http://__DOMAIN__:__PORT__/api/header?uid=123456
-QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params, QString* contentType, QHttpRequest *req, QHttpResponse *resp)
+QByteArray MainWindow::processApiRequest(QString url, QHash<QString, QString> params, QString* contentType, QHttpRequest *req, QHttpResponse *resp)
 {
     QByteArray ba;
     if (url == "header") // 获取头像 /api/header?uid=1234565
@@ -899,8 +899,8 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
             ba = "{ \"cmd\": \"api\", \"code\": \"-1\", \"msg\": \"需要解锁安全限制\" }";
             return ba;
         }
-        QString key = QByteArray::fromPercentEncoding(params.value("key", "").toUtf8());
-        QString value = QByteArray::fromPercentEncoding(params.value("value", "").toUtf8());
+        QString key = params.value("key", "");
+        QString value = params.value("value", "");
         bool autoReload = !params.value("reload").isEmpty();
         if (key.isEmpty())
         {
@@ -915,6 +915,7 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
             qInfo() << "重新读取配置";
             readConfig();
         }
+        ba = "{\"code\": 0}";
     }
     else if (url == "reloadConfig")
     {
