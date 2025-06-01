@@ -9,7 +9,6 @@ void MainWindow::openServer(int port)
         port = ui->serverPortSpin->value();
     if (port < 1 || port > 65535)
         port = 5520;
-    webServer->serverPort = qint16(port);
 #if defined(ENABLE_HTTP_SERVER)
     if (!webServer->server)
     {
@@ -22,13 +21,25 @@ void MainWindow::openServer(int port)
     }
     else
     {
-        webServer->server->close();
+        // 判断需不需要重新开启
+        if (webServer->serverPort == qint16(port))
+        {
+            qInfo() << "Web服务端口一致，不需要重启";
+            return;
+        }
+
+        qDebug() << "重新开启 HTTP 服务";
+        closeServer(); // webServer->server=null，重新进入上面if的初始化方法，之后再打开
+        openServer(port);
+        return;
     }
 
     // 开启服务器
     qInfo() << "开启 HTTP 服务" << port;
+    webServer->serverPort = qint16(port);
     if (!webServer->server->listen(static_cast<quint16>(port)))
     {
+        qWarning() << "开启 HTTP 服务失败！";
         ui->serverCheck->setChecked(false);
         statusLabel->setText("开启服务端失败！");
     }
@@ -44,10 +55,10 @@ void MainWindow::openSocketServer()
     };
 
     // 弹幕socket
+    qInfo() << "开启 Socket 服务" << webServer->serverPort + DANMAKU_SERVER_PORT;
     webServer->extensionSocketServer = new QWebSocketServer("Danmaku", QWebSocketServer::NonSecureMode, this);
     if (webServer->extensionSocketServer->listen(QHostAddress::Any, quint16(webServer->serverPort + DANMAKU_SERVER_PORT)))
     {
-        qInfo() << "开启 Socket 服务" << webServer->serverPort + DANMAKU_SERVER_PORT;
         connect(webServer->extensionSocketServer, &QWebSocketServer::newConnection, this, [=]{
             QWebSocket* clientSocket = webServer->extensionSocketServer->nextPendingConnection();
             qInfo() << "ext socket 接入" << webServer->extensionSockets.size() << clientSocket->peerAddress() << clientSocket->peerPort() << clientSocket->peerName();
