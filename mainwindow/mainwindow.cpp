@@ -3939,6 +3939,18 @@ void MainWindow::saveTaskList()
 
 void MainWindow::restoreTaskList()
 {
+    // 清空
+    for (int i = 0; i < ui->taskListWidget->count(); i++)
+    {
+        auto item = ui->taskListWidget->item(i);
+        auto widget = ui->taskListWidget->itemWidget(item);
+        auto tw = static_cast<TaskWidget*>(widget);
+        tw->deleteLater();
+        ui->taskListWidget->removeItemWidget(item);
+        ui->taskListWidget->takeItem(i);
+    }
+
+    // 读取
     int count = us->value("task/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
@@ -4072,6 +4084,18 @@ void MainWindow::saveReplyList()
 
 void MainWindow::restoreReplyList()
 {
+    // 清空
+    for (int i = 0; i < ui->replyListWidget->count(); i++)
+    {
+        auto item = ui->replyListWidget->item(i);
+        auto widget = ui->replyListWidget->itemWidget(item);
+        auto tw = static_cast<ReplyWidget*>(widget);
+        tw->deleteLater();
+        ui->replyListWidget->removeItemWidget(item);
+        ui->replyListWidget->takeItem(i);
+    }
+
+    // 读取
     int count = us->value("reply/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
@@ -4303,6 +4327,18 @@ void MainWindow::saveEventList()
 
 void MainWindow::restoreEventList()
 {
+    // 清空
+    for (int i = 0; i < ui->eventListWidget->count(); i++)
+    {
+        auto item = ui->eventListWidget->item(i);
+        auto widget = ui->eventListWidget->itemWidget(item);
+        auto tw = static_cast<EventWidget*>(widget);
+        tw->deleteLater();
+        ui->eventListWidget->removeItemWidget(item);
+        ui->eventListWidget->takeItem(i);
+    }
+
+    // 读取
     int count = us->value("event/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
@@ -4537,6 +4573,10 @@ void MainWindow::saveSubAccount()
 
 void MainWindow::restoreSubAccount()
 {
+    // 清空
+    us->subAccounts.clear();
+
+    // 读取
     int count = us->value("subAccount/count", 0).toInt();
     for (int i = 0; i < count; i++)
     {
@@ -7741,6 +7781,14 @@ void MainWindow::saveGameNumbers(int channel)
 
 void MainWindow::restoreGameNumbers()
 {
+    // 清空
+    for (int i = 0; i < CHANNEL_COUNT; i++)
+    {
+        auto& list = cr->gameNumberLists[i];
+        list.clear();
+    }
+
+    // 读取
     for (int i = 0; i < CHANNEL_COUNT; i++)
     {
         if (!cr->heaps->contains("game_numbers/r" + snum(i)))
@@ -7762,6 +7810,14 @@ void MainWindow::saveGameTexts(int channel)
 
 void MainWindow::restoreGameTexts()
 {
+    // 清空
+    for (int i = 0; i < CHANNEL_COUNT; i++)
+    {
+        auto& list = cr->gameTextLists[i];
+        list.clear();
+    }
+
+    // 读取
     for (int i = 0; i < CHANNEL_COUNT; i++)
     {
         if (!cr->heaps->contains("game_texts/r" + snum(i)))
