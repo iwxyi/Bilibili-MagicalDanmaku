@@ -11113,6 +11113,9 @@ void MainWindow::on_GPTAnalysisCheck_clicked()
 {
     us->chatgpt_analysis = ui->GPTAnalysisCheck->isChecked();
     us->setValue("chatgpt/analysis", us->chatgpt_analysis);
+
+    // 无论开关，清空历史记录，不然容易串
+    chatService->clear();
 }
 
 void MainWindow::on_GPTAnalysisFormatButton_clicked()
