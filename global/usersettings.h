@@ -48,6 +48,7 @@ public:
     bool adjustDanmakuLongest = true;// 自动调整弹幕最长字数
     bool removeLongerRandomDanmaku = true; // 随机弹幕自动移除过长的（无视优先级），否则长弹幕会自动分割成多条短的
     bool timerConnectServer = false; // 定时连接
+    int danmakuHistoryMaxCount = 100; // 按个人保留的弹幕历史记录
     int startLiveHour = -1;          // 最早上班的时间
     int endLiveHour = -1;            // 最晚下播的时间
     int timerConnectInterval;        // 定时检测的时间（分支）

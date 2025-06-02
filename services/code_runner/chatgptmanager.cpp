@@ -93,6 +93,12 @@ void ChatGPTManager::chat(qint64 uid, QString text, NetStringFunc func)
     extraKey.insert("uid", uid);
 
     chatgpt->getResponse(chats, extraKey);
+
+    // 清理该UID超过上限的记录
+    const int maxCount = qMax(us->chatgpt_max_context_count * 2, us->danmakuHistoryMaxCount); // 至少保留100条
+    auto& chats = usersChats[uid];
+    while (chats.size() > maxCount)
+        chats.removeFirst();
 }
 
 void ChatGPTManager::clear()
