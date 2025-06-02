@@ -873,6 +873,8 @@ void MainWindow::initLiveService()
 
     connect(liveService, &LiveRoomService::signalRoomTitleChanged, this, [=](const QString& title) {
         ui->roomNameLabel->setText(title);
+
+        this->setWindowTitle(title + " - " + ui->appNameLabel->text());
     });
 
     connect(liveService, &LiveRoomService::signalRoomDescriptionChanged, this, [=](const QString& content) {
@@ -2651,6 +2653,7 @@ void MainWindow::slotRoomInfoChanged()
     if (ui->roomNameLabel->text().isEmpty() || ui->roomNameLabel->text() != warmWish)
         ui->roomNameLabel->setText(ac->roomTitle);
     ui->upNameLabel->setText(ac->upName);
+    this->setWindowTitle(ac->upName + "：" + ac->roomTitle + " - " + ui->appNameLabel->text());
     setRoomDescription(ac->roomDescription);
     ui->roomAreaLabel->setText(ac->areaName);
     ui->popularityLabel->setText(snum(liveService->online));
