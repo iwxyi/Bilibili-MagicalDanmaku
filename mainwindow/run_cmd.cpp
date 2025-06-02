@@ -2270,10 +2270,18 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                             reply = reply.right(reply.length() - index);
                         }
                     }
+                    if (!reply.endsWith("}"))
+                    {
+                        int index = reply.lastIndexOf("}");
+                        if (index > -1)
+                        {
+                            reply = reply.left(index + 1);
+                        }
+                    }
                     MyJson json(reply.toUtf8());
                     if (json.isEmpty())
                     {
-                        qWarning() << "无法解析的GPT回复格式：" << reply.toUtf8();
+                        qWarning() << "无法解析的GPT回复格式：" << reply;
                         return;
                     }
                     result = json.value("msg").toString();

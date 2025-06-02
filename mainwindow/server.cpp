@@ -9,7 +9,6 @@ void MainWindow::openServer(int port)
         port = ui->serverPortSpin->value();
     if (port < 1 || port > 65535)
         port = 5520;
-    webServer->serverPort = qint16(port);
 #if defined(ENABLE_HTTP_SERVER)
     if (!webServer->server)
     {
@@ -22,13 +21,25 @@ void MainWindow::openServer(int port)
     }
     else
     {
-        webServer->server->close();
+        // 判断需不需要重新开启
+        if (webServer->serverPort == qint16(port))
+        {
+            qInfo() << "Web服务端口一致，不需要重启";
+            return;
+        }
+
+        qDebug() << "重新开启 HTTP 服务";
+        closeServer(); // webServer->server=null，重新进入上面if的初始化方法，之后再打开
+        openServer(port);
+        return;
     }
 
     // 开启服务器
     qInfo() << "开启 HTTP 服务" << port;
+    webServer->serverPort = qint16(port);
     if (!webServer->server->listen(static_cast<quint16>(port)))
     {
+        qWarning() << "开启 HTTP 服务失败！";
         ui->serverCheck->setChecked(false);
         statusLabel->setText("开启服务端失败！");
     }
@@ -44,10 +55,10 @@ void MainWindow::openSocketServer()
     };
 
     // 弹幕socket
+    qInfo() << "开启 Socket 服务" << webServer->serverPort + DANMAKU_SERVER_PORT;
     webServer->extensionSocketServer = new QWebSocketServer("Danmaku", QWebSocketServer::NonSecureMode, this);
     if (webServer->extensionSocketServer->listen(QHostAddress::Any, quint16(webServer->serverPort + DANMAKU_SERVER_PORT)))
     {
-        qInfo() << "开启 Socket 服务" << webServer->serverPort + DANMAKU_SERVER_PORT;
         connect(webServer->extensionSocketServer, &QWebSocketServer::newConnection, this, [=]{
             QWebSocket* clientSocket = webServer->extensionSocketServer->nextPendingConnection();
             qInfo() << "ext socket 接入" << webServer->extensionSockets.size() << clientSocket->peerAddress() << clientSocket->peerPort() << clientSocket->peerName();
@@ -570,6 +581,35 @@ void MainWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
     connect(helper, SIGNAL(finished(QHttpRequest *, QHttpResponse *)), this, SLOT(requestHandle(QHttpRequest *, QHttpResponse *)));
 }
 
+QHash<QString, QString> parseUrlParams(const QString& paramString, bool urlDecode = true)
+{
+    QHash<QString, QString> params;
+    QStringList sl = paramString.split("&"); // a=1&b=2的参数
+    foreach (auto s, sl)
+    {
+        int pos = s.indexOf("=");
+        if (pos == -1)
+        {
+            params.insert(QByteArray::fromPercentEncoding(s.toUtf8()), "");
+            continue;
+        }
+
+        QString key = s.left(pos);
+        QString val = s.right(s.length() - pos - 1);
+        if (urlDecode)
+        {
+            params.insert(QByteArray::fromPercentEncoding(key.toUtf8()),
+                          QByteArray::fromPercentEncoding(val.toUtf8()));
+        }
+        else
+        {
+            params.insert(key, val);
+        }
+
+    }
+    return params;
+}
+
 void MainWindow::requestHandle(QHttpRequest *req, QHttpResponse *resp)
 {
     // 解析参数
@@ -580,21 +620,7 @@ void MainWindow::requestHandle(QHttpRequest *req, QHttpResponse *resp)
     {
         int pos = fullUrl.indexOf("?");
         urlPath = fullUrl.left(pos);
-        QStringList sl = fullUrl.right(fullUrl.length() - pos - 1).split("&"); // a=1&b=2的参数
-        foreach (auto s, sl)
-        {
-            int pos = s.indexOf("=");
-            if (pos == -1)
-            {
-                params.insert(QByteArray::fromPercentEncoding(s.toUtf8()), "");
-                continue;
-            }
-
-            QString key = s.left(pos);
-            QString val = s.right(s.length() - pos - 1);
-            params.insert(QByteArray::fromPercentEncoding(key.toUtf8()),
-                          QByteArray::fromPercentEncoding(val.toUtf8()));
-        }
+        params = parseUrlParams(fullUrl.right(fullUrl.length() - pos - 1));
     }
 
     // 路径
@@ -648,7 +674,7 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
     // ========== 各类接口 ==========
     if (urlPath.startsWith("api/"))
     {
-        doc = getApiContent(urlPath.right(urlPath.length() - 4), params, &contentType, req, resp);
+        doc = processApiRequest(urlPath.right(urlPath.length() - 4), params, &contentType, req, resp);
     }
     // ========== 固定类型 ==========
     else if (urlPath == "danmaku") // 弹幕姬
@@ -729,7 +755,7 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
 /// 一些header相关的
 /// @param url 不包括前缀api/，直达动作本身
 /// 示例地址：http://__DOMAIN__:__PORT__/api/header?uid=123456
-QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params, QString* contentType, QHttpRequest *req, QHttpResponse *resp)
+QByteArray MainWindow::processApiRequest(QString url, QHash<QString, QString> params, QString* contentType, QHttpRequest *req, QHttpResponse *resp)
 {
     QByteArray ba;
     if (url == "header") // 获取头像 /api/header?uid=1234565
@@ -880,11 +906,18 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         QString key = QByteArray::fromPercentEncoding(params.value("key", "").toUtf8());
         if (format == "json") // 读取所有的key-value对，并且转换成JSON格式
         {
-            auto keys = us->allKeys();
             MyJson json;
-            foreach (auto k, keys)
+            if (!key.isEmpty())
             {
-                json.insert(k, us->value(k).toJsonValue());
+                json.insert(key, us->value(key).toString());
+            }
+            else
+            {
+                auto keys = us->allKeys();
+                foreach (auto k, keys)
+                {
+                    json.insert(k, us->value(k).toJsonValue());
+                }
             }
             ba = json.toBa();
         }
@@ -907,9 +940,41 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
             ba = "{ \"cmd\": \"api\", \"code\": \"-1\", \"msg\": \"需要解锁安全限制\" }";
             return ba;
         }
-        QString key = QByteArray::fromPercentEncoding(params.value("key", "").toUtf8());
-        QString value = QByteArray::fromPercentEncoding(params.value("value", "").toUtf8());
+
+        // get的参数
+        QString key = params.value("key", "");
+        QString value = params.value("value", "");
         bool autoReload = !params.value("reload").isEmpty();
+
+        // post的参数
+        if (key.isEmpty())
+        {
+            const QByteArray& body = req->body();
+            if (!body.isEmpty())
+            {
+                MyJson json(body);
+                if (!json.isEmpty()) // post json
+                {
+                    key = json.value("key").toString();
+                    value = json.value("value").toString();
+                    autoReload = json.value("reload").toBool();
+                }
+                else // post raw
+                {
+                    qDebug() << "解析URL参数：" << body;
+                    // 一些body不会进行URL编码，这样会导致多一次解码，容易出问题
+                    auto params = parseUrlParams(body, false);
+                    key = params.value("key", "");
+                    value = params.value("value", "");
+                    autoReload = !params.value("reload").isEmpty();
+                }
+            }
+            else
+            {
+                qWarning() << "设置配置：post 的 body 为空";
+            }
+        }
+
         if (key.isEmpty())
         {
             return ba = "未包含指定参数“key”";
@@ -923,6 +988,8 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
             qInfo() << "重新读取配置";
             readConfig();
         }
+        *contentType = "application/json";
+        ba = "{\"code\": 0}";
     }
     else if (url == "reloadConfig")
     {
@@ -932,8 +999,12 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
             ba = "{ \"cmd\": \"api\", \"code\": \"-1\", \"msg\": \"需要解锁安全限制\" }";
             return ba;
         }
-        qInfo() << "重新读取配置";
-        readConfig();
+        QTimer::singleShot(100, this, [=]{
+            qInfo() << "重新读取配置";
+            readConfig();
+        });
+        *contentType = "application/json";
+        ba = "{\"code\": 0}";
     }
 
     return ba;

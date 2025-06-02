@@ -873,6 +873,8 @@ void MainWindow::initLiveService()
 
     connect(liveService, &LiveRoomService::signalRoomTitleChanged, this, [=](const QString& title) {
         ui->roomNameLabel->setText(title);
+
+        this->setWindowTitle(title + " - " + ui->appNameLabel->text());
     });
 
     connect(liveService, &LiveRoomService::signalRoomDescriptionChanged, this, [=](const QString& content) {
@@ -2651,6 +2653,7 @@ void MainWindow::slotRoomInfoChanged()
     if (ui->roomNameLabel->text().isEmpty() || ui->roomNameLabel->text() != warmWish)
         ui->roomNameLabel->setText(ac->roomTitle);
     ui->upNameLabel->setText(ac->upName);
+    this->setWindowTitle(ac->upName + "：" + ac->roomTitle + " - " + ui->appNameLabel->text());
     setRoomDescription(ac->roomDescription);
     ui->roomAreaLabel->setText(ac->areaName);
     ui->popularityLabel->setText(snum(liveService->online));
@@ -3939,6 +3942,18 @@ void MainWindow::saveTaskList()
 
 void MainWindow::restoreTaskList()
 {
+    // 清空
+    for (int i = 0; i < ui->taskListWidget->count(); i++)
+    {
+        auto item = ui->taskListWidget->item(i);
+        auto widget = ui->taskListWidget->itemWidget(item);
+        auto tw = static_cast<TaskWidget*>(widget);
+        tw->deleteLater();
+        ui->taskListWidget->removeItemWidget(item);
+        ui->taskListWidget->takeItem(i);
+    }
+
+    // 读取
     int count = us->value("task/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
@@ -4072,6 +4087,18 @@ void MainWindow::saveReplyList()
 
 void MainWindow::restoreReplyList()
 {
+    // 清空
+    for (int i = 0; i < ui->replyListWidget->count(); i++)
+    {
+        auto item = ui->replyListWidget->item(i);
+        auto widget = ui->replyListWidget->itemWidget(item);
+        auto tw = static_cast<ReplyWidget*>(widget);
+        tw->deleteLater();
+        ui->replyListWidget->removeItemWidget(item);
+        ui->replyListWidget->takeItem(i);
+    }
+
+    // 读取
     int count = us->value("reply/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
@@ -4303,6 +4330,18 @@ void MainWindow::saveEventList()
 
 void MainWindow::restoreEventList()
 {
+    // 清空
+    for (int i = 0; i < ui->eventListWidget->count(); i++)
+    {
+        auto item = ui->eventListWidget->item(i);
+        auto widget = ui->eventListWidget->itemWidget(item);
+        auto tw = static_cast<EventWidget*>(widget);
+        tw->deleteLater();
+        ui->eventListWidget->removeItemWidget(item);
+        ui->eventListWidget->takeItem(i);
+    }
+
+    // 读取
     int count = us->value("event/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
@@ -4537,6 +4576,10 @@ void MainWindow::saveSubAccount()
 
 void MainWindow::restoreSubAccount()
 {
+    // 清空
+    us->subAccounts.clear();
+
+    // 读取
     int count = us->value("subAccount/count", 0).toInt();
     for (int i = 0; i < count; i++)
     {
@@ -7741,6 +7784,14 @@ void MainWindow::saveGameNumbers(int channel)
 
 void MainWindow::restoreGameNumbers()
 {
+    // 清空
+    for (int i = 0; i < CHANNEL_COUNT; i++)
+    {
+        auto& list = cr->gameNumberLists[i];
+        list.clear();
+    }
+
+    // 读取
     for (int i = 0; i < CHANNEL_COUNT; i++)
     {
         if (!cr->heaps->contains("game_numbers/r" + snum(i)))
@@ -7762,6 +7813,14 @@ void MainWindow::saveGameTexts(int channel)
 
 void MainWindow::restoreGameTexts()
 {
+    // 清空
+    for (int i = 0; i < CHANNEL_COUNT; i++)
+    {
+        auto& list = cr->gameTextLists[i];
+        list.clear();
+    }
+
+    // 读取
     for (int i = 0; i < CHANNEL_COUNT; i++)
     {
         if (!cr->heaps->contains("game_texts/r" + snum(i)))
@@ -9326,10 +9385,18 @@ void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
                 reply = reply.right(reply.length() - index);
             }
         }
+        if (!reply.endsWith("}"))
+        {
+            int index = reply.lastIndexOf("}");
+            if (index > -1)
+            {
+                reply = reply.left(index + 1);
+            }
+        }
         MyJson json(reply.toUtf8());
         if (json.isEmpty())
         {
-            qWarning() << "无法解析的GPT回复格式：" << reply.toUtf8();
+            qWarning() << "无法解析的GPT回复格式：" << reply;
             return;
         }
         triggerCmdEvent(GPT_TASK_RESPONSE_EVENT, danmaku.with(json));
@@ -11049,6 +11116,9 @@ void MainWindow::on_GPTAnalysisCheck_clicked()
 {
     us->chatgpt_analysis = ui->GPTAnalysisCheck->isChecked();
     us->setValue("chatgpt/analysis", us->chatgpt_analysis);
+
+    // 无论开关，清空历史记录，不然容易串
+    chatService->clear();
 }
 
 void MainWindow::on_GPTAnalysisFormatButton_clicked()

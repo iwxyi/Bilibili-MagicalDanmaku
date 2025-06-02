@@ -75,6 +75,12 @@ void BiliLiveService::initWS()
         // 定时发送心跳包
         heartTimer->start();
         minuteTimer->start();
+
+        if (rt->isReconnect)
+        {
+            rt->isReconnect = false;
+            localNotify("[重连成功]");
+        }
     });
 
     connect(liveSocket, &QWebSocket::disconnected, this, [=]{
@@ -92,6 +98,8 @@ void BiliLiveService::initWS()
         {
             localNotify("[连接断开，重连...]");
             ac->liveStatus = false;
+            rt->isReconnect = true;
+
             // 尝试5秒钟后重连
             connectServerTimer->setInterval(reconnectWSDuration);
             reconnectWSDuration *= 1.2;

@@ -2875,8 +2875,11 @@ JSON 格式：
 - 触发事件：`/api/event?event=事件名&data=url编码(json)`，会触发指定事件如 `SEND_GIFT`。若使用 post 方式，data 部分可直接使用 json 来发送而不需要 url 编码。
 - 配置文件相关：（下列接口需要打开“解锁安全限制”开关）
 
-  - 获取所有配置：`/api/readConfig`，返回 `settings.ini` 文件内容。如果带有参数`format=json`则以JSON格式返回，否则返回纯INI文本；如果带有参数`key`则读取指定配置，返回纯字符串
+  - 获取所有配置：`/api/readConfig`，返回 `settings.ini` 文件内容。如果带有参数`format=json`则以JSON格式返回，否则返回纯INI文本；如果带有参数`key`则读取指定配置，否则返回全部配置
   - 设置单个值：`/api/setConfig?key=xxx&value=xxx&reload=1`，当`reload`不为空时自动重新加载所有配置
+    - 参数同时支持 GET 和 POST 方式，后者 `body` 中的值要为 raw，不要使用 `form-data`
+    - 支持 POST 的 body 使用 JSON 格式：`{"key": "xxx"}`
+    - 若是成功，返回 `{"code":0}`
   - 主程序重新加载所有配置：`/api/reloadConfig`
 
 
