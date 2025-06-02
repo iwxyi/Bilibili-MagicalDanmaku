@@ -467,6 +467,13 @@ void LiveRoomService::appendNewLiveDanmaku(const LiveDanmaku &danmaku)
     }
 
     emit signalNewDanmaku(danmaku);
+
+
+    // 清理超出上限的
+    while (roomDanmakus.size() > us->danmakuHistoryMaxCount)
+        roomDanmakus.removeFirst();
+    while (rt->allDanmakus.size() > us->danmakuHistoryMaxCount)
+        rt->allDanmakus.removeFirst();
 }
 
 void LiveRoomService::autoSetCookie(const QString &s)
