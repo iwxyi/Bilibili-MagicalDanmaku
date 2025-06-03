@@ -1,0 +1,12 @@
+{
+    "author": "小乂",
+	"list": [
+		{
+			"name": "AI知识卡片",
+			"url": "index.html",
+			"css": "knowledge.css",
+			"css_custom": "knowledge_custom.css",
+			"desc": "根据弹幕内容生成知识卡片（依赖于功能型AI）"
+		}
+	]
+}

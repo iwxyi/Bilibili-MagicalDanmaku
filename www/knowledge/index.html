@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI知识卡片</title>
+    <script src="../js/jquery.js"></script>
+    <link rel="stylesheet" href="knowledge.css" media="screen" type="text/css" />
+    <link rel="stylesheet" href="knowledge_custom.css" media="screen" type="text/css" />
+	<meta name="referrer" content="no-referrer">
+</head>
+<body>
+    <div id="card-container">
+        <!-- 卡片将在这里动态生成 -->
+    </div>
+    <script type="text/javascript">
+		var giftList={};
+        $(document).ready(function() {
+            var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
+            ws.onopen = function() {
+                ws.send('{"cmd": "cmds", "data": ["GPT_RESPONSE"]}');
+                
+                // 添加测试卡片
+                const testCards = [
+                    {
+                        name: "测试知识卡片1",
+                        content: "这是第一个测试用的知识卡片，用于展示卡片效果。\n\n" +
+                                "1. 卡片会自动在10秒后消失\n" +
+                                "2. 如果有多个卡片，后续卡片会显示更长时间\n" +
+                                "3. 卡片消失时会有平滑的动画效果\n" +
+                                "4. 其他卡片会自动向左移动\n\n" +
+                                "您可以等待这张卡片消失，或者添加新的卡片来测试效果。"
+                    },
+                    {
+                        name: "测试知识卡片2",
+                        content: "这是第二个测试用的知识卡片，用于展示多卡片效果。\n\n" +
+                                "这张卡片会显示15秒（比第一张多5秒）。\n\n" +
+                                "当第一张卡片消失时，这张卡片会平滑地向左移动。\n\n" +
+                                "您可以观察卡片的动画效果和显示时间。"
+                    },
+                    {
+                        name: "测试知识卡片3",
+                        content: "这是第三个测试用的知识卡片，用于展示多卡片效果。\n\n" +
+                                "这张卡片会显示20秒（比第一张多10秒）。\n\n" +
+                                "当前面的卡片消失时，这张卡片会平滑地向左移动。\n\n" +
+                                "您可以观察三张卡片依次消失的动画效果。"
+                    }
+                ];
+                
+                // 依次添加测试卡片
+                testCards.forEach((card, index) => {
+                    setTimeout(() => {
+                        generateKnowledgeCard(card);
+                    }, index * 1000); // 每隔1秒添加一张卡片
+                });
+            };
+            ws.onmessage = function(e) {
+                console.log(e.data);
+                var json = JSON.parse(e.data);
+                var cmd = json['cmd'];
+                switch (cmd) {
+					case 'GPT_RESPONSE':
+						// 如果有knowledge，就是JSON数组
+						// [{"name":"xxx","content":"xxx"}]
+                        var knowledge = json['data']['extra']['knowledge'];
+						if (knowledge) {
+							// 遍历knowledge，生成知识卡片
+							for (var i = 0; i < knowledge.length; i++) {
+								generateKnowledgeCard(knowledge[i]);
+							}
+						}
+                        break;
+                }
+            };
+
+            function generateKnowledgeCard(card) {
+                console.log(card);
+                const cardElement = $('<div>', {
+                    class: 'knowledge-card',
+                    html: `
+                        <div class="card-header">${card.name}</div>
+                        <div class="card-content"><span class="typing-content">${card.content}</span></div>
+                    `
+                });
+
+                $('#card-container').append(cardElement);
+
+                // 动画序列
+                setTimeout(() => {
+                    // 1. 卡片出现动画
+                    cardElement.addClass('show');
+                    
+                    // 2. 显示标题
+                    cardElement.find('.card-header').addClass('show');
+                    
+                    // 3. 显示内容（打字机效果）
+                    setTimeout(() => {
+                        const contentElement = cardElement.find('.card-content');
+                        const typingContent = contentElement.find('.typing-content');
+                        contentElement.addClass('show');
+                        
+                        // 获取文本内容
+                        const text = typingContent.text();
+                        // 清空内容
+                        typingContent.text('');
+                        // 逐字显示
+                        let i = 0;
+                        const typeWriter = () => {
+                            if (i < text.length) {
+                                typingContent.text(text.substring(0, i + 1));
+                                i++;
+                                setTimeout(typeWriter, 20); // 每个字符的显示间隔
+                            }
+                        };
+                        typeWriter();
+                    }, 300);
+                    
+                    // 4. 显示分割线
+                    setTimeout(() => {
+                        cardElement.find('.card-header').addClass('show-divider');
+                    }, 2300); // 等待打字机效果完成后再显示分割线
+                }, 50);
+
+                // 计算当前卡片数量
+                const currentCardCount = $('.knowledge-card').length;
+                
+                // 根据卡片位置计算显示时间
+                let displayTime = 10000; // 基础显示时间10秒
+                if (currentCardCount > 1) {
+                    // 每张卡片增加5秒，最多增加20秒
+                    displayTime += Math.min((currentCardCount - 1) * 5000, 20000);
+                }
+
+                // 设置移除时间
+                setTimeout(() => {
+                    // 添加淡出动画
+                    cardElement.addClass('fade-out');
+                    
+                    // 等待淡出动画完成后移除卡片
+                    setTimeout(() => {
+                        // 计算需要移动的距离（一张卡片的宽度加上间距）
+                        const moveDistance = cardElement.outerWidth() + 20;
+                        
+                        // 给容器添加过渡效果
+                        const container = $('#card-container');
+                        container.css('transition', 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)');
+                        container.css('transform', `translateX(-${moveDistance}px)`);
+                        
+                        // 等待移动动画完成后
+                        setTimeout(() => {
+                            // 移除第一张卡片
+                            cardElement.remove();
+                            // 移除过渡效果
+                            container.css('transition', 'none');
+                            // 重置容器位置
+                            container.css('transform', 'translateX(0)');
+                            // 强制重绘
+                            container[0].offsetHeight;
+                            // 恢复过渡效果
+                            container.css('transition', 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)');
+                        }, 500);
+                    }, 3000); // 等待3秒淡出动画
+                }, displayTime - 3000); // 提前3秒开始淡出
+            }
+        });
+		
+    </script>
+</body>
+</html>
