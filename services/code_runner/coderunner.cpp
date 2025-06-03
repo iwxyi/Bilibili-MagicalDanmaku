@@ -1806,6 +1806,20 @@ QString CodeRunner::replaceDynamicVariants(const QString &funcName, const QStrin
         qint64 uid = unameToUid(args);
         return snum(uid);
     }
+    else if (funcName == "ignoreEmpty")
+    {
+        QString s = args.trimmed();
+        if (s.isEmpty())
+            return "";
+        s = s.replace(" ", "").replace("\t", "");
+        if (s == "()" || s == "（）"
+            || s == "[]" || s == "【】"
+            || s == "{}" || s == "「」"
+            || s == "<>" || s == "《》"
+            || s == "\"\"" || s == "“”")
+            return "";
+        return args;
+    }
     else if (funcName == "inGameUsers")
     {
         int ch = 0;

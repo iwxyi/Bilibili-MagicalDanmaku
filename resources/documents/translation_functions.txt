@@ -1,5 +1,6 @@
 格式化时间=time
 查找用户名=unameToUid
+忽略空=ignoreEmpty
 输入文本=inputText
 取文本长度=strlen
 删首尾空=trim
