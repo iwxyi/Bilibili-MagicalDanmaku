@@ -28,21 +28,83 @@ body {
 }
 
 .knowledge-card {
+    position: relative;
     flex: 0 0 auto;
     min-width: calc(100vh * 0.618); /* 最小宽度为黄金比例 */
     max-width: calc((100vh - 40px) / 0.618); /* 最大宽度为高度的黄金比例 */
     width: min-content; /* 使用最小内容宽度 */
     height: calc(100vh - 40px);
-    margin-right: 20px;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.95); /* 提高卡片整体背景透明度 */
     border-radius: 16px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
+    margin-right: 20px;
     opacity: 0;
     transform: translateY(20px) scale(0.95);
     transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); /* 弹性动画 */
-    position: relative; /* 添加相对定位 */
+    overflow: hidden;
+}
+
+/* 渐变条样式 */
+.knowledge-card .gradient-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, rgba(255, 107, 107, 0.9), rgba(78, 205, 196, 0.9));
+    border-radius: 16px 16px 0 0;
+    z-index: 3;
+    width: calc(100% - 2px);
+    margin: 0 1px;
+}
+
+/* 内容区域容器 */
+.knowledge-card .content-wrapper {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+}
+
+/* 背景图片容器 */
+.knowledge-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40%; /* 图片高度占卡片的40% */
+    background-image: var(--card-bg-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 1; /* 初始完全不透明 */
+    z-index: 0;
+    transition: opacity 3s ease; /* 添加过渡效果 */
+}
+
+/* 渐变遮罩 */
+.knowledge-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 100%); /* 降低渐变遮罩的透明度 */
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* 内容容器 */
+.card-header, .card-content {
+    position: relative;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.95); /* 提高内容区域背景透明度 */
 }
 
 .knowledge-card.show {
@@ -61,12 +123,16 @@ body {
     transform: translateY(-20px);
 }
 
+.knowledge-card.fade-out::before {
+    opacity: 0.3 !important; /* 淡出时降低图片透明度 */
+}
+
 .card-header {
     padding: 12px 20px;
     font-size: clamp(18px, 3vh, 24px);
     font-weight: 600;
-    color: #333;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    color: rgba(51, 51, 51, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -103,7 +169,7 @@ body {
     padding: 12px 20px;
     font-size: clamp(14px, 2.5vh, 18px);
     line-height: 1.6;
-    color: #666;
+    color: rgba(102, 102, 102, 0.95);
     overflow-y: auto;
     flex: 1;
     display: -webkit-box;
@@ -140,21 +206,6 @@ body {
 .card-content::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 3px;
-}
-
-/* 添加渐变背景 */
-.knowledge-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #FF6B6B, #4ECDC4);
-    border-radius: 16px 16px 0 0;
-    z-index: 1; /* 确保渐变条在内容之上 */
-    width: calc(100% - 2px); /* 减去边框宽度 */
-    margin: 0 1px; /* 左右各留出1px的边框宽度 */
 }
 
 /* 打字机效果 */

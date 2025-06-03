@@ -24,7 +24,7 @@
                 // 添加测试卡片
                 const testCards = [
                     {
-                        name: "测试知识卡片1",
+                        name: "SoC",
                         content: "这是第一个测试用的知识卡片，用于展示卡片效果。\n\n" +
                                 "1. 卡片会自动在10秒后消失\n" +
                                 "2. 如果有多个卡片，后续卡片会显示更长时间\n" +
@@ -33,14 +33,14 @@
                                 "您可以等待这张卡片消失，或者添加新的卡片来测试效果。"
                     },
                     {
-                        name: "测试知识卡片2",
+                        name: "CPU",
                         content: "这是第二个测试用的知识卡片，用于展示多卡片效果。\n\n" +
                                 "这张卡片会显示15秒（比第一张多5秒）。\n\n" +
                                 "当第一张卡片消失时，这张卡片会平滑地向左移动。\n\n" +
                                 "您可以观察卡片的动画效果和显示时间。"
                     },
                     {
-                        name: "测试知识卡片3",
+                        name: "GPU",
                         content: "这是第三个测试用的知识卡片，用于展示多卡片效果。\n\n" +
                                 "这张卡片会显示20秒（比第一张多10秒）。\n\n" +
                                 "当前面的卡片消失时，这张卡片会平滑地向左移动。\n\n" +
@@ -85,10 +85,16 @@
                 const cardElement = $('<div>', {
                     class: 'knowledge-card',
                     html: `
-                        <div class="card-header">${card.name}</div>
-                        <div class="card-content"><span class="typing-content">${card.content}</span></div>
+                        <div class="gradient-bar"></div>
+                        <div class="content-wrapper">
+                            <div class="card-header">${card.name}</div>
+                            <div class="card-content"><span class="typing-content">${card.content}</span></div>
+                        </div>
                     `
                 });
+
+                // 搜索并设置背景图
+                searchAndSetBackground(card.name, cardElement);
 
                 $('#card-container').append(cardElement);
 
@@ -168,6 +174,58 @@
                         }, 500);
                     }, 3000); // 等待3秒淡出动画
                 }, displayTime - 3000); // 提前3秒开始淡出
+            }
+
+            // 添加图片搜索和设置函数
+            function searchAndSetBackground(query, cardElement) {
+                // 创建唯一的回调函数名
+                const callbackName = 'baiduImageCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                
+                // 创建全局回调函数
+                window[callbackName] = function(data) {
+                    if (data.image) {
+                        // 移除转义字符
+                        const imageUrl = data.image.replace(/\\/g, '');
+                        console.log('设置背景图片:', imageUrl); // 添加日志
+                        
+                        // 预加载图片
+                        const img = new Image();
+                        img.onload = () => {
+                            console.log('图片加载成功'); // 添加日志
+                            // 图片加载成功后设置背景
+                            cardElement.css({
+                                '--card-bg-image': `url("${imageUrl}")`,
+                                'background-image': `url("${imageUrl}")`,
+                                'background-size': 'cover',
+                                'background-position': 'center bottom',
+                                'background-repeat': 'no-repeat'
+                            });
+                        };
+                        img.onerror = () => {
+                            console.log('图片加载失败:', imageUrl); // 添加日志
+                        };
+                        img.src = imageUrl;
+                    }
+                    
+                    // 清理回调函数
+                    delete window[callbackName];
+                };
+
+                // 创建 script 标签
+                const script = document.createElement('script');
+                script.src = `https://baike.baidu.com/api/openapi/BaikeLemmaCardApi?appid=379020&bk_key=${encodeURIComponent(query)}&callback=${callbackName}`;
+                document.body.appendChild(script);
+
+                // 加载完成后移除 script 标签
+                script.onload = function() {
+                    document.body.removeChild(script);
+                };
+                script.onerror = function() {
+                    console.log('加载脚本失败');
+                    document.body.removeChild(script);
+                    // 清理回调函数
+                    delete window[callbackName];
+                };
             }
         });
 		
