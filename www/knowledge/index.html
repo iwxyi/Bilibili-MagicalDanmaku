@@ -13,6 +13,9 @@
     </div>
     <script type="text/javascript">
 		var giftList={};
+        // 添加知识点记录
+        var knowledgeHistory = new Set();
+        
         $(document).ready(function() {
             var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
             ws.onopen = function() {
@@ -64,7 +67,13 @@
 						if (knowledge) {
 							// 遍历knowledge，生成知识卡片
 							for (var i = 0; i < knowledge.length; i++) {
-								generateKnowledgeCard(knowledge[i]);
+                                // 检查知识点是否已存在
+                                if (!knowledgeHistory.has(knowledge[i].name)) {
+                                    // 添加到历史记录
+                                    knowledgeHistory.add(knowledge[i].name);
+                                    // 生成知识卡片
+                                    generateKnowledgeCard(knowledge[i]);
+                                }
 							}
 						}
                         break;
