@@ -93,13 +93,15 @@ public:
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku danmaku);
     QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku);
     QString replaceDanmakuVariants(const LiveDanmaku &danmaku, const QString& key, bool* ok) const;
-    QString replaceDanmakuJson(const QJsonObject& json, const QString &key_seq, bool *ok) const;
+    QString generateCodeFunctions(const QString &funcName, const QString &args, const LiveDanmaku& danmaku, bool* ok);
+    QString replaceDanmakuJson(const QString &keySeq, const QJsonObject& json, bool *ok) const;
+    QString traverseJsonCode(const QString& keySeq, const QString& code, const QJsonObject& json) const;
     QString replaceDynamicVariants(const QString& funcName, const QString& args, const LiveDanmaku &danmaku);
     QString processMsgHeaderConditions(QString msg) const;
     template<typename T>
     bool isConditionTrue(T a, T b, QString op) const;
     bool isFilterRejected(QString filterName, const LiveDanmaku& danmaku);
-    bool processFilter(QString filterText, const LiveDanmaku& danmaku);
+    bool processFilter(QString filterCode, const LiveDanmaku& danmaku);
     void translateUnicode(QString& s) const;
 
     QString getReplyExecutionResult(QString key, const LiveDanmaku &danmaku);

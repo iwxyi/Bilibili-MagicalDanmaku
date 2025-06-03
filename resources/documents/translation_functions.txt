@@ -50,3 +50,4 @@ SQL查询=SQLQuery
 获取窗口位置=getWindowRect
 获取坐标所在窗口=getWindowFromPoint
 获取弹幕历史=getDanmuHistory
+遍历JSON=traverseJson

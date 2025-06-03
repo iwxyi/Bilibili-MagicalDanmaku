@@ -821,6 +821,30 @@ QString CodeRunner::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         msg.replace(_var, text);
     }
 
+    // 生成代码
+    re = QRegularExpression("^\\s*#\\s*(\\w+)\\s*\\((.+)\\)\\s*$", QRegularExpression::MultilineOption);
+    int matchPos = 0;
+    bool ok;
+    while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
+    {
+        QString mat = match.captured(0);
+        QString funcName = match.captured(1);
+        QString args = match.captured(2);
+        QString rpls = generateCodeFunctions(funcName, args, danmaku, &ok);
+        if (ok)
+        {
+            msg.replace(mat, rpls);
+            matchPos = matchPos + rpls.length();
+        }
+        else
+        {
+            if (mat.length() > 1 && mat.endsWith("%"))
+                matchPos += mat.length() - 1;
+            else
+                matchPos += mat.length();
+        }
+    }
+
     // 自定义变量
     for (auto it = us->customVariant.begin(); it != us->customVariant.end(); ++it)
     {
@@ -838,8 +862,7 @@ QString CodeRunner::processDanmakuVariants(QString msg, const LiveDanmaku& danma
 
     // 弹幕变量、环境变量（固定文字）
     re = QRegularExpression("%[\\w_]+%");
-    int matchPos = 0;
-    bool ok;
+    matchPos = 0;
     while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
     {
         QString mat = match.captured(0);
@@ -880,7 +903,7 @@ QString CodeRunner::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
         {
             bool ok = false;
-            QString rpls = replaceDanmakuJson(json, match.captured(1), &ok);
+            QString rpls = replaceDanmakuJson(match.captured(1), json, &ok);
             if (!ok)
             {
                 matchPos++;
@@ -1585,14 +1608,36 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     }
 }
 
-/**
- * 额外数据（JSON）替换
- */
-QString CodeRunner::replaceDanmakuJson(const QJsonObject &json, const QString& key_seq, bool* ok) const
+QString CodeRunner::generateCodeFunctions(const QString &funcName, const QString &args, const LiveDanmaku &danmaku, bool *ok)
 {
-    QStringList keyTree = key_seq.split(".");
+    if (funcName == "traverseJson")
+    {
+        QRegularExpression re("(.+?)\\s*,\\s*(.*)");
+        QRegularExpressionMatch match;
+        if (args.contains(re, &match))
+        {
+            QString keySeq = match.captured(1).trimmed();
+            QString code = match.captured(2).trimmed();
+            *ok = true;
+            return traverseJsonCode(keySeq, code, danmaku.extraJson);
+        }
+    }
+
+    *ok = false;
+    qWarning() << "无法解析：" << funcName << args;
+    return "";
+}
+
+QJsonValue getJsonValueByKeySeq(QString keySeq, const QJsonObject& json)
+{
+    while (keySeq.startsWith(".")) // 第一个点是自己
+        keySeq = keySeq.mid(1);
+    QStringList keyTree = keySeq.split(".");
     if (keyTree.size() == 0)
+    {
+        qWarning() << "获取JSON值：路径为空";
         return "";
+    }
 
     QJsonValue obj = json;
     while (keyTree.size())
@@ -1614,7 +1659,7 @@ QString CodeRunner::replaceDanmakuJson(const QJsonObject &json, const QString& k
             }
             else
             {
-                qWarning() << "解析JSON的键是空的：" << key_seq;
+                qWarning() << "解析JSON的键是空的：" << keySeq;
                 return "";
             }
         }
@@ -1653,19 +1698,27 @@ QString CodeRunner::replaceDanmakuJson(const QJsonObject &json, const QString& k
                 }
                 else
                 {
-                    qWarning() << "错误的数组索引：" << index << "当前总数量：" << array.size() << "  " << key_seq;
+                    qWarning() << "错误的数组索引：" << index << "当前总数量：" << array.size() << "  " << keySeq;
                     return "";
                 }
             }
         }
         else
         {
-            qWarning() << "未知的JSON类型：" << key_seq;
+            qWarning() << "未知的JSON类型：" << keySeq;
             obj = QJsonValue();
             break;
         }
     }
+    return obj;
+}
 
+/**
+ * 额外数据（JSON）替换
+ */
+QString CodeRunner::replaceDanmakuJson(const QString &keySeq, const QJsonObject &json, bool* ok) const
+{
+    QJsonValue obj = getJsonValueByKeySeq(keySeq, json);
     *ok = true;
 
     if (obj.isNull() || obj.isUndefined())
@@ -1681,9 +1734,44 @@ QString CodeRunner::replaceDanmakuJson(const QJsonObject &json, const QString& k
             return QString::number(qint64(val));
         return QString::number(val);
     }
-    if (obj.isObject() || obj.isArray()) // 不支持转换的类型
-        return "";
+    if (obj.isObject()) // 不支持转换的类型
+        return QJsonDocument(obj.toObject()).toJson(QJsonDocument::Compact);
+    if (obj.isArray())
+        return QJsonDocument(obj.toArray()).toJson(QJsonDocument::Compact);
     return "";
+}
+
+/**
+ * 转换 traverseJson 函数为代码
+ */
+QString CodeRunner::traverseJsonCode(const QString &keySeq, const QString &code, const QJsonObject &json) const
+{
+    qDebug() << "遍历JSON：" << keySeq << code;
+    // 解析JSON
+    QJsonValue jv = getJsonValueByKeySeq(keySeq, json);
+    QStringList codes;
+    if (jv.isArray())
+    {
+        QJsonArray array = jv.toArray();
+        for (int i = 0; i < array.size(); i++)
+        {
+            QString c = cr->toRunableCode(cr->toMultiLine(code));
+            c.replace("%i%", QString::number(i));
+            codes.append(c);
+        }
+    }
+    else if (jv.isObject())
+    {
+        QJsonObject obj = jv.toObject();
+        foreach (QString key, obj.keys())
+        {
+            QString c = cr->toRunableCode(cr->toMultiLine(code));
+            c.replace("%key%", key);
+            c.replace("%value%", cr->toSingleLine(MyJson(obj.value(key).toObject()).toBa(QJsonDocument::Compact)));
+            codes.append(c);
+        }
+    }
+    return codes.join("\\n");
 }
 
 /**
@@ -2637,6 +2725,7 @@ bool CodeRunner::isFilterRejected(QString filterName, const LiveDanmaku &danmaku
     if (!enableFilter)
         return false;
 
+    qDebug() << "触发过滤器：" << filterName;
     // 查找所有事件，查看有没有对应的过滤器
     bool reject = false;
     for (int row = 0; row < ui->eventListWidget->count(); row++)
@@ -2648,9 +2737,9 @@ bool CodeRunner::isFilterRejected(QString filterName, const LiveDanmaku &danmaku
         auto eventWidget = static_cast<EventWidget*>(widget);
         if (eventWidget->isEnabled() && eventWidget->title() == filterName)
         {
-            QString filterText = eventWidget->body();
+            QString filterCode = eventWidget->body();
             // 判断事件
-            if (!processFilter(filterText, danmaku))
+            if (!processFilter(filterCode, danmaku))
                 reject = true;
         }
     }
@@ -2661,23 +2750,23 @@ bool CodeRunner::isFilterRejected(QString filterName, const LiveDanmaku &danmaku
 /**
  * 判断是否通过（没有reject）
  */
-bool CodeRunner::processFilter(QString filterText, const LiveDanmaku &danmaku)
+bool CodeRunner::processFilter(QString filterCode, const LiveDanmaku &danmaku)
 {
-    if (filterText.isEmpty())
+    if (filterCode.isEmpty())
         return false;
 
     // 获取符合的所有结果
-    QStringList msgs = getEditConditionStringList(filterText, danmaku);
+    QStringList msgs = getEditConditionStringList(filterCode, danmaku);
     if (!msgs.size())
         return true;
 
     // 如果有多个，随机取一个
     int r = qrand() % msgs.size();
     QString s = msgs.at(r);
-
+    qDebug() << "过滤器随机：" << msgs << r << s;
     bool reject = s.contains(QRegularExpression(">\\s*reject\\s*(\\s*)"));
     if (reject)
-        qInfo() << "已过滤:" << filterText;
+        qInfo() << "已过滤:" << filterCode;
 
     if (reject && !s.contains("\\n")) // 拒绝，且不需要其他操作，直接返回
     {
@@ -2689,6 +2778,7 @@ bool CodeRunner::processFilter(QString filterText, const LiveDanmaku &danmaku)
         sendAutoMsg(s, danmaku);
     }
 
+    qDebug() << "过滤器结果：阻止=" << reject;
     return !reject;
 }
 

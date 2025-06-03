@@ -865,6 +865,66 @@ border-image: url(C:/Path/To/Image.png)
 | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | %n%  | 替换为换行符 `\n`，目前仅支持：`postData()`、`postJson()`、`writeTextFile()`、`appendFileLine()`、`sendToSockets()`、`sendToLastSocket()`、`runCommandLine()`、`sendLongText()` |
 
+### 代码展开
+
+目前只有一个：`#traverseJson(json_path, code)`，遍历 JSON 的指定内容，并展开为代码列表。
+
+用来遍历不确定的 JSON 数据，可以是 JSON 对象，或者 JSON 数组。
+
+参数说明：
+
+- path: 本程序语法中的 JSON 路径，不带`%`，如 `.data?.array?`，对应具体的对象或数组
+- code: 要执行的代码，需要进行转义：`%` 写作 `\%`，`\n` 写作 `%n%` 等
+
+如果是 JSON 数组：
+
+- `code` 中引用到的 JSON 数组索引使用 `\%i\%` 来获取（实际上`%i%` 也可以）
+
+如果是 JSON 对象：
+
+- `code` 中引用到的 JSON 键值对使用 `\%key\%` 来获取
+
+##### 示例：知识库列表
+
+使用 AI 检查不定数量的知识卡片，其JSON 格式：
+
+```json
+{
+    "type": "回答",
+    "msg": "测试内容",
+    "tip":"这是测试内容",
+    "knowledge":[
+        {"name": "知识1", "content": "这是知识1的内容"},
+        {"name": "知识2","content": "这是知识2的内容"},
+        {"name": "知识3","content": "这是知识3的内容"}
+    ]
+}
+```
+
+如果需要展开显示所有 `knowledge` 中的内容：
+
+```
+#traverseJson(.knowledge, >localNotify(【\%.knowledge.\%i\%.name\%】\%.knowledge.\%i\%.content\%))
+```
+
+会展开为代码：
+
+```
+>localNotify(【%.knowledge.0.name%】%.knowledge.0.content%)\n\
+	>localNotify(【%.knowledge.1.name%】%.knowledge.1.content%)\n\
+	>localNotify(【%.knowledge.2.name%】%.knowledge.2.content%)
+```
+
+最后运行结果：
+
+```
+【知识1】这是知识1的内容
+【知识2】这是知识2的内容
+【知识3】这是知识3的内容
+```
+
+
+
 ### 函数计算
 
 按指定格式，获取动态的数值，格式：`%>func(args)%`
@@ -919,6 +979,8 @@ border-image: url(C:/Path/To/Image.png)
 ```
 当前时间：%>time(yy-MM-dd hh:mm)%
 ```
+
+#### 
 
 ### 四则运算
 

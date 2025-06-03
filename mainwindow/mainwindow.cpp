@@ -3718,6 +3718,24 @@ void MainWindow::on_testDanmakuButton_clicked()
             musicWindow->slotSearchAndAutoAppend("5", "测试用户");
         }
     }
+    else if (text == "遍历JSON")
+    {
+        QString code = R"(
+{
+    "type": "回答",
+    "msg": "测试内容",
+    "tip":"这是测试内容",
+    "knowledge":[
+        {"name": "知识1", "content": "这是知识1的内容"},
+        {"name": "知识2","content": "这是知识2的内容"},
+        {"name": "知识3","content": "这是知识3的内容"}
+    ]
+}
+)";
+        LiveDanmaku danmaku("测试用户" + QString::number(r), text, uid, 12, QDateTime::currentDateTime(), "", "");
+        danmaku.extraJson = MyJson(code.toUtf8());
+        triggerCmdEvent("GPT_RESPONSE", danmaku);
+    }
     else
     {
         liveService->appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
