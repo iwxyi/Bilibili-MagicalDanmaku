@@ -149,6 +149,19 @@ QString CodeRunner::getCodeContentFromFile(QString name)
  */
 bool CodeRunner::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int channel, bool manual, bool delayMine)
 {
+    // 多段代码判断，在所有情况之前
+    if (msg.contains(QRegularExpression("^\\s*-{3,}\\s*$", QRegularExpression::MultilineOption)))
+    {
+        QStringList codes = msg.split(QRegularExpression("^\\s*-{3,}\\s*$", QRegularExpression::MultilineOption), QString::SkipEmptyParts);
+        bool hasSuccess = false;
+        foreach (QString code, codes)
+        {
+            if (sendVariantMsg(code, danmaku, channel, manual, delayMine))
+                hasSuccess = true;
+        }
+        return hasSuccess;
+    }
+    
     // 文件判断
     if (msg.contains("<file:"))
     {

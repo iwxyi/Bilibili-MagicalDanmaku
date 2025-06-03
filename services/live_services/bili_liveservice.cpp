@@ -1146,7 +1146,7 @@ void BiliLiveService::updateOnlineGoldRank()
     get(url, [=](QJsonObject json){
         if (_upUid != ac->upUid)
         {
-            qWarning() << "已切换直播间，忽略高能榜结果";
+            qWarning() << "已切换直播间，忽略高能榜结果。之前：" << _upUid << "，之后：" << ac->upUid;
             return ;
         }
         QStringList names;
