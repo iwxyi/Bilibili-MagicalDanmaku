@@ -1754,9 +1754,10 @@ QString CodeRunner::replaceDanmakuJson(const QString &keySeq, const QJsonObject 
  */
 QString CodeRunner::traverseJsonCode(const QString &keySeq, const QString &code, const QJsonObject &json) const
 {
-    qDebug() << "遍历JSON：" << keySeq << code;
     // 解析JSON
     QJsonValue jv = getJsonValueByKeySeq(keySeq, json);
+    if (!jv.isNull())
+        qDebug() << "遍历JSON：" << keySeq << code;
     QStringList codes;
     if (jv.isArray())
     {

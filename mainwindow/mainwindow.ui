@@ -7526,7 +7526,7 @@ margin: 40px;</string>
 font-weight: 500;</string>
                </property>
                <property name="text">
-                <string>粉丝档案</string>
+                <string>AI粉丝档案</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>

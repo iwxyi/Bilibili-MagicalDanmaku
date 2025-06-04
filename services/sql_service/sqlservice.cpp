@@ -523,7 +523,7 @@ QString SqlService::getNextFansArchive()
     // 获取当前正在活跃的用户
     // 要求：
     // - 处理过，即档案表中存在的
-    // - 未处理弹幕超过上限（100条）
+    // - 未处理弹幕超过上限（50条）
     static QString getActiveFansSql = R"(
 WITH update_candidates AS (
   SELECT 
@@ -534,7 +534,7 @@ WITH update_candidates AS (
     ON d.uid = fa.uid 
     AND d.create_time > fa.update_time
   GROUP BY d.uid
-  HAVING COUNT(*) > 100
+  HAVING COUNT(*) > 50
 )
 SELECT 
   uc.uid,
@@ -697,6 +697,41 @@ QList<MyJson> SqlService::getUserDanmakuList(const QString &uid, qint64 startTim
         item.insert("uname", query.value("uname").toString());
         item.insert("uid", query.value("uid").toString());
         item.insert("msg", query.value("msg").toString());
+        item.insert("create_time", query.value("create_time").toDateTime().toString(Qt::ISODate));
+        result.append(item);
+    }
+    return result;
+}
+
+/**
+ * 获取指定用户的最近礼物记录
+ * @param uid 用户ID
+ * @param startTime 开始时间，一直到最新一条
+ * @return 包含礼物信息的QList<QJsonObject>。如果未找到返回空列表
+ */
+QList<MyJson> SqlService::getUserGiftList(const QString &uid, qint64 startTime, int maxCount)
+{
+    QList<MyJson> result;
+    QSqlQuery query;
+    query.prepare("SELECT uname, uid, gift_name, gift_id, number, total_coin, create_time FROM gift WHERE uid = ? AND create_time >= ? ORDER BY create_time DESC LIMIT ?");
+    query.addBindValue(uid);
+    query.addBindValue(startTime);
+    query.addBindValue(maxCount);
+
+    if (!query.exec())
+    {
+        qWarning() << "执行SQL语句失败：" << query.lastError() << query.executedQuery();
+    }
+
+    while (query.next())
+    {
+        MyJson item;
+        item.insert("uname", query.value("uname").toString());
+        item.insert("uid", query.value("uid").toString());
+        item.insert("gift_name", query.value("gift_name").toString());
+        item.insert("gift_id", query.value("gift_id").toString());
+        item.insert("number", query.value("number").toInt());
+        item.insert("total_coin", query.value("total_coin").toInt());
         item.insert("create_time", query.value("create_time").toDateTime().toString(Qt::ISODate));
         result.append(item);
     }
