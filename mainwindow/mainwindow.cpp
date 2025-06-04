@@ -11257,6 +11257,12 @@ void MainWindow::on_refreshFansArchivesButton_clicked()
 
 void MainWindow::on_clearFansArchivesButton_clicked()
 {
+    if (!fansArchivesService)
+    {
+        QMessageBox::warning(this, "粉丝档案", "功能尚未开启");
+        return;
+    }
+
     newFacileMenu;
     menu->addAction("清除当前直播间的档案", [&]{
         fansArchivesService->clearFansArchivesByRoomId(ac->roomId);

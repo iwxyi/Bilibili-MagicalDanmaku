@@ -2,7 +2,7 @@
 #include <QApplication>
 // #include <QBreakpadHandler.h>
 #include "dlog.h"
-
+#include "signaltransfer.h"
 #ifdef Q_OS_WIN32
 // #include <dbghelp.h>
 /**
@@ -38,6 +38,7 @@ UserSettings* us;
 AccountInfo* ac;
 PlatformInfo* pl;
 CodeRunner* cr;
+SignalTransfer* st;
 
 int main(int argc, char *argv[])
 {
@@ -66,6 +67,7 @@ int main(int argc, char *argv[])
 
     rt = new RuntimeInfo;
     us = nullptr;
+    st = new SignalTransfer;
     ac = new AccountInfo;
     pl = new PlatformInfo;
     cr = new CodeRunner;

@@ -2,6 +2,7 @@
 #include "myjson.h"
 #include "chatgptutil.h"
 #include "fileutil.h"
+#include "signaltransfer.h"
 
 #define INTERVAL_WORK 3000
 #define INTERVAL_WAIT 60000
@@ -64,13 +65,14 @@ void FansArchivesService::onTimer()
 
     // 获取未处理的弹幕
     QList<MyJson> danmakuList = sqlService->getUserDanmakuList(uid, startTime, 100);
-    QString lastUname;
     if (danmakuList.isEmpty())
     {
         qWarning() << "没有找到未处理的弹幕";
         return;
     }
+    QString lastUname;
     QStringList danmakuListStr;
+    LiveDanmaku lastDanmaku = danmakuList.first();
     foreach (MyJson danmaku, danmakuList)
     {
         if (lastUname.isEmpty())
@@ -82,11 +84,12 @@ void FansArchivesService::onTimer()
 
     // 组合发送的文本
     QString prompt = readTextFile(":/documents/archives_prompt");
+    emit st->replaceDanmakuVariables(&prompt, lastDanmaku);
 
     QString sendText;
     if (!archive.isEmpty())
     {
-        sendText += "以下是当前已有的档案，请根据该档案，结合近期的弹幕内容，更新档案内容并生成新的档案：\n\n" + archive.s("archive");
+        sendText += "以下是当前已有的档案，请根据该档案，结合近期的弹幕内容，更新档案内容并生成新的档案：\n\n```\n" + archive.s("archive") + "```\n\n";
     }
 
     sendText += "以下是近期的弹幕内容，请结合弹幕更新档案内容：\n\n```\n" + danmakuListStr.join("\n") + "\n```";

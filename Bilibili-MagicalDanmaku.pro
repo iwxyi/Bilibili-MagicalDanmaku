@@ -242,6 +242,7 @@ HEADERS += \
     global/debounce.h \
     global/platforminfo.h \
     global/runtimeinfo.h \
+    global/signaltransfer.h \
     global/usersettings.h \
     services/chat_service/chatservice.h \
     services/code_runner/chatgptmanager.h \
