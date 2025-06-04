@@ -58,7 +58,7 @@
 #include "voice_service/voiceservice.h"
 #include "chat_service/chatservice.h"
 #include "emailutil.h"
-#include "fans_archives/fansarchivesservice.h"
+#include "fansarchivesservice.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

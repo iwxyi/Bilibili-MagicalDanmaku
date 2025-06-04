@@ -20,7 +20,6 @@
 
 
 class LiveDanmaku;
-class FansDanmakuWaitBean;
 
 enum LivePlatform
 {
