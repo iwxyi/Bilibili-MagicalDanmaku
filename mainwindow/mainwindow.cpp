@@ -8515,7 +8515,9 @@ void MainWindow::initFansArchivesService()
         // 如果是第一个，刷新之后，自动选中第一个；
         // 如更哦不是第一个，那么自动恢复至原先选中的UID
         int selectRow = ui->fansArchivesTableView->currentIndex().row();
-        QString selectUid = ui->fansArchivesTableView->model()->index(selectRow, 0).data().toString();
+        QString selectUid;
+        if (selectRow != -1)
+            selectUid = ui->fansArchivesTableView->model()->index(selectRow, 0).data().toString();
         
         updateFansArchivesListView();
 
