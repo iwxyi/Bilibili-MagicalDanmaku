@@ -11,9 +11,15 @@
 #include "fileutil.h"
 #include "ImageSimilarityUtil.h"
 #include "netutil.h"
+#include "signaltransfer.h"
 
 CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
 {
+    // 全局替换
+    connect(st, &SignalTransfer::replaceDanmakuVariables, this, [=](QString* text, const LiveDanmaku& danmaku) {
+        *text = processDanmakuVariants(*text, danmaku);
+    });
+    
     // 等待通道
     for (int i = 0; i < CHANNEL_COUNT; i++)
         msgWaits[i] = WAIT_CHANNEL_MAX;
@@ -1421,6 +1427,8 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return ac->roomId;
     else if (key == "%room_name%" || key == "%room_title%")
         return toSingleLine(ac->roomTitle);
+    else if (key == "%room_desc%")
+        return toSingleLine(ac->roomDescription);
 //        return ac->roomTitle;
     else if (key == "%up_name%" || key == "%up_uname%")
         return ac->upName;
@@ -1746,9 +1754,10 @@ QString CodeRunner::replaceDanmakuJson(const QString &keySeq, const QJsonObject 
  */
 QString CodeRunner::traverseJsonCode(const QString &keySeq, const QString &code, const QJsonObject &json) const
 {
-    qDebug() << "遍历JSON：" << keySeq << code;
     // 解析JSON
     QJsonValue jv = getJsonValueByKeySeq(keySeq, json);
+    if (!jv.isNull())
+        qDebug() << "遍历JSON：" << keySeq << code;
     QStringList codes;
     if (jv.isArray())
     {

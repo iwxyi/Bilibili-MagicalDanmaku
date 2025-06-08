@@ -20,6 +20,7 @@
 #include "qxtglobalshortcut.h"
 #endif
 #include "conditioneditor.h"
+#include "crontimer.h"
 
 #define CODE_EVENT_ACTION_KEY (QApplication::applicationName() + ":EventAction")
 
@@ -44,8 +45,8 @@ public slots:
     void triggerCmdEvent(QString cmd, LiveDanmaku danmaku);
     void triggerAction(LiveDanmaku danmaku);
     void autoResizeEdit() override;
-    void configShortcut();
-    void deleteShortcut();
+    void createSpecialFunction();
+    void deleteSpecialFunction();
 
 public:
     QLineEdit* eventEdit;
@@ -56,6 +57,7 @@ public:
 #if defined(ENABLE_SHORTCUT)
     QxtGlobalShortcut* shortcut = nullptr;
 #endif
+    CronTimer* cronTimer = nullptr;
 };
 
 #endif // EVENTWIDGET_H

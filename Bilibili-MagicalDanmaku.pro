@@ -100,7 +100,8 @@ INCLUDEPATH += \
     third_party/linear_check_box/ \
     third_party/mfaudioendpointcontrol_fixed/ \
     third_party/m3u8_downloader/ \
-    third_party/brotli/include/
+    third_party/brotli/include/ \
+    third_party/cron/
 
 SOURCES += \
     global/usersetting.cpp \
@@ -155,6 +156,8 @@ SOURCES += \
     third_party/brotli/enc/utf8_util.c \
     third_party/color_octree/coloroctree.cpp \
     third_party/color_octree/coloroctreeutil.cpp \
+    third_party/cron/cronparser.cpp \
+    third_party/cron/crontimer.cpp \
     third_party/facile_menu/facilemenu.cpp \
     third_party/facile_menu/facilemenuitem.cpp \
     third_party/gif/avilib.cpp \
@@ -242,6 +245,7 @@ HEADERS += \
     global/debounce.h \
     global/platforminfo.h \
     global/runtimeinfo.h \
+    global/signaltransfer.h \
     global/usersettings.h \
     services/chat_service/chatservice.h \
     services/code_runner/chatgptmanager.h \
@@ -332,6 +336,8 @@ HEADERS += \
     third_party/calculator/function.h \
     third_party/color_octree/coloroctree.h \
     third_party/color_octree/coloroctreeutil.h \
+    third_party/cron/cronparser.h \
+    third_party/cron/crontimer.h \
     third_party/facile_menu/facilemenu.h \
     third_party/facile_menu/facilemenuitem.h \
     third_party/gif/avilib.h \

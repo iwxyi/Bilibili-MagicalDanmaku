@@ -25,6 +25,7 @@ public:
     QString getNextFansArchive();
     MyJson getFansArchives(const QString &uid);
     QList<MyJson> getUserDanmakuList(const QString &uid, qint64 startTime, int maxCount = 100);
+    QList<MyJson> getUserGiftList(const QString &uid, qint64 startTime, int maxCount = 100);
     void clearFansArchivesAll();
     void clearFansArchivesByRoomId(const QString& roomId);
     void clearFansArchivesByNoRoom();

@@ -29,11 +29,11 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
 
     connect(check, &QCheckBox::stateChanged, this, [=]{
         if (isEnabled())
-            configShortcut();
-#if defined(ENABLE_SHORTCUT)
-        else if (shortcut)
-            deleteShortcut();
-#endif
+        {
+            createSpecialFunction();
+        }
+        else
+            deleteSpecialFunction();
     });
 
     connect(btn, &QPushButton::clicked, this, [=]{
@@ -43,14 +43,10 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
     // 启动时读取设置就会触发一次事件
     connect(eventEdit, &QLineEdit::textChanged, this, [=]{
         cmdKey = eventEdit->text().trimmed();
-        configShortcut();
+        createSpecialFunction();
     });
 
     connect(actionEdit, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)), this, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)));
-
-    /*connect(eventEdit, &QLineEdit::editingFinished, this, [=]{
-        configShortcut();
-    });*/
 
     connect(actionEdit, &QPlainTextEdit::textChanged, this, [=]{
         autoResizeEdit();
@@ -84,7 +80,6 @@ void EventWidget::fromJson(MyJson json)
     actionEdit->setPlainText(json.s("action"));
 
     cmdKey = eventEdit->text();
-    // configShortcut();
 }
 
 MyJson EventWidget::toJson() const
@@ -147,38 +142,72 @@ void EventWidget::autoResizeEdit()
     emit signalResized();
 }
 
-void EventWidget::configShortcut()
+void EventWidget::createSpecialFunction()
 {
+    if (!isEnabled())
+    {
+        return deleteSpecialFunction();
+    }
+
+    if (cmdKey.startsWith("TIME:") || cmdKey.startsWith("TIMER:"))
+    {
+        QString key = cmdKey.right(cmdKey.length() - 4).trimmed();
+        if (key.startsWith(":"))
+            key = key.mid(1);
+        if (key.isEmpty())
+            return deleteSpecialFunction();
+        if (!cronTimer)
+        {
+            cronTimer = new CronTimer(this);
+            connect(cronTimer, &CronTimer::timeout, this, [=](){
+                triggerAction(LiveDanmaku());
+            });
+        }
+        cronTimer->setCronExpression(key);
+        if (cronTimer->isValid())
+        {
+            cronTimer->start();
+        }
+        else
+        {
+            deleteSpecialFunction();
+        }
+    }
 #if defined(ENABLE_SHORTCUT)
-        // 判断快捷键
-        if (isEnabled() && cmdKey.startsWith("KEY:"))
+    // 判断快捷键
+    else if (cmdKey.startsWith("KEY:"))
+    {
+        QString key = cmdKey.right(cmdKey.length() - 4).trimmed();
+        if (key.isEmpty())
+            return disableSpecialFunction();
+        if (!shortcut)
         {
-            QString key = cmdKey.right(cmdKey.length() - 4).trimmed();
-            if (key.isEmpty())
-                return deleteShortcut();
-            if (!shortcut)
-            {
-                shortcut = new QxtGlobalShortcut(this);
-                connect(shortcut, &QxtGlobalShortcut::activated, this, [=](){
-                    triggerAction(LiveDanmaku());
-                });
-            }
-            shortcut->setShortcut(QKeySequence(key));
-            shortcut->setEnabled(isEnabled());
-            qInfo() << "注册快捷键：" << shortcut->shortcut();
+            shortcut = new QxtGlobalShortcut(this);
+            connect(shortcut, &QxtGlobalShortcut::activated, this, [=](){
+                triggerAction(LiveDanmaku());
+            });
         }
-        else if (shortcut)
-        {
-            deleteShortcut();
-        }
+        shortcut->setShortcut(QKeySequence(key));
+        shortcut->setEnabled(isEnabled());
+        qInfo() << "注册快捷键：" << shortcut->shortcut();
+    }
 #endif
 }
 
-void EventWidget::deleteShortcut()
+void EventWidget::deleteSpecialFunction()
 {
+    if (cronTimer)
+    {
+        cronTimer->stop();
+        cronTimer->deleteLater();
+        cronTimer = nullptr;
+    }
 #if defined(ENABLE_SHORTCUT)
-    qInfo() << "删除快捷键：" << shortcut->shortcut();
-    shortcut->deleteLater();
-    shortcut = nullptr;
+    else if (shortcut)
+    {
+        qInfo() << "删除快捷键：" << shortcut->shortcut();
+        shortcut->deleteLater();
+        shortcut = nullptr;
+    }
 #endif
 }
