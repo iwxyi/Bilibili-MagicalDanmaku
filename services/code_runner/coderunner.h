@@ -178,8 +178,8 @@ public:
     int liveTotalDanmaku = 0; // 本场直播的弹幕数量
 
     // 其他模块
-    OrderPlayerWindow* musicWindow;
-    WebServer* webServer;
+    OrderPlayerWindow* musicWindow = nullptr;
+    WebServer* webServer = nullptr;
 
     // 缓存
     QHash<QString, QImage> cacheImages;
