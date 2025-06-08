@@ -63,7 +63,7 @@ public:
     void setVoiceService(VoiceService* vs);
     void releaseData();
 
-    QString getCodeContentFromFile(QString name);
+    QString getCodeContentFromFile(QString name) const;
 
 signals:
     void signalTriggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug);
@@ -90,10 +90,11 @@ public slots:
 public:
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
     QString processTimeVariants(QString msg) const;
+    QString replaceCodeLanguage(QString code, const LiveDanmaku &danmaku, bool* ok);
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku danmaku);
     QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku);
-    QString replaceDanmakuVariants(const LiveDanmaku &danmaku, const QString& key, bool* ok) const;
-    QString generateCodeFunctions(const QString &funcName, const QString &args, const LiveDanmaku& danmaku, bool* ok);
+    QString replaceDanmakuVariants(const LiveDanmaku &danmaku, const QString& key, bool* ok);
+    QString generateCodeFunctions(const QString &funcName, const QString &args, const LiveDanmaku& danmaku, bool* ok) const;
     QString replaceDanmakuJson(const QString &keySeq, const QJsonObject& json, bool *ok) const;
     QString traverseJsonCode(const QString& keySeq, const QString& code, const QJsonObject& json) const;
     QString replaceDynamicVariants(const QString& funcName, const QString& args, const LiveDanmaku &danmaku);
@@ -172,7 +173,7 @@ public:
 
     // 弹幕记录
     const int debugLastCount = 20;
-    QStringList lastConditionDanmu;   // 替换变量后的代码
+    mutable QStringList lastConditionDanmu;   // 替换变量后的代码
     QStringList lastCandidateDanmaku; // 要执行的代码
     int robotTotalSendMsg = 0; // 机器人发送的弹幕数量
     int liveTotalDanmaku = 0; // 本场直播的弹幕数量

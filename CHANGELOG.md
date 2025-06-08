@@ -1,3 +1,15 @@
+### v5.3.1 [Cron 定时事件](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.3.1)
+
+- 粉丝档案新增观众消费能力分析
+- 新增 Cron 定时事件
+- 新增过滤器支持多个编程语言和代码文件
+- 修复过滤器在空代码时返回值错误的问题
+- 修复一些崩溃问题
+
+
+
+
+
 ### v5.3.0 [功能型AI](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.3.0)
 
 - 新增代码支持以本地文件的形式加载，可使用其他IDE来编写与管理
