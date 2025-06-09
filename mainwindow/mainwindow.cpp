@@ -708,7 +708,7 @@ void MainWindow::initObject()
     permissionText = us->value("mainwindow/permissionText", rt->asPlugin ? "Lite版" : permissionText).toString();
 
     // 10秒内不进行自动化操作
-    QTimer::singleShot(3000, [=]{
+    QTimer::singleShot(10000, [=]{
         rt->justStart = false;
     });
 

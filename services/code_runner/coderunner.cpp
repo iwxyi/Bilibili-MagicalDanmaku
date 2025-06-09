@@ -2768,7 +2768,7 @@ bool CodeRunner::isConditionTrue(T a, T b, QString op) const
 
 bool CodeRunner::isFilterRejected(QString filterName, const LiveDanmaku &danmaku)
 {
-    if (!enableFilter)
+    if (!enableFilter || rt->justStart)
         return false;
 
     qDebug() << "触发过滤器：" << filterName;
