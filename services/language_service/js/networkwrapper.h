@@ -16,12 +16,13 @@ public:
     explicit NetworkWrapper(QObject *parent = nullptr);
 
     Q_INVOKABLE QString fetch(const QString &url, const QVariantMap &options = QVariantMap());
-    Q_INVOKABLE QString get(const QString &url);
-    Q_INVOKABLE QString post(const QString &url, const QString &data);
+    Q_INVOKABLE QString get(const QString &url, const QVariantMap &options = QVariantMap());
+    Q_INVOKABLE QString post(const QString &url, const QString &data, const QVariantMap &options = QVariantMap());
 
 private:
     QNetworkAccessManager *manager;
     QString processReply(QNetworkReply *reply);
+    void setupRequest(QNetworkRequest &request, const QVariantMap &options);
 };
 
 #endif // NETWORKWRAPPER_H 

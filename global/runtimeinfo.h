@@ -36,7 +36,7 @@ public:
     LivePlatform livePlatform = Bilibili;
     bool asPlugin = false;
     bool asFreeOnly = false;
-    bool justStart = false; // 启动几秒内不进行发送，避免一些尴尬场景
+    bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
     bool isReconnect = false; // 是否是重连
 
     QHash<QString, QString> pinyinMap; // 拼音

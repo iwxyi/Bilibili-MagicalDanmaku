@@ -710,6 +710,7 @@ void MainWindow::initObject()
     // 10秒内不进行自动化操作
     QTimer::singleShot(10000, [=]{
         rt->justStart = false;
+        qInfo() << "启动等待时长结束，开始自动化操作";
     });
 
     // 读取拼音
