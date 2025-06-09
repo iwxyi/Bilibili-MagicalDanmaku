@@ -8,13 +8,23 @@
  */
 void BiliLiveService::slotBinaryMessageReceived(const QByteArray &message)
 {
+    static bool processing = false;
+    static QByteArray lastMessage = "";
+
     int operation = ((uchar)message[8] << 24)
             + ((uchar)message[9] << 16)
             + ((uchar)message[10] << 8)
             + ((uchar)message[11]);
     QByteArray body = message.right(message.length() - 16);
     SOCKET_DEB << "操作码=" << operation << "  大小=" << body.size() << "  正文=" << (body.left(1000)) << "...";
+    if (body == lastMessage && processing)
+    {
+        qWarning() << "忽略时间循环引起的网络波动";
+        return;
+    }
+    lastMessage = body;
 
+    processing = true;
     QJsonParseError error;
     QJsonDocument document = QJsonDocument::fromJson(body, &error);
     MyJson json;
@@ -88,6 +98,7 @@ void BiliLiveService::slotBinaryMessageReceived(const QByteArray &message)
     }
 //    delete[] body.data();
 //    delete[] message.data();
+    processing = false;
     SOCKET_DEB << "消息处理结束";
 }
 
