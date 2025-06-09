@@ -3157,7 +3157,35 @@ heaps.write("test", "222")
 console.log(heaps.read("test"))
 ```
 
+##### 网络连接
 
+由于嵌入的 JS 引擎并不支持许多原生 JS 模块，网络连接与原生 JS 略有不同。
+
+```JS
+// GET 请求
+let response = get("https://api.example.com/data");
+
+// POST 请求
+let response = post("https://api.example.com/submit", JSON.stringify({key: "value"}));
+
+// 使用 fetch 进行更复杂的请求
+let response = fetch("https://api.example.com/data", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({key: "value"})
+});
+```
+
+示例：获取直播间标题
+
+```js
+js:
+let response = get("https://api.live.bilibili.com/room/v1/Room/get_info?room_id=1");
+let data = JSON.parse(response);
+console.log(data.data.title)
+```
 
 #### Lua语言
 

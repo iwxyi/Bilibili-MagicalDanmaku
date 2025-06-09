@@ -111,6 +111,7 @@ SOURCES += \
     services/code_runner/coderunner.cpp \
     services/ai_analysis_service/fansarchivesservice.cpp \
     services/language_service/js/jsengine.cpp \
+    services/language_service/js/networkwrapper.cpp \
     services/language_service/lua/luaengine.cpp \
     services/language_service/python/pythonengine.cpp \
     services/live_services/bili_livecmds.cpp \
@@ -253,6 +254,7 @@ HEADERS += \
     services/entities/emoticon.h \
     services/entities/entities.h \
     services/ai_analysis_service/fansarchivesservice.h \
+    services/language_service/js/networkwrapper.h \
     services/language_service/python/pythonengine.h \
     services/language_service/wrapper/danmakuwrapper.h \
     services/language_service/js/jsconsole.h \

@@ -7,6 +7,7 @@
 #include "livedanmaku.h"
 #include "jsconsole.h"
 #include "languageservicebase.h"
+#include "networkwrapper.h"
 
 class JSEngine : public LanguageServiceBase
 {
@@ -26,6 +27,7 @@ signals:
 private:
     QJSEngine *engine = nullptr;
     JsConsole *console = nullptr;
+    NetworkWrapper *network = nullptr;
 };
 
 #endif // JSENGINE_H
