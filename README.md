@@ -3221,6 +3221,8 @@ end
 ```
 
 > `应用数据路径` 如果是绿色版，那么就是安装路径；如果是单文件版，那么按照系统设置会不同。
+>
+> 默认全局python不支持第三方库，例如网络库requests，请参考下方虚拟环境。
 
 ##### Python示例
 
@@ -3316,7 +3318,48 @@ except configparser.Error as e:
     print(f"Error Settings INI file: {e}")
 ```
 
+##### 使用Python虚拟环境
 
+通过Python的虚拟环境，可以为插件安装单独版本的第三方库，与其他项目不冲突。
+
+```
+cd [神奇弹幕的codes文件夹]
+
+# 创建虚拟环境
+python -m venv venv
+
+# 2. 激活虚拟环境
+# Windows:
+venv\scripts\activate
+# Linux/macOS:
+source venv/bin/activate
+
+# 3. 在虚拟环境中安装包
+pip install package-name
+
+# 4. 退出虚拟环境
+deactivate
+```
+
+##### 指定命令行exe
+
+支持使用命令行运行的程序，调用形式如 `python [文件路径]` 这样的命令（暂不支持带其他参数）。
+
+使用语法规则 `exec:[exe路径]:` 开头来指定要调用的命令，以指定虚拟环境的 Python 为例（Mac上）：
+
+```python
+exec:/Users/iwxyi/Library/Application Support/LanYiXi/神奇弹幕/codes/venv/bin/python:
+import sys
+print(">localNotify(111111)")
+```
+
+由于路径过长，以及给大家确定一个通用路径，添加了统一的变量替换 `<codes>` 来指定为 `数据路径/codes` 文件夹，例如上述代码可以写为：
+
+```python
+exec:<codes>/venv/bin/python:
+import sys
+print(">localNotify(111111)")
+```
 
 #### 从代码文件导入
 

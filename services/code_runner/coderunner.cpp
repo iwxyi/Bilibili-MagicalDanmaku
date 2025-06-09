@@ -701,46 +701,40 @@ QString CodeRunner::replaceCodeLanguage(QString code, const LiveDanmaku& danmaku
     }
 
     // 判断是否是自定义编程语言
-    if (msg.startsWith("var:"))
+    QRegularExpressionMatch match;
+    if (msg.contains(QRegularExpression("^\\s*var:\\s*", QRegularExpression::CaseInsensitiveOption), &match)) // 替换变量
     {
-        QString code = msg.mid(4);
+        QString code = msg.mid(match.capturedLength());
         code = processDanmakuVariants(code, danmaku);
         return code;
     }
-    else if (msg.startsWith("js:"))
+    else if (msg.contains(QRegularExpression("^\\s*(js|javascript):\\s*", QRegularExpression::CaseInsensitiveOption), &match))
     {
-        QString code = msg.mid(3);
+        QString code = msg.mid(match.capturedLength());
         QString result = jsEngine->runCode(danmaku, code);
         return result;
     }
-    else if (msg.startsWith("javascript:"))
+    else if (msg.contains(QRegularExpression("^\\s*lua:\\s*", QRegularExpression::CaseInsensitiveOption), &match))
     {
-        QString code = msg.mid(11);
-        QString result = jsEngine->runCode(danmaku, code);
-        return result;
-    }
-    else if (msg.startsWith("lua:"))
-    {
-        QString code = msg.mid(4);
+        QString code = msg.mid(match.capturedLength());
         QString result = luaEngine->runCode(danmaku, code);
         return result;
     }
-    else if (msg.startsWith("python:"))
+    else if (msg.contains(QRegularExpression("^\\s*(python|python3|py|py3):\\s*", QRegularExpression::CaseInsensitiveOption), &match))
     {
-        QString code = msg.mid(7);
-        QString result = pythonEngine->runCode(danmaku, "python", code);
+        QString exeName = match.captured(1);
+        if (exeName == "py") exeName = "python";
+        else if (exeName == "py3") exeName = "python3";
+        QString code = msg.mid(match.capturedLength());
+        QString result = pythonEngine->runCode(danmaku, exeName, code);
         return result;
     }
-    else if (msg.startsWith("python3:"))
+    else if (msg.contains(QRegularExpression("^\\s*exec:(.+?):\\s*", QRegularExpression::CaseInsensitiveOption), &match))
     {
-        QString code = msg.mid(8);
-        QString result = pythonEngine->runCode(danmaku, "python3", code);
-        return result;
-    }
-    else if (msg.startsWith("py:"))
-    {
-        QString code = msg.mid(3);
-        QString result = pythonEngine->runCode(danmaku, "python", code);
+        QString exePath = match.captured(1);
+        exePath.replace("<codes>", rt->dataPath + "codes");
+        QString code = msg.mid(match.capturedLength());
+        QString result = pythonEngine->runCode(danmaku, exePath, code);
         return result;
     }
 
