@@ -1,0 +1,13 @@
+{
+    "author": "小乂",
+	"list": [
+		{
+			"name": "AI弹幕",
+            "url": "index.html",
+            "config": "config.html",
+			"css": "index.css",
+			"css_custom": "index_custom.css",
+			"desc": "基于“功能型AI”的智能弹幕，自动过滤、智能样式"
+		}
+	]
+}
