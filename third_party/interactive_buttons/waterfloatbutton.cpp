@@ -5,7 +5,6 @@ WaterFloatButton::WaterFloatButton(QWidget *parent) : InteractiveButtonBase(pare
 {
     fore_enabled = false;
     fore_paddings.left = fore_paddings.right = radius;
-    setAutoTextColor(false);
 }
 
 WaterFloatButton::WaterFloatButton(QString s, QWidget *parent) : InteractiveButtonBase(s, parent),
@@ -153,10 +152,6 @@ void WaterFloatButton::paintEvent(QPaintEvent *event)
                     text_color.green() + (aim_color.green() - text_color.green()) * pro / 100,
                     text_color.blue() + (aim_color.blue() - text_color.blue()) * pro / 100,
                     255);
-            }
-            else
-            {
-                color = text_color;
             }
             painter.setPen(color);
         }

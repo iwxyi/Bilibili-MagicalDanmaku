@@ -1,4 +1,5 @@
 #include "waterfallbuttongroup.h"
+#include <QStyleOption>
 
 WaterFallButtonGroup::WaterFallButtonGroup(QWidget *parent)
     : QWidget(parent),
@@ -14,86 +15,148 @@ WaterFallButtonGroup::WaterFallButtonGroup(QWidget *parent)
 
 void WaterFallButtonGroup::initStringList(QStringList list, QStringList selected)
 {
-    clearButtons();
     foreach (QString s, list)
     {
-        if (s.trimmed().isEmpty())
-            continue;
         addButton(s, selected.contains(s));
     }
-    updateButtonPositions();
 }
 
+/**
+ * 选择指定项
+ * 会清除已有的选择
+ */
 void WaterFallButtonGroup::setSelects(QStringList list)
 {
+    selectable = true;
     foreach (InteractiveButtonBase *btn, btns)
     {
         if (btn->getText().isEmpty())
             continue;
         if (list.contains(btn->getText()) && !btn->getState())
-            selectBtn(btn);
+            changeBtnSelect(btn);
         else if (!list.contains(btn->getText()) && btn->getState())
-            selectBtn(btn);
+            changeBtnSelect(btn);
     }
 }
 
-void WaterFallButtonGroup::addButton(QString s, bool selected)
+void WaterFallButtonGroup::setSelect(QString text)
+{
+    foreach (InteractiveButtonBase *btn, btns)
+    {
+        if (btn->getText() == text)
+        {
+            changeBtnSelect(btn);
+            break;
+        }
+    }
+}
+
+void WaterFallButtonGroup::setSelect(int index)
+{
+    if (index < 0 || index >= btns.size())
+        return;
+
+    changeBtnSelect(btns.at(index));
+}
+
+WaterFloatButton* WaterFallButtonGroup::addButton(QString s, bool selected)
+{
+    return addButton(s, QColor(), selected);
+}
+
+WaterFloatButton* WaterFallButtonGroup::addButton(QString s, QColor c, bool selected)
 {
     WaterFloatButton* btn = new WaterFloatButton(s, this);
     btn->setFixedForeSize();
+    setBtnColors(btn);
     btn->show();
-    setBtnColors(btn);
     btns.append(btn);
 
     if (selected)
-        selectBtn(btn);
+        changeBtnSelect(btn);
 
     btn->setAutoTextColor(false);
+    if (c.isValid())
+        btn->setTextColor(c);
     connect(btn, &InteractiveButtonBase::clicked, this, [=]{
-        if (!selectable)
-            return ;
+        slotButtonClicked(btn);
+    });
 
-        selectBtn(btn);
+    btn->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(btn, &InteractiveButtonBase::customContextMenuRequested, this, [=](QPoint){
+        emit signalRightClicked(s);
+    });
+    /* connect(btn, &InteractiveButtonBase::rightClicked, this, [=]{
+        emit signalRightClicked(s);
+    }); */
+}
+
+void WaterFallButtonGroup::slotButtonClicked(InteractiveButtonBase* btn)
+{
+    QString s = btn->getText();
+    if (selectable)
+    {
+        if (single_select) // 单选，只选择它
+        {
+            if (btn->getState()) // 已经选择了，则不进行处理
+                return;
+
+            // 取消所有选择
+            foreach (auto btn, btns)
+            {
+                if (btn->getState())
+                    unselectBtn(btn);
+            }
+
+            // 只选择它
+            selectBtn(btn);
+        }
+        else // 多选，那么可以取消选择
+        {
+            changeBtnSelect(btn);
+        }
+
         if (btn->getState())
             emit signalSelected(s);
         else
             emit signalUnselected(s);
-    });
+        emit signalSelectChanged();
+    }
+    else
+    {
+        emit signalClicked(s);
+    }
 }
 
-void WaterFallButtonGroup::addButton(QString s, QColor c, bool selected)
+QStringList WaterFallButtonGroup::getSelectedTexts() const
 {
-    WaterFloatButton* btn = new WaterFloatButton(s, this);
-    btn->setFixedForeSize();
-    setBtnColors(btn);
-    btns.append(btn);
-
-    if (selected)
-        selectBtn(btn);
-
-    btn->setAutoTextColor(false);
-    btn->setTextColor(c);
-    connect(btn, &InteractiveButtonBase::clicked, this, [=]{
-        if (!selectable)
-            return ;
-        selectBtn(btn);
-        if (btn->getState())
-            emit signalSelected(s);
-        else
-            emit signalUnselected(s);
-    });
+    QStringList results;
+    for (int i = 0; i < btns.size(); i++)
+    {
+        if (btns.at(i)->getState())
+            results.append(btns.at(i)->getText());
+    }
+    return results;
 }
 
-void WaterFallButtonGroup::clearButtons()
+QList<int> WaterFallButtonGroup::getSelectedIndexes() const
 {
-    foreach (InteractiveButtonBase* btn, btns)
-        btn->deleteLater();
+    QList<int> results;
+    for (int i = 0; i < btns.size(); i++)
+    {
+        if (btns.at(i)->getState())
+            results.append(i);
+    }
+    return results;
+}
+
+void WaterFallButtonGroup::clear()
+{
+    for (int i = 0; i < btns.size(); i++)
+    {
+        btns.at(i)->deleteLater();
+    }
     btns.clear();
-}
-
-void WaterFallButtonGroup::setSelecteable(bool en)
-{
-    this->selectable = en;
 }
 
 void WaterFallButtonGroup::setColors(QColor normal_bg, QColor hover_bg, QColor press_bg, QColor selected_bg, QColor normal_ft, QColor selected_ft)
@@ -107,23 +170,40 @@ void WaterFallButtonGroup::setColors(QColor normal_bg, QColor hover_bg, QColor p
         this->selected_ft = selected_ft;
     else
         selected_ft = getReverseColor(selected_bg);
+}
 
-    foreach (InteractiveButtonBase* btn, btns)
+void WaterFallButtonGroup::setSelectedColor(QColor color)
+{
+    this->selected_bg = color;
+}
+
+void WaterFallButtonGroup::updateBtnColors()
+{
+    foreach (InteractiveButtonBase *btn, btns)
     {
-        btn->setTextColor(normal_ft);
-        btn->setBgColor(normal_bg);
-        btn->setBgColor(hover_bg, press_bg);
+        setBtnColors(btn);
     }
 }
 
-void WaterFallButtonGroup::setMouseColor(QColor hover_bg, QColor press_bg)
+int WaterFallButtonGroup::count() const
 {
-    this->hover_bg = hover_bg;
-    this->press_bg = press_bg;
-    foreach (InteractiveButtonBase* btn, btns)
-    {
-        btn->setBgColor(hover_bg, press_bg);
-    }
+    return btns.size();
+}
+
+QList<InteractiveButtonBase *> WaterFallButtonGroup::getButtons() const
+{
+    return btns;
+}
+
+void WaterFallButtonGroup::setSelectable(bool enable)
+{
+    this->selectable = enable;
+}
+
+void WaterFallButtonGroup::setSingleSelect(bool enable)
+{
+    this->single_select = enable;
+    setSelectable(true);
 }
 
 void WaterFallButtonGroup::updateButtonPositions()
@@ -160,6 +240,14 @@ void WaterFallButtonGroup::resizeEvent(QResizeEvent *event)
     QWidget::resizeEvent(event);
 }
 
+void WaterFallButtonGroup::paintEvent(QPaintEvent *event)
+{
+    QStyleOption opt;
+    opt.init(this);
+    QPainter p(this);
+    style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+}
+
 QColor WaterFallButtonGroup::getReverseColor(QColor color)
 {
     return QColor(
@@ -185,17 +273,26 @@ void WaterFallButtonGroup::setBtnColors(InteractiveButtonBase *btn)
     btn->setBgColor(hover_bg, press_bg);
 }
 
+void WaterFallButtonGroup::changeBtnSelect(InteractiveButtonBase *btn)
+{
+    if (btn->getState()) // 已选中，取消选中
+    {
+        unselectBtn(btn);
+    }
+    else // 未选中，进行选中
+    {
+        selectBtn(btn);
+    }
+}
+
 void WaterFallButtonGroup::selectBtn(InteractiveButtonBase *btn)
 {
-    btn->setState(!btn->getState());
-    if (btn->getState()) // 选中
-    {
-        btn->setBgColor(selected_bg);
-//        btn->setTextColor(selected_ft);
-    }
-    else
-    {
-        btn->setBgColor(normal_bg);
-//        btn->setTextColor(normal_ft);
-    }
+    btn->setState(true);
+    btn->setBgColor(selected_bg);
+}
+
+void WaterFallButtonGroup::unselectBtn(InteractiveButtonBase *btn)
+{
+    btn->setState(false);
+    btn->setBgColor(normal_bg);
 }
