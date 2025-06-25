@@ -1,0 +1,277 @@
+/* ===== 基础样式 ===== */
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===== 弹幕列表容器 ===== */
+#danmu-list {
+    position: relative;
+    margin: 20px;
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    height: auto;
+}
+
+/* ===== 弹幕项样式 ===== */
+#danmu-list li {
+    position: absolute;
+    left: 0;
+    right: 0;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-out;
+    will-change: transform, opacity;
+    transform-origin: top center;
+}
+
+/* ===== 弹幕行样式 ===== */
+.msg_line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    flex-shrink: 0;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    pointer-events: none;
+}
+
+/* 显示昵称时的样式 */
+.msg_line.show-info {
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.msg_line.show-info .msg_line_info {
+    margin-top: 4px;
+}
+
+.msg_line.show-info .msg_line_bubble {
+    margin-top: 4px;
+}
+
+/* ===== 头像样式 ===== */
+.msg_line_avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.msg_line.show-info .msg_line_avatar {
+    width: 48px;
+    height: 48px;
+}
+
+.msg_line_avatar_small {
+    width: 32px;
+    height: 32px;
+}
+
+.msg_line_avatar_img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ===== 用户信息样式 ===== */
+.msg_line_info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.msg_line_info_row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-left: 8px;
+}
+
+.msg_line_uname {
+    font-size: 14px;
+    color: #666;
+}
+
+/* ===== 粉丝勋章样式 ===== */
+.fans-medal-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 2px 8px;
+}
+
+.fans-medal-label {
+    font-size: 12px;
+    color: #666;
+}
+
+.fans-medal-level {
+    font-size: 12px;
+    color: #ff9500;
+    margin-left: 4px;
+}
+
+/* ===== 舰长图标样式 ===== */
+.medal-guard {
+    width: 20px;
+    height: 20px;
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* ===== 弹幕内容样式 ===== */
+.msg_line_content {
+    flex: 1;
+    min-width: 0;
+    padding-left: 8px;
+}
+
+.msg_line_bubble {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    padding: 8px 16px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+}
+
+.msg_line_bubble_arrow {
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right: 6px solid rgba(255, 255, 255, 0.9);
+}
+
+.msg_line_bubble_content {
+    display: flex;
+    align-items: center;
+}
+
+.msg_line_text {
+    font-size: 16px;
+    color: #333;
+    word-break: break-all;
+    line-height: 1.4;
+    display: inline-block;
+}
+
+.msg_line_pure_text {
+    padding: 8px 12px;
+}
+
+/* ===== 测试按钮样式 ===== */
+#test-danmu-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 20px;
+    color: #333;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+#test-danmu-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#test-danmu-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== 动画定义 ===== */
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-20px); }
+}
+
+/* 移除动画类 */
+.msg_line.removing {
+    animation: fadeOut 0.3s ease-in forwards;
+    pointer-events: none;
+}
+
+/* 连续弹幕样式 - 添加在最后以确保优先级 */
+.danmaku-item.continuous .msg_line {
+    padding-left: 0 !important;
+    gap: 0 !important;
+}
+
+.danmaku-item.continuous .msg_line_avatar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.danmaku-item.continuous .msg_line_info {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.danmaku-item.continuous .msg_line_content {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.danmaku-item.continuous .msg_line_bubble {
+    margin-left: 0 !important;
+}
+
+.danmaku-item.continuous .msg_line_bubble_arrow {
+    display: none !important;
+}
+
+/* 移除之前的移动动画相关样式 */
+.msg_line.moving,
+#danmu-list li.moving {
+    transform: none;
+}

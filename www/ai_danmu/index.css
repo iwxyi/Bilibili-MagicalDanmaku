@@ -1,277 +1,155 @@
-/* ===== 基础样式 ===== */
-body {
+/* 弹幕容器样式 */
+#danmu-list {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    width: calc(100% - 40px);
+    max-width: 800px;
     margin: 0;
     padding: 0;
-    overflow: hidden;
-    background: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-/* ===== 弹幕列表容器 ===== */
-#danmu-list {
-    position: relative;
-    margin: 20px;
     list-style: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    min-height: 0;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    height: auto;
-}
-
-/* ===== 弹幕项样式 ===== */
-#danmu-list li {
-    position: absolute;
-    left: 0;
-    right: 0;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-out;
-    will-change: transform, opacity;
-    transform-origin: top center;
-}
-
-/* ===== 弹幕行样式 ===== */
-.msg_line {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 0;
-    flex-shrink: 0;
-    will-change: transform, opacity;
-    backface-visibility: hidden;
-    -webkit-font-smoothing: antialiased;
+    z-index: 9999;
     pointer-events: none;
 }
 
-/* 显示昵称时的样式 */
-.msg_line.show-info {
+/* 弹幕项样式 */
+.danmu-item {
+    position: relative;
+    display: flex;
     align-items: flex-start;
-    gap: 12px;
+    margin-bottom: 8px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: danmuEnter 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.msg_line.show-info .msg_line_info {
-    margin-top: 4px;
+.danmu-item.removing {
+    animation: danmuExit 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-.msg_line.show-info .msg_line_bubble {
-    margin-top: 4px;
-}
-
-/* ===== 头像样式 ===== */
-.msg_line_avatar {
+/* 头像样式 */
+.danmu-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    overflow: hidden;
+    margin-right: 8px;
     flex-shrink: 0;
 }
 
-.msg_line.show-info .msg_line_avatar {
-    width: 48px;
-    height: 48px;
-}
-
-.msg_line_avatar_small {
-    width: 32px;
-    height: 32px;
-}
-
-.msg_line_avatar_img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* ===== 用户信息样式 ===== */
-.msg_line_info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+/* 右侧内容容器 */
+.danmu-content {
     flex: 1;
     min-width: 0;
 }
 
-.msg_line_info_row {
+/* 昵称行样式 */
+.danmu-user-info {
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    padding-left: 8px;
+    margin-bottom: 4px;
+    white-space: nowrap;
 }
 
-.msg_line_uname {
+/* 粉丝牌样式 */
+.danmu-medal {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+    font-size: 12px;
+    border: 1px solid;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+/* 昵称样式 */
+.danmu-nickname {
+    color: #fff;
     font-size: 14px;
-    color: #666;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+    margin-right: 6px;
 }
 
-/* ===== 粉丝勋章样式 ===== */
-.fans-medal-item {
-    display: flex;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 12px;
-    padding: 2px 8px;
-}
-
-.fans-medal-label {
-    font-size: 12px;
-    color: #666;
-}
-
-.fans-medal-level {
-    font-size: 12px;
-    color: #ff9500;
+/* 舰长图标样式 */
+.danmu-guard-icon {
+    width: 20px;
+    height: 20px;
     margin-left: 4px;
 }
 
-/* ===== 舰长图标样式 ===== */
-.medal-guard {
-    width: 20px;
-    height: 20px;
-    background-size: 20px 20px;
-    background-repeat: no-repeat;
-    background-position: center;
+/* 弹幕气泡样式 */
+.danmu-bubble {
     display: inline-block;
-    vertical-align: middle;
-}
-
-/* ===== 弹幕内容样式 ===== */
-.msg_line_content {
-    flex: 1;
-    min-width: 0;
-    padding-left: 8px;
-}
-
-.msg_line_bubble {
-    background: rgba(255, 255, 255, 0.9);
+    padding: 6px 12px;
     border-radius: 16px;
-    padding: 8px 16px;
-    position: relative;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    display: inline-block;
-}
-
-.msg_line_bubble_arrow {
-    position: absolute;
-    left: -6px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 0;
-    height: 0;
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-    border-right: 6px solid rgba(255, 255, 255, 0.9);
-}
-
-.msg_line_bubble_content {
-    display: flex;
-    align-items: center;
-}
-
-.msg_line_text {
-    font-size: 16px;
-    color: #333;
-    word-break: break-all;
-    line-height: 1.4;
-    display: inline-block;
-}
-
-.msg_line_pure_text {
-    padding: 8px 12px;
-}
-
-/* ===== 测试按钮样式 ===== */
-#test-danmu-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 8px 16px;
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    border-radius: 20px;
-    color: #333;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
     font-size: 14px;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-    z-index: 1000;
+    word-break: break-word;
+    max-width: 100%;
 }
 
-#test-danmu-btn:hover {
-    background: rgba(255, 255, 255, 1);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+/* 动画定义 */
+@keyframes danmuEnter {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-#test-danmu-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+@keyframes danmuExit {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
 }
 
-/* ===== 动画定义 ===== */
-@keyframes slideIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+    #danmu-list {
+        left: 10px;
+        bottom: 10px;
+        width: calc(100% - 20px);
+    }
+    
+    .danmu-avatar {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .danmu-bubble {
+        font-size: 12px;
+        padding: 4px 10px;
+    }
+    
+    .danmu-nickname {
+        font-size: 12px;
+    }
+    
+    .danmu-medal {
+        font-size: 10px;
+        padding: 1px 4px;
+    }
+    
+    .danmu-item.continuous {
+        padding-left: 40px; /* 移动端头像宽度(32px) + 右边距(8px) */
+    }
 }
 
-@keyframes fadeOut {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(-20px); }
+/* 连续弹幕样式 */
+.danmu-item.continuous {
+    padding-left: 40px; /* 头像宽度(40px) + 右边距(8px) */
 }
 
-/* 移除动画类 */
-.msg_line.removing {
-    animation: fadeOut 0.3s ease-in forwards;
-    pointer-events: none;
-}
-
-/* 连续弹幕样式 - 添加在最后以确保优先级 */
-.danmaku-item.continuous .msg_line {
-    padding-left: 0 !important;
-    gap: 0 !important;
-}
-
-.danmaku-item.continuous .msg_line_avatar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-.danmaku-item.continuous .msg_line_info {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-.danmaku-item.continuous .msg_line_content {
-    margin-left: 0 !important;
-    padding-left: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-}
-
-.danmaku-item.continuous .msg_line_bubble {
-    margin-left: 0 !important;
-}
-
-.danmaku-item.continuous .msg_line_bubble_arrow {
-    display: none !important;
-}
-
-/* 移除之前的移动动画相关样式 */
-.msg_line.moving,
-#danmu-list li.moving {
-    transform: none;
+.danmu-item.continuous .danmu-content {
+    margin-left: 0;
 }
