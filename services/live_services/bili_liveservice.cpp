@@ -61,7 +61,6 @@ void BiliLiveService::releaseLiveData(bool prepare)
 void BiliLiveService::initWS()
 {
     liveSocket = new QWebSocket();
-
     connect(liveSocket, &QWebSocket::connected, this, [=]{
         SOCKET_DEB << "socket connected";
         emit signalStatusChanged("WS状态：已连接");
@@ -237,13 +236,13 @@ void BiliLiveService::getAccountByCookie(const QString& cookie)
 
         // 获取用户信息
         QJsonObject dataObj = json.value("data").toObject();
-        ac->cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
-        ac->cookieUname = dataObj.value("uname").toString();
-        qInfo() << "获取子账号信息：" << ac->cookieUid << ac->cookieUname;
+        QString uid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
+        QString uname = dataObj.value("uname").toString();
+        qInfo() << "获取子账号信息：" << uid << uname;
         
         SubAccount subAccount;
-        subAccount.uid = ac->cookieUid;
-        subAccount.nickname = ac->cookieUname;
+        subAccount.uid = uid;
+        subAccount.nickname = uname;
         subAccount.cookie = cookie;
         emit signalSubAccountChanged(cookie, subAccount);
     }, cookie);

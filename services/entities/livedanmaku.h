@@ -988,6 +988,7 @@ protected:
     QString coin_type;
     qint64 total_coin = 0;
     qint64 discount_price = 0;
+    QString origin_gift_name;
 
     QString spread_desc; // 星光推广
     QString spread_info; // 颜色

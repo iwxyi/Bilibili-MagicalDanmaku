@@ -210,7 +210,7 @@ void MainWindow::initView()
     roomSelectorBtn->setSquareSize();
     roomSelectorBtn->setRadius(rt->fluentRadius);
     roomSelectorBtn->setFocusPolicy(Qt::FocusPolicy::ClickFocus);
-    ui->tagsButtonGroup->setSelecteable(false);
+    ui->tagsButtonGroup->setSelectable(false);
     ui->robotInfoWidget->setMinimumWidth(upHeaderSize * 2);
 
     // 避免压缩

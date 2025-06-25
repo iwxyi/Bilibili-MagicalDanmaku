@@ -15,10 +15,14 @@ WaterFallButtonGroup::WaterFallButtonGroup(QWidget *parent)
 
 void WaterFallButtonGroup::initStringList(QStringList list, QStringList selected)
 {
+    clear();
     foreach (QString s, list)
     {
+        if (s.trimmed().isEmpty())
+            continue;
         addButton(s, selected.contains(s));
     }
+    updateButtonPositions();
 }
 
 /**
@@ -152,10 +156,8 @@ QList<int> WaterFallButtonGroup::getSelectedIndexes() const
 
 void WaterFallButtonGroup::clear()
 {
-    for (int i = 0; i < btns.size(); i++)
-    {
-        btns.at(i)->deleteLater();
-    }
+    foreach (InteractiveButtonBase* btn, btns)
+        btn->deleteLater();
     btns.clear();
 }
 
@@ -175,6 +177,16 @@ void WaterFallButtonGroup::setColors(QColor normal_bg, QColor hover_bg, QColor p
 void WaterFallButtonGroup::setSelectedColor(QColor color)
 {
     this->selected_bg = color;
+}
+
+void WaterFallButtonGroup::setMouseColor(QColor hover_bg, QColor press_bg)
+{
+    this->hover_bg = hover_bg;
+    this->press_bg = press_bg;
+    foreach (InteractiveButtonBase* btn, btns)
+    {
+        btn->setBgColor(hover_bg, press_bg);
+    }
 }
 
 void WaterFallButtonGroup::updateBtnColors()
