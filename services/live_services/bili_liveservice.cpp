@@ -196,7 +196,7 @@ void BiliLiveService::getCookieAccount()
     if (ac->browserCookie.isEmpty())
     {
         // 获取一个基础cookie
-        getDefaultCookie();
+        // getDefaultCookie();
         return ;
     }
 
@@ -468,6 +468,11 @@ void BiliLiveService::getBuVID()
         if (ac->browserCookie.isEmpty())
         {
 
+        }
+        else if (!ac->browserCookie.contains("buvid="))
+        {
+            ac->browserCookie += ";buvid3=" + ac->buvid;
+            qInfo() << "临时添加BuVID:" << ac->buvid;
         }
     });
 }

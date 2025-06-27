@@ -11602,6 +11602,7 @@ void MainWindow::on_proxyTestIPButton_clicked()
             QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
             if (!doc.isNull() && doc.object().contains("ip")) {
                 QString ip = doc.object()["ip"].toString();
+                qInfo() << "当前连接使用的IP地址：" << ip;
                 QMessageBox::information(this, tr("IP Test"), tr("Current IP: ") + ip);
             } else {
                 QMessageBox::warning(this, tr("Error"), tr("Invalid response format"));
