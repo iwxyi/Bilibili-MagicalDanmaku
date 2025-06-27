@@ -33,7 +33,7 @@ private:
     QString qrcode_key;
     QTimer* queryTimer;
 
-    QString b3, b4;
+    QString b_3, b_4, b_nut;
 };
 
 #endif // QRCODELOGINDIALOG_H

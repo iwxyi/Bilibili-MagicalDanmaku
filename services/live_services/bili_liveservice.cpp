@@ -482,6 +482,15 @@ void BiliLiveService::getBuVID()
                     ac->browserCookie += ";buvid4=" + ac->buvid;
                     qInfo() << "旧Cookie自动添加BuVID4:" << ac->buvid;
                 }
+
+                // 添加b_nut
+                if (!ac->browserCookie.contains("b_nut="))
+                {
+                    QString timestamp = snum(QDateTime::currentSecsSinceEpoch());
+                    ac->browserCookie += ";b_nut=" + timestamp;
+                    qInfo() << "旧Cookie自动添加b_nut:" << timestamp;
+                }
+
                 us->setValue("danmaku/browserCookie", ac->browserCookie);
             }
         }

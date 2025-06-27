@@ -93,10 +93,12 @@ void QRCodeLoginDialog::getLoginInfo()
             }
 
             // 添加buvid
-            if (!b3.isEmpty() && !(sl.join(";").contains("buvid3=")))
-                sl << "buvid3=" + b3;
-            if (!b4.isEmpty() && !(sl.join(";").contains("buvid4=")))
-                sl << "buvid4=" + b4;
+            if (!b_3.isEmpty() && !(sl.join(";").contains("buvid3=")))
+                sl << "buvid3=" + b_3;
+            if (!b_4.isEmpty() && !(sl.join(";").contains("buvid4=")))
+                sl << "buvid4=" + b_4;
+            if (!b_nut.isEmpty() && !(sl.join(";").contains("b_nut=")))
+                sl << "b_nut=" + b_nut;
 
             // 添加刷新token
             QString refresh_token = data.s("refresh_token");
@@ -131,9 +133,10 @@ void QRCodeLoginDialog::getBuvid()
 {
     get("https://api.bilibili.com/x/frontend/finger/spi", [=](MyJson json) {
         MyJson data = json.data();
-        this->b3 = data.s("b_3");
-        this->b4 = data.s("b_4");
-        qDebug() << "获取到BUVID:" << b3 << b4;
+        this->b_3 = data.s("b_3");
+        this->b_4 = data.s("b_4");
+        this->b_nut = QString::number(QDateTime::currentSecsSinceEpoch());
+        qDebug() << "获取到BUVID:" << b_3 << b_4;
     });
 }
 
