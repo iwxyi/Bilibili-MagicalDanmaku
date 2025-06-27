@@ -449,7 +449,8 @@ public:
 
     void setUserAgent(const QString& ua)
     {
-        qInfo() << "设置UA：" << ua;
+        if (!ua.isEmpty())
+            qInfo() << "设置UA：" << ua;
         userAgent = ua;
     }
 

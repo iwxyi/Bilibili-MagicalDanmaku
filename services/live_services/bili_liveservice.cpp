@@ -396,6 +396,28 @@ void BiliLiveService::getRobotInfo()
 
 void BiliLiveService::getBuVID()
 {
+    // 如果Cookie中，则有限从Cookie中获取
+    if (ac->browserCookie.contains("buvid3="))
+    {
+        QRegularExpression re("\\bbuvid3=(.*?);");
+        QRegularExpressionMatch match = re.match(ac->browserCookie);
+        if (match.hasMatch())
+        {
+            ac->buvid = match.captured(1);
+            qInfo() << "使用Cookie中的BuVID:" << ac->buvid;
+            return ;
+        }
+        else
+        {
+            qWarning() << "无法匹配Cookie中的buvid3";
+        }
+    }
+    else
+    {
+        qDebug() << "Cookie中不带有buvid3，从接口获取";
+    }
+
+    // 如果账号中不带，则从接口获取
     get("https://api.bilibili.com/x/frontend/finger/spi", [=](const MyJson& json) {
         /*{
             "code": 0,
