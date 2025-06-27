@@ -194,7 +194,12 @@ void BiliLiveService::initWS()
 void BiliLiveService::getCookieAccount()
 {
     if (ac->browserCookie.isEmpty())
+    {
+        // 获取一个基础cookie
+        getDefaultCookie();
         return ;
+    }
+
     gettingUser = true;
     get("https://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -220,6 +225,35 @@ void BiliLiveService::getCookieAccount()
         if (!wbiMixinKey.isEmpty())
             getRobotInfo();
     });
+}
+
+void BiliLiveService::getDefaultCookie()
+{
+    if (gettingUser)
+        return;
+    gettingUser = true;
+    get("https://api.bilibili.com/x/frontend/finger/spi", [=](const MyJson& json) {
+        /*{
+            "code": 0,
+            "data": {
+                "b_3": "DE04FB9D-9A3C-09E7-3B1E-A0FBF55CE62833464infoc",
+                "b_4": "8219B8B6-66F0-4831-90E5-D01DB16B356C33464-023091121-ee9bM9FACMa+pR2By/Ilvg=="
+            },
+            "message": "ok"
+        }*/
+
+        // 设置为默认cookie
+        if (ac->browserCookie.isEmpty())
+        {
+            MyJson data = json.data();
+            QString b3 = data.s("b_3");
+            QString b4 = data.s("b_4");
+            QString cookie = "buvid3=" + b3 + ";buvid4=" + b4;
+            ac->browserCookie = cookie;
+        }
+        }, [=](QString) {
+            gettingUser = false;
+        });
 }
 
 void BiliLiveService::getAccountByCookie(const QString& cookie)
@@ -429,6 +463,12 @@ void BiliLiveService::getBuVID()
         }*/
         ac->buvid = json.data().s("b_3");
         qInfo() << "BuVID:" << ac->buvid;
+
+        // 设置为默认cookie
+        if (ac->browserCookie.isEmpty())
+        {
+
+        }
     });
 }
 

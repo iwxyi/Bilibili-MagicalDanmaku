@@ -1069,9 +1069,13 @@ void BiliLiveService::handleMessage(QJsonObject json)
         qint64 totalCoin = data.value("total_coin").toDouble();
         qint64 discountPrice = data.value("discount_price").toDouble(); // 盲盒实际爆出的单个礼物价值
         int wealth_level = data.value("wealth_level").toInt();
-        QJsonObject batchGiftSend = data.value("batch_combo_send").toObject();
-        QJsonObject blindGift = batchGiftSend.value("blind_gift").toObject();
-        QString originalGiftName = blindGift.value("original_gift_name").toString();
+        QString originalGiftName = data.value("original_gift_name").toString();
+        if (originalGiftName.isEmpty())
+        {
+            QJsonObject batchGiftSend = data.value("batch_combo_send").toObject();
+            QJsonObject blindGift = batchGiftSend.value("blind_gift").toObject();
+            originalGiftName = blindGift.value("original_gift_name").toString();
+        }
 
         qInfo() << s8("接收到送礼：") << username << giftId << giftName << num << s8("  总价值：") << totalCoin << discountPrice << coinType;
         QString localName = us->getLocalNickname(uid);
@@ -1080,6 +1084,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
         danmaku.setDiscountPrice(discountPrice);
         danmaku.setWealthLevel(wealth_level);
+        danmaku.setOriginalGiftName(originalGiftName);
         if (!data.value("medal_info").isNull())
         {
             QJsonObject medalInfo = data.value("medal_info").toObject();

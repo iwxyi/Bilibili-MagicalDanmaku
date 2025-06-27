@@ -599,6 +599,11 @@ public:
         this->sub_account = sub;
     }
 
+    void setOriginalGiftName(QString name)
+    {
+        this->original_gift_name = name;
+    }
+
     QString getText() const
     {
         return text;
@@ -946,6 +951,11 @@ public:
         return sub_account;
     }
 
+    QString getOriginalGiftName() const
+    {
+        return original_gift_name;
+    }
+
 protected:
     MessageType msgType = MSG_DANMAKU;
 
@@ -988,7 +998,7 @@ protected:
     QString coin_type;
     qint64 total_coin = 0;
     qint64 discount_price = 0;
-    QString origin_gift_name;
+    QString original_gift_name;
 
     QString spread_desc; // 星光推广
     QString spread_info; // 颜色
