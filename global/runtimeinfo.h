@@ -38,6 +38,7 @@ public:
     bool asFreeOnly = false;
     bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
     bool isReconnect = false; // 是否是重连
+    bool adjustCookie = false;
 
     QHash<QString, QString> pinyinMap; // 拼音
     QList<LiveDanmaku> allDanmakus;

@@ -250,6 +250,7 @@ void BiliLiveService::getDefaultCookie()
             QString b4 = data.s("b_4");
             QString cookie = "buvid3=" + b3 + ";buvid4=" + b4;
             ac->browserCookie = cookie;
+            ac->userCookies = getCookies();
         }
         }, [=](QString) {
             gettingUser = false;
@@ -494,6 +495,11 @@ void BiliLiveService::getBuVID()
                 }
 
                 us->setValue("danmaku/browserCookie", ac->browserCookie);
+                ac->userCookies = getCookies();
+                rt->adjustCookie = true;
+
+                qInfo() << "自动优化Cookie完毕，重新获取弹幕信息";
+                getDanmuInfo();
             }
         }
     });
@@ -511,6 +517,11 @@ void BiliLiveService::startConnect()
  */
 void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
 {
+    if (gettingRoom)
+    {
+        qWarning() << "正在获取直播间信息...";
+        return;
+    }
     if (ac->roomId.isEmpty() || ac->roomId == "0")
     {
         qCritical() << "没有房间号，无法获取直播间信息";
@@ -717,6 +728,11 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
  */
 void BiliLiveService::getDanmuInfo()
 {
+    if (gettingDanmu)
+    {
+        qWarning() << "正在获取弹幕信息...";
+        return;
+    }
     gettingDanmu = true;
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?" + toWbiParam("id="+ac->roomId+"&type=0");
     get(url, [=](QJsonObject json) {
@@ -728,7 +744,14 @@ void BiliLiveService::getDanmuInfo()
             // -352尝试触发风控解除
             if (code == -352)
             {
-                
+                if (rt->adjustCookie)
+                {
+                    rt->adjustCookie = false;
+                    QTimer::singleShot(3000, this, [=]{
+                        qInfo() << "-352但是有修改Cookie，尝试重新获取一次";
+                        getDanmuInfo();
+                    });
+                }
             }
             return ;
         }
@@ -754,6 +777,8 @@ void BiliLiveService::getDanmuInfo()
 
         updateExistGuards(0);
         updateOnlineGoldRank();
+    }, [=](QString){
+        gettingDanmu = false;
     });
     emit signalConnectionStateTextChanged("获取弹幕信息...");
 }
@@ -4502,6 +4527,7 @@ void BiliLiveService::refreshCookie()
     newCookie.replace(QRegularExpression("bili_jct=[^;]*"), "bili_jct=" + ac->csrf_token);
     newCookie.replace(QRegularExpression("ac_time_value=[^;]*"), "ac_time_value=" + newRefreshToken);
     ac->browserCookie = newCookie;
+    ac->userCookies = getCookies();
     
     // 7. 更新 csrf_token
     ac->csrf_token = ac->browserCookie.split("bili_jct=").last().split(";").first();
