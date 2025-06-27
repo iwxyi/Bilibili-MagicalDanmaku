@@ -469,11 +469,21 @@ void BiliLiveService::getBuVID()
         {
 
         }
-        else if (!ac->browserCookie.contains("buvid3="))
+        else
         {
-            ac->browserCookie += ";buvid3=" + ac->buvid;
-            qInfo() << "旧Cookie自动添加BuVID:" << ac->buvid;
-            us->setValue("danmaku/browserCookie", ac->browserCookie);
+            if (!ac->browserCookie.contains("buvid3="))
+            {
+                ac->browserCookie += ";buvid3=" + ac->buvid;
+                qInfo() << "旧Cookie自动添加BuVID3:" << ac->buvid;
+
+                // 4目前不知道有什么用，当3没有的时候，把4也顺便加上，否则尽量不做修改
+                if (!ac->browserCookie.contains("buvid4="))
+                {
+                    ac->browserCookie += ";buvid4=" + ac->buvid;
+                    qInfo() << "旧Cookie自动添加BuVID4:" << ac->buvid;
+                }
+                us->setValue("danmaku/browserCookie", ac->browserCookie);
+            }
         }
     });
 }
