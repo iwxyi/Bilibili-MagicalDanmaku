@@ -24,6 +24,7 @@ public:
 
     /// 直播间连接
     void getCookieAccount() override;
+    void getDefaultCookie();
     void getAccountByCookie(const QString& cookie) override;
     void getNavInfo(NetVoidFunc func = nullptr);
     QString toWbiParam(QString params) const;

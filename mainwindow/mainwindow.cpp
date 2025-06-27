@@ -8,6 +8,7 @@
 #include <QDataStream>
 #include <QTableWidget>
 #include <QSqlQuery>
+#include <QNetworkProxy>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "videolyricscreator.h"
@@ -1871,6 +1872,14 @@ void MainWindow::readConfig()
     ui->emailPortSpin->setValue(us->value("email/port", ui->emailPortSpin->value()).toInt());
     ui->emailFromEdit->setText(us->value("email/from").toString());
     ui->emailPasswordEdit->setText(us->value("email/password").toString());
+
+    // 代理
+    ui->proxyTypeCombo->setCurrentText(us->value("proxy/type", ui->proxyTypeCombo->currentText()).toString());
+    ui->proxyHostEdit->setText(us->value("proxy/host").toString());
+    ui->proxyPortSpin->setValue(us->value("proxy/port", ui->proxyPortSpin->value()).toInt());
+    ui->proxyUsernameEdit->setText(us->value("proxy/username").toString());
+    ui->proxyPasswordEdit->setText(us->value("proxy/password").toString());
+    setNetworkProxy();
 
     // 开启服务端
     bool enableServer = us->value("server/enabled", false).toBool();
@@ -3736,6 +3745,10 @@ void MainWindow::on_testDanmakuButton_clicked()
         LiveDanmaku danmaku("测试用户" + QString::number(r), text, uid, 12, QDateTime::currentDateTime(), "", "");
         danmaku.extraJson = MyJson(code.toUtf8());
         triggerCmdEvent("GPT_RESPONSE", danmaku);
+    }
+    else if (text == "测试代理")
+    {
+        on_proxyTestIPButton_clicked();
     }
     else
     {
@@ -8490,6 +8503,50 @@ void MainWindow::sendEmail(const QString &to, const QString &subject, const QStr
                             body);
 }
 
+void MainWindow::setNetworkProxy()
+{
+    QString proxyType = us->value("proxy/type", ui->proxyTypeCombo->currentText()).toString().toUpper();
+    QString proxyHost = us->value("proxy/host").toString();
+    int proxyPort = us->value("proxy/port", ui->proxyPortSpin->value()).toInt();
+    QString proxyUsername = us->value("proxy/username").toString();
+    QString proxyPassword = us->value("proxy/password").toString();
+
+    static bool setted = false;
+    QNetworkProxy proxy;
+    if (proxyType.contains("不") || proxyType.contains("无") || proxyHost.isEmpty() || proxyPort == 0)
+    {
+        if (setted)
+        {
+            setted = false;
+            qDebug() << "不使用代理";
+            QNetworkProxy::setApplicationProxy(QNetworkProxy::NoProxy);
+        }
+        return;
+    }
+    else if (proxyType == "HTTP")
+    {
+        proxy = QNetworkProxy::HttpProxy;
+    }
+    else if (proxyType == "SOCKS5")
+    {
+        proxy = QNetworkProxy::Socks5Proxy;
+    }
+    else
+    {
+        qWarning() << "不支持的代理类型：" << proxyType;
+        return;
+    }
+
+    setted = true;
+    qInfo() << "设置代理：" << proxyHost << proxyPort;
+    proxy.setHostName(proxyHost);
+    proxy.setPort(proxyPort);
+    proxy.setUser(proxyUsername);
+    proxy.setPassword(proxyPassword);
+
+    QNetworkProxy::setApplicationProxy(proxy);
+}
+
 void MainWindow::initFansArchivesService()
 {
     if (!sqlService.isOpen())
@@ -11200,6 +11257,36 @@ void MainWindow::on_emailPasswordEdit_editingFinished()
     us->setValue("email/password", ui->emailPasswordEdit->text());
 }
 
+void MainWindow::on_proxyTypeCombo_activated(const QString &arg1)
+{
+    us->setValue("proxy/type", arg1);
+    setNetworkProxy();
+}
+
+void MainWindow::on_proxyHostEdit_editingFinished()
+{
+    us->setValue("proxy/host", ui->proxyHostEdit->text());
+    setNetworkProxy();
+}
+
+void MainWindow::on_proxyPortSpin_editingFinished()
+{
+    us->setValue("proxy/port", snum(ui->proxyPortSpin->value()));
+    setNetworkProxy();
+}
+
+void MainWindow::on_proxyUsernameEdit_editingFinished()
+{
+    us->setValue("proxy/username", ui->proxyUsernameEdit->text());
+    setNetworkProxy();
+}
+
+void MainWindow::on_proxyPasswordEdit_editingFinished()
+{
+    us->setValue("proxy/password", ui->proxyPasswordEdit->text());
+    setNetworkProxy();
+}
+
 void MainWindow::on_fansArchivesCheck_clicked()
 {
     if (ui->fansArchivesCheck->isChecked() && !hasPermission())
@@ -11502,3 +11589,28 @@ void MainWindow::on_subAccountTableWidget_customContextMenuRequested(const QPoin
     });
     menu->exec();
 }
+
+void MainWindow::on_proxyTestIPButton_clicked()
+{
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest request(QUrl("https://api.ipify.org?format=json"));
+
+    QNetworkReply *reply = manager->get(request);
+
+    QObject::connect(reply, &QNetworkReply::finished, this, [=]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+            if (!doc.isNull() && doc.object().contains("ip")) {
+                QString ip = doc.object()["ip"].toString();
+                QMessageBox::information(this, tr("IP Test"), tr("Current IP: ") + ip);
+            } else {
+                QMessageBox::warning(this, tr("Error"), tr("Invalid response format"));
+            }
+        } else {
+            QMessageBox::critical(this, tr("Error"), reply->errorString());
+        }
+        reply->deleteLater();
+        manager->deleteLater();
+    });
+}
+

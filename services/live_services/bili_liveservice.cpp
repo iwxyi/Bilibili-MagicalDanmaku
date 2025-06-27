@@ -101,7 +101,7 @@ void BiliLiveService::initWS()
 
             // 尝试5秒钟后重连
             connectServerTimer->setInterval(reconnectWSDuration);
-            reconnectWSDuration *= 1.2;
+            reconnectWSDuration *= 2;
             if (reconnectWSDuration > INTERVAL_RECONNECT_WS_MAX)
                 reconnectWSDuration = INTERVAL_RECONNECT_WS_MAX;
         }

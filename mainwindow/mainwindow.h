@@ -112,7 +112,6 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
     void changeEvent (QEvent * event) override;
     void paintEvent(QPaintEvent * event) override;
-    void test();
 
 signals:
     void signalRoomChanged(QString roomId);
@@ -720,9 +719,19 @@ private slots:
 
     void on_emailFromEdit_editingFinished();
 
-    void on_chatGPTEndpointEdit_textEdited(const QString &arg1);
-
     void on_emailPasswordEdit_editingFinished();
+
+    void on_proxyTypeCombo_activated(const QString &arg1);
+
+    void on_proxyHostEdit_editingFinished();
+
+    void on_proxyPortSpin_editingFinished();
+
+    void on_proxyUsernameEdit_editingFinished();
+
+    void on_proxyPasswordEdit_editingFinished();
+
+    void on_chatGPTEndpointEdit_textEdited(const QString &arg1);
 
     void on_fansArchivesCheck_clicked();
 
@@ -749,6 +758,8 @@ private slots:
     void on_subAccountDescButton_clicked();
 
     void on_subAccountTableWidget_customContextMenuRequested(const QPoint &pos);
+
+    void on_proxyTestIPButton_clicked();
 
 private:
     void initView();
@@ -909,6 +920,8 @@ private:
     void showSqlQueryResult(QString sql);
 
     void sendEmail(const QString& to, const QString& subject, const QString& body);
+
+    void setNetworkProxy();
 
     void initFansArchivesService();
     void updateFansArchivesListView();
