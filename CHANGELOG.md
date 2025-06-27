@@ -1,11 +1,18 @@
-### v5.3.1 [Cron 定时事件](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.3.1)
+### v5.4 [Cron 定时事件](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.4)
 
-- 粉丝档案新增观众消费能力分析
-- 新增 Cron 定时事件
+- 新增粉丝档案的观众消费能力分析
+- 新增 Cron 定时事件：以`TIME:`开头
+- 新增网络代理功能，支持HTTP合SOCKS5
 - 新增过滤器支持多个编程语言和代码文件
+- 新增手动设置Python虚拟环境
+- 新增JS语法支持网络连接，可使用在线数据
+- 新增过滤器事件支持使用JS语法的AI判断
+- 新增多个场景下自动设置BuVID字段
 - 优化启动10秒内不进行自动化操作（包括定时、回复、事件、过滤器等）
+- 优化部分控件的交互
 - 修复过滤器在空代码时返回值错误的问题
-- 修复一些崩溃问题
+- 修复粉丝档案没有选中时导致崩溃的问题
+- 修复子账号导致进入主页链接错误的问题
 
 
 

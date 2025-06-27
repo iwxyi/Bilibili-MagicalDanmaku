@@ -179,7 +179,7 @@ void EventWidget::createSpecialFunction()
     {
         QString key = cmdKey.right(cmdKey.length() - 4).trimmed();
         if (key.isEmpty())
-            return disableSpecialFunction();
+            return deleteSpecialFunction();
         if (!shortcut)
         {
             shortcut = new QxtGlobalShortcut(this);

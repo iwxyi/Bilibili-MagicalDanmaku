@@ -16,7 +16,7 @@ void CronParser::setCronExpression(const QString &expression)
 {
     m_cronExpression = expression;
     qDebug() << "cronExpression:" << m_cronExpression;
-    QStringList parts = expression.split(' ', Qt::SkipEmptyParts);
+    QStringList parts = expression.split(' ', QString::SkipEmptyParts);
     if (parts.size() != 6)
     {
         qWarning() << "Invalid cron expression format. Expected 6 fields.";
@@ -30,7 +30,6 @@ void CronParser::setCronExpression(const QString &expression)
                 months.parse(parts[4], 1, 12) &&
                 daysOfWeek.parse(parts[5], 0, 6); // 0=Sunday
 }
-
 
 bool CronParser::isValid() const
 {

@@ -473,13 +473,15 @@ void BiliLiveService::getBuVID()
         {
             if (!ac->browserCookie.contains("buvid3="))
             {
-                ac->browserCookie += ";buvid3=" + ac->buvid;
+                if (!ac->browserCookie.trimmed().endsWith(";"))
+                    ac->browserCookie += "; ";
+                ac->browserCookie += "buvid3=" + ac->buvid;
                 qInfo() << "旧Cookie自动添加BuVID3:" << ac->buvid;
 
                 // 4目前不知道有什么用，当3没有的时候，把4也顺便加上，否则尽量不做修改
                 if (!ac->browserCookie.contains("buvid4="))
                 {
-                    ac->browserCookie += ";buvid4=" + ac->buvid;
+                    ac->browserCookie += "; buvid4=" + ac->buvid;
                     qInfo() << "旧Cookie自动添加BuVID4:" << ac->buvid;
                 }
 
@@ -487,7 +489,7 @@ void BiliLiveService::getBuVID()
                 if (!ac->browserCookie.contains("b_nut="))
                 {
                     QString timestamp = snum(QDateTime::currentSecsSinceEpoch());
-                    ac->browserCookie += ";b_nut=" + timestamp;
+                    ac->browserCookie += "; b_nut=" + timestamp;
                     qInfo() << "旧Cookie自动添加b_nut:" << timestamp;
                 }
 
