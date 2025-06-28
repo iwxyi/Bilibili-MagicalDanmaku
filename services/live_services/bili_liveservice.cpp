@@ -217,7 +217,7 @@ void BiliLiveService::getCookieAccount()
         ac->cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
         ac->cookieUname = dataObj.value("uname").toString();
         qInfo() << "当前账号：" << ac->cookieUid << ac->cookieUname;
-        
+
         emit signalRobotAccountChanged();
 
         getBuVID();
@@ -274,7 +274,7 @@ void BiliLiveService::getAccountByCookie(const QString& cookie)
         QString uid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
         QString uname = dataObj.value("uname").toString();
         qInfo() << "获取子账号信息：" << uid << uname;
-        
+
         SubAccount subAccount;
         subAccount.uid = uid;
         subAccount.nickname = uname;
@@ -295,7 +295,7 @@ void BiliLiveService::getNavInfo(NetVoidFunc finalFunc)
         QJsonObject wbi_img_obj = dataObj.value("wbi_img").toObject();
         QString img_url = wbi_img_obj.value("img_url").toString();
         QString sub_url = wbi_img_obj.value("sub_url").toString();
-        
+
         QRegularExpression re("/(\\w{32})\\.png");
         QRegularExpressionMatch match = re.match(img_url);
         QString wbi_img_ba = match.captured(1);
@@ -807,10 +807,8 @@ void BiliLiveService::startMsgLoop()
 
     // 设置安全套接字连接模式（不知道有啥用）
     QSslConfiguration config = liveSocket->sslConfiguration();
-    config.setPeerVerifyMode(QSslSocket::VerifyNone);
-    config.setProtocol(QSsl::TlsV1SslV3);
+    config.setProtocol(QSsl::TlsV1_2OrLater);
     liveSocket->setSslConfiguration(config);
-
     liveSocket->open(host);
 }
 
@@ -3420,8 +3418,7 @@ void BiliLiveService::connectPkSocket()
         if (!pkLiveSocket)
             pkLiveSocket = new QWebSocket();
         QSslConfiguration config = pkLiveSocket->sslConfiguration();
-        config.setPeerVerifyMode(QSslSocket::VerifyNone);
-        config.setProtocol(QSsl::TlsV1SslV3);
+        config.setProtocol(QSsl::TlsV1_2OrLater);
         pkLiveSocket->setSslConfiguration(config);
         pkLiveSocket->open(host);
     });
@@ -4445,7 +4442,7 @@ void BiliLiveService::refreshCookie()
         qInfo() << "Cookie不带有refresh_token，不刷新";
         return;
     }
-    
+
     // 1. 检查是否需要刷新
     MyJson checkJson = getToJson("https://passport.bilibili.com/x/passport-login/web/cookie/info");
     if (checkJson.code() != 0 || !checkJson.data().b("refresh"))
@@ -4454,10 +4451,10 @@ void BiliLiveService::refreshCookie()
         return;
     }
     qInfo() << "准备刷新Cookie：" << checkJson;
-    
+
     // 2. 生成 CorrespondPath
     qint64 timestamp = checkJson.data().l("timestamp");
-    
+
     // 使用 RSA-OAEP 加密
     /* QString message = QString("refresh_%1").arg(timestamp);
     QByteArray publicKeyPEM = "-----BEGIN PUBLIC KEY-----\n"
@@ -4466,7 +4463,7 @@ void BiliLiveService::refreshCookie()
                              "nzPjfdTcqMz7djHum0qSZA0AyCBDABUqCrfNgCiJ00Ra7GmRj+YCK1NJEuewlb40"
                              "JNrRuoEUXpabUzGB8QIDAQAB\n"
                              "-----END PUBLIC KEY-----";
-    
+
     QByteArray encrypted = RSAUtil::rsaEncrypt(message.toUtf8(), publicKeyPEM);
     QString correspondPath = encrypted.toHex();
     qDebug() << "生成的correspondPath：" << encrypted << correspondPath;*/
@@ -4490,7 +4487,7 @@ void BiliLiveService::refreshCookie()
         qWarning() << "无法获取refresh_csrf" << html;
         return;
     }
-    
+
     // 4. 刷新 Cookie
     QString oldRefreshToken = ac->browserCookie.split("ac_time_value=").last().split(";").first();
     qDebug() << "旧的refresh_token:" << oldRefreshToken;
@@ -4499,7 +4496,7 @@ void BiliLiveService::refreshCookie()
         .arg(refresh_csrf)
         .arg(oldRefreshToken)
         .toUtf8();
-    
+
     MyJson refreshJson = postToJson("https://passport.bilibili.com/x/passport-login/web/cookie/refresh", postData, "",
                                     QList<QPair<QString, QString>>{{"content-type", "application/x-www-form-urlencoded"}});
     if (refreshJson.code() != 0)
@@ -4507,28 +4504,28 @@ void BiliLiveService::refreshCookie()
         qWarning() << "刷新Cookie失败:" << refreshJson.msg();
         return;
     }
-    
+
     // 5. 确认更新
     QString newRefreshToken = refreshJson.data().s("refresh_token");
     postData = QString("csrf=%1&refresh_token=%2")
         .arg(ac->csrf_token)
         .arg(oldRefreshToken)
         .toUtf8();
-    
+
     MyJson confirmJson = postToJson("https://passport.bilibili.com/x/passport-login/web/confirm/refresh", postData);
     if (confirmJson.code() != 0)
     {
         qWarning() << "确认更新失败:" << confirmJson.msg();
         return;
     }
-    
+
     // 6. 更新 Cookie
     QString newCookie = ac->browserCookie;
     newCookie.replace(QRegularExpression("bili_jct=[^;]*"), "bili_jct=" + ac->csrf_token);
     newCookie.replace(QRegularExpression("ac_time_value=[^;]*"), "ac_time_value=" + newRefreshToken);
     ac->browserCookie = newCookie;
     ac->userCookies = getCookies();
-    
+
     // 7. 更新 csrf_token
     ac->csrf_token = ac->browserCookie.split("bili_jct=").last().split(";").first();
     qInfo() << "设置新的csrf：" << ac->csrf_token;
@@ -4716,7 +4713,7 @@ void BiliLiveService::adjustDanmakuLongest()
     // 大航海：舰长20，提督/总督40
     if (ac->cookieGuardLevel == 1 || ac->cookieGuardLevel == 2)
         longest = qMax(longest, 40);
-    
+
     ac->danmuLongest = longest;
     emit signalDanmakuLongestChanged(longest);
 }
@@ -4773,7 +4770,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg, const QSt
         msg.replace(match.captured(0), "");
         reply_mid = match.captured(1);
     }
-    
+
     // @uname
     re = QRegularExpression("(?<!\\\\)@(\\S+)( |^)");
     match = re.match(msg);
@@ -4848,7 +4845,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg, const QSt
         if (posr == -1)
             posr = cookie.length();
         QString csrf = cookie.mid(posl, posr-posl);
-        
+
         // 替换 csrf=xxx
         posl = s.indexOf("csrf=");
         if (posl == -1)
@@ -4862,7 +4859,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg, const QSt
         if (posr == -1)
             posr = s.length();
         s.replace(posl, posr-posl, csrf);
-        
+
         // 替换 csrf_token=xxx
         posl = s.indexOf("csrf_token=");
         if (posl == -1)

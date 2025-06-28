@@ -8697,8 +8697,7 @@ void MainWindow::on_actionMany_Robots_triggered()
     QString host = QString("wss://%1:%2/sub").arg(hostServer.host).arg(hostServer.wss_port);
 
     QSslConfiguration config = liveService->liveSocket->sslConfiguration();
-    config.setPeerVerifyMode(QSslSocket::VerifyNone);
-    config.setProtocol(QSsl::TlsV1SslV3);
+    config.setProtocol(QSsl::TlsV1_2OrLater);
 
     for (int i = 0; i < 1000; i++)
     {
