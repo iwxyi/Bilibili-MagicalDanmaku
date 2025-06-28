@@ -764,12 +764,12 @@ QByteArray MainWindow::processApiRequest(QString url, QHash<QString, QString> pa
         if (!params.contains("uid"))
             return ba;
 
-        QString uid = params.value("uid");
+        UIDT uid = params.value("uid");
         QString filePath = webCache("header_" + uid);
         if (!isFileExist(filePath))
         {
             // 获取封面URL并下载封面
-            QString url = liveService->getApiUrl(UserHead, uid.toLongLong());
+            QString url = liveService->getApiUrl(UserHead, uid);
             NetUtil::downloadWebFile(url, filePath);
         }
 

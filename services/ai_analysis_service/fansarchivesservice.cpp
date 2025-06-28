@@ -84,7 +84,7 @@ void FansArchivesService::onTimer()
         identity = "主播";
     else if (lastDanmaku.isGuard()) // 目前都没有舰长信息的
         identity = lastDanmaku.getGuardName();
-    else if (ac->currentGuards.contains(uid.toLongLong()))
+    else if (ac->currentGuards.contains(uid))
         identity = "舰长";
     else
         identity = "观众";

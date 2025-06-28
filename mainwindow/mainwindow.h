@@ -99,7 +99,7 @@ public:
     struct Diange
     {
         QString nickname;
-        qint64 uid;
+        UIDT uid;
         QString name;
         QDateTime time;
     };
@@ -195,11 +195,11 @@ private slots:
 
     void showDiangeHistory();
 
-    void eternalBlockUser(qint64 uid, QString uname, QString msg);
-    void cancelEternalBlockUser(qint64 uid);
-    void cancelEternalBlockUser(qint64 uid, qint64 roomId);
-    void cancelEternalBlockUserAndUnblock(qint64 uid);
-    void cancelEternalBlockUserAndUnblock(qint64 uid, qint64 roomId);
+    void eternalBlockUser(UIDT uid, QString uname, QString msg);
+    void cancelEternalBlockUser(UIDT uid);
+    void cancelEternalBlockUser(UIDT uid, qint64 roomId);
+    void cancelEternalBlockUserAndUnblock(UIDT uid);
+    void cancelEternalBlockUserAndUnblock(UIDT uid, qint64 roomId);
     void saveEternalBlockUsers();
     void detectEternalBlockUsers();
 
@@ -781,7 +781,7 @@ private:
 
     void oldLiveDanmakuRemoved(const LiveDanmaku &danmaku);
     void localNotify(const QString &text);
-    void localNotify(const QString &text, qint64 uid);
+    void localNotify(const QString &text, UIDT uid);
 
     TaskWidget *addTimerTask(bool enable, int second, QString text, int index = -1);
     TaskWidget *addTimerTask(const MyJson &json);

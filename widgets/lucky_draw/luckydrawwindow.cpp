@@ -70,7 +70,7 @@ void LuckyDrawWindow::slotNewDanmaku(const LiveDanmaku &danmaku)
     }
 
     // 避免重复
-    qint64 uid = danmaku.getUid();
+    UIDT uid = danmaku.getUid();
     foreach (LiveDanmaku danmaku, participants)
         if (danmaku.getUid() == uid)
             return ;

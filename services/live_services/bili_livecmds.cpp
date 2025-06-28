@@ -1061,7 +1061,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         int giftType = data.value("giftType").toInt(); // 不知道是啥，金瓜子1，银瓜子（小心心、辣条）5？
         QString giftName = data.value("giftName").toString(); // 盲盒是爆出来的礼物名字
         QString username = data.value("uname").toString();
-        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
+        UIDT uid = snum(static_cast<qint64>(data.value("uid").toDouble()));
         int num = data.value("num").toInt();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble()); // 秒
         timestamp = QDateTime::currentSecsSinceEpoch(); // *不管送出礼物的时间，只管机器人接收到的时间
@@ -1115,9 +1115,9 @@ void BiliLiveService::handleMessage(QJsonObject json)
         // 进行统计
         if (coinType == "silver")
         {
-            qint64 userSilver = us->danmakuCounts->value("silver/" + snum(uid)).toLongLong();
+            qint64 userSilver = us->danmakuCounts->value("silver/" + uid).toLongLong();
             userSilver += totalCoin;
-            us->danmakuCounts->setValue("silver/"+snum(uid), userSilver);
+            us->danmakuCounts->setValue("silver/"+uid, userSilver);
 
             dailyGiftSilver += totalCoin;
             if (dailySettings)
@@ -1128,9 +1128,9 @@ void BiliLiveService::handleMessage(QJsonObject json)
         }
         if (coinType == "gold")
         {
-            qint64 userGold = us->danmakuCounts->value("gold/" + snum(uid)).toLongLong();
+            qint64 userGold = us->danmakuCounts->value("gold/" + uid).toLongLong();
             userGold += totalCoin;
-            us->danmakuCounts->setValue("gold/"+snum(uid), userGold);
+            us->danmakuCounts->setValue("gold/"+uid, userGold);
 
             dailyGiftGold += totalCoin;
             if (dailySettings)
@@ -1148,7 +1148,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             appendLiveGift(danmaku);
 
             // 正在偷塔阶段
-            if (pkEnding && uid == ac->cookieUid.toLongLong()) // 机器人账号
+            if (pkEnding && uid == ac->cookieUid) // 机器人账号
             {
 //                pkVoting -= totalCoin;
 //                if (pkVoting < 0) // 自己用其他设备送了更大的礼物
@@ -1338,7 +1338,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             return ;
         }
 
-        LiveDanmaku danmaku(uname, message, uid, user_level, QDateTime::fromSecsSinceEpoch(end_time), name_color, message_font_color,
+        LiveDanmaku danmaku(uname, message, snum(uid), user_level, QDateTime::fromSecsSinceEpoch(end_time), name_color, message_font_color,
                     gift_id, gift_name, num, price);
         danmaku.setMedal(snum(anchor_roomid), medal_name, medal_level, medal_color, anchor_uname);
         appendNewLiveDanmaku(danmaku);
@@ -1521,7 +1521,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             }
         }*/
         QJsonObject data = json.value("data").toObject();
-        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
+        UIDT uid = snum(static_cast<qint64>(data.value("uid").toDouble()));
         QString copy_writing = data.value("copy_writing").toString();
         QStringList results = QRegularExpression("欢迎(舰长|提督|总督)?.+?<%(.+)%>").match(copy_writing).capturedTexts();
         LiveDanmaku danmaku;
@@ -1632,7 +1632,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
 
         QJsonObject data = json.value("data").toObject();
         int msgType = data.value("msg_type").toInt(); // 1进入直播间，2关注，3分享直播间，4特别关注
-        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
+        UIDT uid = snum(static_cast<qint64>(data.value("uid").toDouble()));
         QString username = data.value("uname").toString();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
         bool isadmin = data.value("isadmin").toBool(); // TODO:这里没法判断房管？
@@ -1734,7 +1734,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             "uname": "sescuerYOKO"
         }*/
         QString nickname = json.value("uname").toString();
-        qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
+        UIDT uid = snum(static_cast<qint64>(json.value("uid").toDouble()));
         LiveDanmaku danmaku(LiveDanmaku(nickname, uid));
         appendNewLiveDanmaku(danmaku);
         rt->blockedQueue.append(danmaku);
@@ -1748,7 +1748,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
     {
         // {"end_time":1611343771,"gift_id":10003,"gift_name":"舰长","guard_level":3,"num":1,"price":198000,"start_time":1611343771,"uid":67756641,"username":"31119657605_bili"}
         QJsonObject data = json.value("data").toObject();
-        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
+        UIDT uid = snum(static_cast<qint64>(data.value("uid").toDouble()));
         QString username = data.value("username").toString();
         QString giftName = data.value("gift_name").toString();
         int price = data.value("price").toInt();
@@ -1756,7 +1756,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         int guard_level = data.value("guard_level").toInt();
         int num = data.value("num").toInt();
         // start_time和end_time都是当前时间？
-        int guardCount = us->danmakuCounts->value("guard/" + snum(uid), 0).toInt();
+        int guardCount = us->danmakuCounts->value("guard/" + uid, 0).toInt();
         qInfo() << username << s8("购买") << giftName << num << guardCount;
         LiveDanmaku danmaku(username, uid, giftName, num, guard_level, gift_id, price,
                             guardCount == 0 ? 1 : ac->currentGuards.contains(uid) ? 0 : 2);
@@ -1767,9 +1767,9 @@ void BiliLiveService::handleMessage(QJsonObject json)
 
         emit signalNewGuardBuy(danmaku);
 
-        qint64 userGold = us->danmakuCounts->value("gold/" + snum(uid)).toLongLong();
+        qint64 userGold = us->danmakuCounts->value("gold/" + uid).toLongLong();
         userGold += price;
-        us->danmakuCounts->setValue("gold/"+snum(uid), userGold);
+        us->danmakuCounts->setValue("gold/"+uid, userGold);
 
         int addition = 1;
         if (giftName == "舰长")
@@ -1779,7 +1779,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         else if (giftName == "总督")
             addition = 100;
         guardCount += addition;
-        us->danmakuCounts->setValue("guard/" + snum(uid), guardCount);
+        us->danmakuCounts->setValue("guard/" + uid, guardCount);
 
         dailyGuard += num;
         if (dailySettings)
@@ -1858,7 +1858,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             foreach (auto val, array)
             {
                 auto user = val.toObject();
-                qint64 uid = static_cast<qint64>(user.value("uid").toDouble());
+                UIDT uid = snum(static_cast<qint64>(user.value("uid").toDouble()));
                 int score = user.value("score").toInt();
                 int rank = user.value("rank").toInt();
 
@@ -2214,8 +2214,8 @@ void BiliLiveService::handleMessage(QJsonObject json)
             "uid": 20285041
         }*/
         QString msg = json.value("msg").toString();
-        qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
-        if (snum(uid) == ac->cookieUid)
+        UIDT uid = snum(static_cast<qint64>(json.value("uid").toDouble()));
+        if (uid == ac->cookieUid)
         {
             localNotify(msg, uid);
         }
@@ -2233,7 +2233,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             "uid": 324495090
         }*/
         QString msg = json.value("msg").toString();
-        qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
+        UIDT uid = snum(static_cast<qint64>(json.value("uid").toDouble()));
         localNotify(cr->uidToName(uid) + " 被取消房管", uid);
         triggerCmdEvent(cmd, LiveDanmaku(msg).with(json));
     }
@@ -2720,7 +2720,7 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
         qint64 timestamp = static_cast<qint64>(array[4].toDouble()); // 13位
         QString msg = info[1].toString();
         QJsonArray user = info[2].toArray();
-        qint64 uid = static_cast<qint64>(user[0].toDouble());
+        UIDT uid = snum(static_cast<qint64>(user[0].toDouble()));
         QString username = user[1].toString();
         QString unameColor = user[7].toString();
         int level = info[4].toArray()[0].toInt();
@@ -2770,7 +2770,7 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
         int giftType = data.value("giftType").toInt(); // 不知道是啥，金瓜子1，银瓜子（小心心、辣条）5？
         QString giftName = data.value("giftName").toString();
         QString username = data.value("uname").toString();
-        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
+        UIDT uid = snum(static_cast<qint64>(data.value("uid").toDouble()));
         int num = data.value("num").toInt();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble()); // 秒
         timestamp = QDateTime::currentSecsSinceEpoch(); // *不管送出礼物的时间，只管机器人接收到的时间
@@ -2825,7 +2825,7 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
             return ;
         QJsonObject data = json.value("data").toObject();
         int msgType = data.value("msg_type").toInt(); // 1进入直播间，2关注，3分享直播间，4特别关注
-        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
+        UIDT uid = snum(static_cast<qint64>(data.value("uid").toDouble()));
         QString username = data.value("uname").toString();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
         bool isadmin = data.value("isadmin").toBool();
@@ -2869,14 +2869,14 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
         if (attentionToMyRoom)
         {
             danmaku.transToAttention(timestamp);
-            localNotify("对面的 " + username + " 关注了本直播间 " + snum(uid));
+            localNotify("对面的 " + username + " 关注了本直播间 " + uid);
             triggerCmdEvent("ATTENTION_ON_OPPOSITE", danmaku.with(data));
         }
         else if (msgType == 1)
         {
             if (toView)
             {
-                localNotify(username + " 跑去对面串门 " + snum(uid)); // 显示一个短通知，就不作为一个弹幕了
+                localNotify(username + " 跑去对面串门 " + uid); // 显示一个短通知，就不作为一个弹幕了
                 triggerCmdEvent("CALL_ON_OPPOSITE", danmaku.with(data));
             }
             triggerCmdEvent("PK_" + cmd, danmaku.with(data));
@@ -2886,7 +2886,7 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
             danmaku.transToAttention(timestamp);
             if (toView)
             {
-                localNotify(username + " 关注了对面直播间 " + snum(uid)); // XXX
+                localNotify(username + " 关注了对面直播间 " + uid); // XXX
                 triggerCmdEvent("ATTENTION_OPPOSITE", danmaku.with(data));
             }
             triggerCmdEvent("PK_ATTENTION", danmaku.with(data));
@@ -2896,7 +2896,7 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
             danmaku.transToShare();
             if (toView)
             {
-                localNotify(username + " 分享了对面直播间 " + snum(uid)); // XXX
+                localNotify(username + " 分享了对面直播间 " + uid); // XXX
                 triggerCmdEvent("SHARE_OPPOSITE", danmaku.with(data));
             }
             triggerCmdEvent("PK_SHARE", danmaku.with(data));

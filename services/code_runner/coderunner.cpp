@@ -192,7 +192,7 @@ bool CodeRunner::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int cha
     QString s = msgs.at(r);
     if (!s.trimmed().isEmpty())
     {
-        if (delayMine && QString::number(danmaku.getUid()) == ac->cookieUid) // 自己发的，自己回复，必须要延迟一会儿
+        if (delayMine && danmaku.getUid() == ac->cookieUid) // 自己发的，自己回复，必须要延迟一会儿
         {
             if (s.contains(QRegExp("cd\\d+\\s*:\\s*\\d+"))) // 带冷却通道，不能放前面
                 autoMsgTimer->start(); // 先启动，避免立即发送
@@ -910,7 +910,7 @@ QString CodeRunner::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     {
         QString _var = match.captured(0);
         QString text = match.captured(1);
-        msg.replace(_var, snum(unameToUid(text)));
+        msg.replace(_var, unameToUid(text));
     }
 
     bool find = true;
@@ -1022,7 +1022,7 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 用户昵称
     else if (key == "%uid%")
-        return snum(danmaku.getUid());
+        return danmaku.getUid();
 
     // 本地昵称+简化
     else if (key == "%ai_name%")
@@ -1066,7 +1066,7 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         if (danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD))
             return snum(danmaku.getNumber());
         else
-            return snum(us->danmakuCounts->value("come/"+snum(danmaku.getUid())).toInt());
+            return snum(us->danmakuCounts->value("come/" + danmaku.getUid()).toInt());
     }
 
     // 上次进来
@@ -1074,7 +1074,7 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     {
         return snum(danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD)
                                         ? danmaku.getPrevTimestamp()
-                                        : us->danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong());
+                                        : us->danmakuCounts->value("comeTime/" + danmaku.getUid()).toLongLong());
     }
 
     // 和现在的时间差
@@ -1082,7 +1082,7 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     {
         qint64 prevTime = danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD)
                 ? danmaku.getPrevTimestamp()
-                : us->danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong();
+                : us->danmakuCounts->value("comeTime/" + danmaku.getUid()).toLongLong();
         return snum(QDateTime::currentSecsSinceEpoch() - prevTime);
     }
 
@@ -1167,18 +1167,18 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 总共赠送金瓜子
     else if (key == "%total_gold%")
-        return snum(us->danmakuCounts->value("gold/"+snum(danmaku.getUid())).toLongLong());
+        return snum(us->danmakuCounts->value("gold/" + danmaku.getUid()).toLongLong());
 
     // 总共赠送银瓜子
     else if (key == "%total_silver%")
-        return snum(us->danmakuCounts->value("silver/"+snum(danmaku.getUid())).toLongLong());
+        return snum(us->danmakuCounts->value("silver/" + danmaku.getUid()).toLongLong());
 
     // 购买舰长
     else if (key == "%guard_buy%")
         return danmaku.is(MSG_GUARD_BUY) ? "1" : "0";
 
     else if (key == "%guard_buy_count%")
-        return snum(us->danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt());
+        return snum(us->danmakuCounts->value("guard/" + danmaku.getUid(), 0).toInt());
 
     // 0续费，1第一次上船，2重新上船
     else if (key == "%guard_first%" || key == "%first%")
@@ -1209,7 +1209,7 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 房管
     else if (key == "%admin%")
-        return danmaku.isAdmin() ? "1" : (!ac->upUid.isEmpty() && snum(danmaku.getUid())==ac->upUid ? "1" : "0");
+        return danmaku.isAdmin() ? "1" : (!ac->upUid.isEmpty() && danmaku.getUid()==ac->upUid ? "1" : "0");
 
     // 舰长
     else if (key == "%guard%" || key == "%guard_level%")
@@ -1231,12 +1231,12 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 房管或舰长
     else if (key == "%admin_or_guard%")
-        return (danmaku.isGuard() || danmaku.isAdmin() || (!ac->upUid.isEmpty() && snum(danmaku.getUid()) == ac->upUid)) ? "1" : "0";
+        return (danmaku.isGuard() || danmaku.isAdmin() || (!ac->upUid.isEmpty() && danmaku.getUid() == ac->upUid)) ? "1" : "0";
 
     // 高能榜
     else if (key == "%online_rank%")
     {
-        qint64 uid = danmaku.getUid();
+        UIDT uid = danmaku.getUid();
         for (int i = 0; i < liveService->onlineGoldRank.size(); i++)
         {
             if (liveService->onlineGoldRank.at(i).getUid() == uid)
@@ -1311,7 +1311,7 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%new_attention%")
     {
         bool isInFans = false;
-        qint64 uid = danmaku.getUid();
+        UIDT uid = danmaku.getUid();
         foreach (FanBean fan, liveService->fansList)
             if (fan.mid == uid)
             {
@@ -1470,10 +1470,10 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 是主播
     else if (key == "%is_up%")
-        return danmaku.getUid() == ac->upUid.toLongLong() ? "1" : "0";
+        return danmaku.getUid() == ac->upUid ? "1" : "0";
     // 是机器人
     else if (key == "%is_me%")
-        return danmaku.getUid() == ac->cookieUid.toLongLong() ? "1" : "0";
+        return danmaku.getUid() == ac->cookieUid ? "1" : "0";
     // 戴房间勋章
     else if (key == "%is_room_medal%")
         return danmaku.getAnchorRoomid() == ac->roomId ? "1" : "0";
@@ -1503,7 +1503,7 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%in_game_users%")
         return gameUsers[0].contains(danmaku.getUid()) ? "1" : "0";
     else if (key == "%in_game_numbers%")
-        return gameNumberLists[0].contains(danmaku.getUid()) ? "1" : "0";
+        return gameNumberLists[0].contains(danmaku.getNumber()) ? "1" : "0";
     else if (key == "%in_game_texts%")
         return gameTextLists[0].contains(danmaku.getText()) ? "1" : "0";
 
@@ -1536,7 +1536,7 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 用户备注
     else if (key == "%umark%")
-        return us->userMarks->value("base/" + snum(danmaku.getUid()), "").toString();
+        return us->userMarks->value("base/" + danmaku.getUid()).toString();
 
     // 对面直播间也在用神奇弹幕
     else if (key == "%pk_magical_room%")
@@ -1829,8 +1829,7 @@ QString CodeRunner::replaceDynamicVariants(const QString &funcName, const QStrin
     }
     else if (funcName == "unameToUid")
     {
-        qint64 uid = unameToUid(args);
-        return snum(uid);
+        return unameToUid(args);
     }
     else if (funcName == "ignoreEmpty")
     {
@@ -1849,17 +1848,17 @@ QString CodeRunner::replaceDynamicVariants(const QString &funcName, const QStrin
     else if (funcName == "inGameUsers")
     {
         int ch = 0;
-        qint64 id = 0;
+        UIDT uid = 0;
         if (argList.size() == 1)
-            id = argList.first().toLongLong();
+            uid = argList.first().toLongLong();
         else if (argList.size() >= 2)
         {
             ch = argList.at(0).toInt();
-            id = argList.at(1).toLongLong();
+            uid = argList.at(1).toLongLong();
         }
         if (ch < 0 || ch >= CHANNEL_COUNT)
             ch = 0;
-        return gameUsers[ch].contains(id) ? "1" : "0";
+        return gameUsers[ch].contains(uid) ? "1" : "0";
     }
     else if (funcName == "inGameNumbers")
     {
@@ -2548,7 +2547,7 @@ QString CodeRunner::replaceDynamicVariants(const QString &funcName, const QStrin
         }
         else // 指定 UID
         {
-            danmuList = liveService->getDanmusByUID(uid.toLongLong(), count);
+            danmuList = liveService->getDanmusByUID(uid, count);
         }
         if (danmuList.isEmpty())
         {
@@ -2595,7 +2594,7 @@ QString CodeRunner::replaceDynamicVariants(const QString &funcName, const QStrin
                 QString timeFormat = match.captured(1);
                 line.replace(time, danmu.getTimeline().toString(timeFormat));
             }
-            line.replace("{uid}", QString::number(danmu.getUid()));
+            line.replace("{uid}", danmu.getUid());
             line.replace("{uname}", danmaku.getNickname());
             line.replace("{text}", danmu.getText());
             return line;
@@ -3121,7 +3120,7 @@ void CodeRunner::triggerCmdEvent(const QString &cmd, const LiveDanmaku &danmaku,
     emit signalTriggerCmdEvent(cmd, danmaku, debug);
 }
 
-void CodeRunner::localNotify(const QString &text, qint64 uid)
+void CodeRunner::localNotify(const QString &text, UIDT uid)
 {
     emit signalLocalNotify(text, uid);
 }
@@ -3191,7 +3190,7 @@ QString CodeRunner::toRunableCode(QString text) const
     return text.replace("\\%", "%");
 }
 
-qint64 CodeRunner::unameToUid(QString text)
+UIDT CodeRunner::unameToUid(QString text)
 {
     // 查找弹幕和送礼
     for (int i = liveService->roomDanmakus.size()-1; i >= 0; i--)
@@ -3210,13 +3209,13 @@ qint64 CodeRunner::unameToUid(QString text)
     }
 
     // 查找专属昵称
-    QSet<qint64> hadMatches;
+    QSet<UIDT> hadMatches;
     for (int i = liveService->roomDanmakus.size()-1; i >= 0; i--)
     {
         const LiveDanmaku danmaku = liveService->roomDanmakus.at(i);
         if (!danmaku.is(MSG_DANMAKU) && !danmaku.is(MSG_GIFT))
             continue;
-        qint64 uid = danmaku.getUid();
+        UIDT uid = danmaku.getUid();
         if (hadMatches.contains(uid) || !us->localNicknames.contains(uid))
             continue;
         QString nick = us->localNicknames.value(uid);
@@ -3231,10 +3230,10 @@ qint64 CodeRunner::unameToUid(QString text)
 
     localNotify("[未找到用户：" + text + "]");
     triggerCmdEvent("NOT_FIND_USER_BY_UNAME", LiveDanmaku(text), true);
-    return 0;
+    return "";
 }
 
-QString CodeRunner::uidToName(qint64 uid)
+QString CodeRunner::uidToName(UIDT uid)
 {
     // 查找弹幕和送礼
     for (int i = liveService->roomDanmakus.size()-1; i >= 0; i--)
@@ -3252,7 +3251,7 @@ QString CodeRunner::uidToName(qint64 uid)
     }
 
     // 查找专属昵称
-    QSet<qint64> hadMatches;
+    QSet<UIDT> hadMatches;
     for (int i = liveService->roomDanmakus.size()-1; i >= 0; i--)
     {
         const LiveDanmaku danmaku = liveService->roomDanmakus.at(i);
@@ -3267,9 +3266,9 @@ QString CodeRunner::uidToName(qint64 uid)
         hadMatches.insert(uid);
     }
 
-    localNotify("[未找到用户：" + snum(uid) + "]");
-    triggerCmdEvent("NOT_FIND_USER_BY_UID", LiveDanmaku(snum(uid)), true);
-    return snum(uid);
+    localNotify("[未找到用户：" + uid + "]");
+    triggerCmdEvent("NOT_FIND_USER_BY_UID", LiveDanmaku(uid), true);
+    return uid;
 }
 
 /**

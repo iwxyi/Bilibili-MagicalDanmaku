@@ -257,7 +257,7 @@ void LiveRoomService::releaseLiveData(bool prepare)
     _guardJudged = false;
 }
 
-QList<LiveDanmaku> LiveRoomService::getDanmusByUID(qint64 uid, int count) const
+QList<LiveDanmaku> LiveRoomService::getDanmusByUID(QString uid, int count) const
 {
     QList<LiveDanmaku> dms;
     for (int i = 0; i < roomDanmakus.size(); i++)
@@ -434,7 +434,7 @@ void LiveRoomService::triggerCmdEvent(const QString &cmd, const LiveDanmaku &dan
     emit signalTriggerCmdEvent(cmd, danmaku, debug);
 }
 
-void LiveRoomService::localNotify(const QString &text, qint64 uid)
+void LiveRoomService::localNotify(const QString &text, UIDT uid)
 {
     emit signalLocalNotify(text, uid);
 }
@@ -622,7 +622,7 @@ void LiveRoomService::sendLongText(QString text)
     emit signalSendAutoMsg(splitLongDanmu(text, ac->danmuLongest).join("\\n"), LiveDanmaku());
 }
 
-bool LiveRoomService::isInFans(qint64 uid) const
+bool LiveRoomService::isInFans(QString uid) const
 {
     foreach (auto fan, fansList)
     {
@@ -632,13 +632,13 @@ bool LiveRoomService::isInFans(qint64 uid) const
     return false;
 }
 
-void LiveRoomService::markNotRobot(qint64 uid)
+void LiveRoomService::markNotRobot(QString uid)
 {
     if (!us->judgeRobot)
         return ;
-    int val = robotRecord->value("robot/" + snum(uid), 0).toInt();
+    int val = robotRecord->value("robot/" + uid, 0).toInt();
     if (val != -1)
-        robotRecord->setValue("robot/" + snum(uid), -1);
+        robotRecord->setValue("robot/" + uid, -1);
 }
 
 /**
@@ -652,7 +652,7 @@ bool LiveRoomService::mergeGiftCombo(const LiveDanmaku &danmaku)
         return false;
 
     // 判断，同人 && 礼物同名 && x秒内
-    qint64 uid = danmaku.getUid();
+    UIDT uid = danmaku.getUid();
     int giftId = danmaku.getGiftId();
     qint64 time = danmaku.getTimeline().toSecsSinceEpoch();
     LiveDanmaku* merged = nullptr;
@@ -694,7 +694,7 @@ bool LiveRoomService::mergeGiftCombo(const LiveDanmaku &danmaku)
  */
 void LiveRoomService::receiveDanmaku(LiveDanmaku &danmaku)
 {
-    qint64 uid = danmaku.getUid();
+    UIDT uid = danmaku.getUid();
     QString uname = danmaku.getNickname();
     QString msg = danmaku.getText();
 
@@ -702,17 +702,17 @@ void LiveRoomService::receiveDanmaku(LiveDanmaku &danmaku)
     qInfo() << s8("接收到弹幕：") << uname << msg << (danmaku.isNoReply() ? "(无需回复)" : "");
 
     // 等待通道
-    if (uid != ac->cookieUid.toLongLong())
+    if (uid != ac->cookieUid)
     {
         for (int i = 0; i < CHANNEL_COUNT; i++)
             cr->msgWaits[i]++;
     }
 
     // 统计弹幕次数
-    int danmuCount = us->danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;
+    int danmuCount = us->danmakuCounts->value("danmaku/"+uid, 0).toInt()+1;
     if (uid > 0)
     {
-        us->danmakuCounts->setValue("danmaku/"+snum(uid), danmuCount);
+        us->danmakuCounts->setValue("danmaku/"+uid, danmuCount);
     }
     dailyDanmaku++;
     if (dailySettings)
@@ -721,7 +721,7 @@ void LiveRoomService::receiveDanmaku(LiveDanmaku &danmaku)
     if (currentLiveSettings)
         currentLiveSettings->setValue("danmaku", currentLiveDanmaku);
 
-    if (snum(uid) == ac->cookieUid && cr->noReplyMsgs.contains(msg))
+    if (uid == ac->cookieUid && cr->noReplyMsgs.contains(msg))
     {
         danmaku.setNoReply();
         danmaku.setAutoSend();
@@ -762,7 +762,7 @@ void LiveRoomService::receiveDanmaku(LiveDanmaku &danmaku)
 
 void LiveRoomService::receiveGift(LiveDanmaku &danmaku)
 {
-    qint64 uid = danmaku.getUid();
+    UIDT uid = danmaku.getUid();
 
     danmaku.setFirst(mergeGiftCombo(danmaku) ? 0 : 1);// 如果有合并，则合并到之前的弹幕上面
     if (!danmaku.isGiftMerged())
@@ -780,15 +780,15 @@ void LiveRoomService::receiveGift(LiveDanmaku &danmaku)
 
 void LiveRoomService::receiveUserCome(LiveDanmaku &danmaku)
 {
-    qint64 uid = danmaku.getUid();
+    UIDT uid = danmaku.getUid();
 
     // [%come_time% > %timestamp%-3600]*%ai_name%，你回来了~ // 一小时内
     // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
-    int userCome = us->danmakuCounts->value("come/" + snum(uid)).toInt();
+    int userCome = us->danmakuCounts->value("come/" + uid).toInt();
     danmaku.setNumber(userCome);
     if (uid > 0)
     {
-        danmaku.setPrevTimestamp(us->danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
+        danmaku.setPrevTimestamp(us->danmakuCounts->value("comeTime/"+uid, 0).toLongLong());
     }
 
     appendNewLiveDanmaku(danmaku);
@@ -796,8 +796,8 @@ void LiveRoomService::receiveUserCome(LiveDanmaku &danmaku)
     userCome++;
     if (uid > 0)
     {
-        us->danmakuCounts->setValue("come/"+snum(uid), userCome);
-        us->danmakuCounts->setValue("comeTime/"+snum(uid), danmaku.getTimeline().toSecsSinceEpoch());
+        us->danmakuCounts->setValue("come/"+uid, userCome);
+        us->danmakuCounts->setValue("comeTime/"+uid, danmaku.getTimeline().toSecsSinceEpoch());
     }
 
     dailyCome++;

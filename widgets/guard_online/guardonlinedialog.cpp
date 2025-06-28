@@ -13,7 +13,7 @@
 #include "ui_guardonlinedialog.h"
 #include "usersettings.h"
 
-GuardOnlineDialog::GuardOnlineDialog(QSettings *settings, QString roomId, QString upUid, QWidget *parent) :
+GuardOnlineDialog::GuardOnlineDialog(QSettings *settings, QString roomId, UIDT upUid, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GuardOnlineDialog), settings(settings), roomId(roomId), upUid(upUid)
 {
@@ -53,7 +53,11 @@ void GuardOnlineDialog::refreshOnlineGuards(int page)
 
         ui->tableWidget->setRowCount(ui->tableWidget->rowCount()+1);
 
-        qint64 uid = qint64(user.value("uid").toDouble());
+        UIDT uid;
+        if (user.value("uid").isString())
+            uid = user.value("uid").toString();
+        else
+            uid = QString::number(qint64(user.value("uid").toDouble()));
         QString uname = user.value("username").toString();
         int guard_level = user.value("guard_level").toInt();
         QJsonObject medalInfo = user.value("medal_info").toObject();

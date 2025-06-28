@@ -67,7 +67,7 @@ public:
 
 signals:
     void signalTriggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug);
-    void signalLocalNotify(const QString& text, qint64 uid);
+    void signalLocalNotify(const QString& text, UIDT uid);
     void signalShowError(const QString& title, const QString& info);
     void signalSpeakText(const QString& text);
 
@@ -119,7 +119,7 @@ public:
     bool hasSimilarOldDanmaku(const QString &s) const;
 
     void triggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug = false);
-    void localNotify(const QString& text, qint64 uid = 0);
+    void localNotify(const QString& text, UIDT uid = "");
     void showError(const QString& title, const QString& desc = "");
 
     QString msgToShort(QString msg) const;
@@ -128,8 +128,8 @@ public:
     QString toMultiLine(QString text) const;
     QString toMultiLineForJson(QString text) const;
     QString toRunableCode(QString text) const;
-    qint64 unameToUid(QString text);
-    QString uidToName(qint64 uid);
+    UIDT unameToUid(QString text);
+    QString uidToName(QString uid);
     QString nicknameSimplify(const LiveDanmaku& danmaku) const;
     QString numberSimplify(int number) const;
     bool shallAutoMsg() const;
@@ -167,7 +167,7 @@ public:
     int msgWaits[CHANNEL_COUNT] = {}; // 等待通道
 
     // 游戏列表
-    QList<qint64> gameUsers[CHANNEL_COUNT];
+    QList<UIDT> gameUsers[CHANNEL_COUNT];
     QList<qint64> gameNumberLists[CHANNEL_COUNT];
     QList<QString> gameTextLists[CHANNEL_COUNT];
 
