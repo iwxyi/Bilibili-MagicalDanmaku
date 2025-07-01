@@ -11,7 +11,7 @@ void ChatGPTManager::setLiveService(LiveRoomService *service)
     this->liveService = service;
 }
 
-void ChatGPTManager::chat(qint64 uid, QString text, NetStringFunc func)
+void ChatGPTManager::chat(UIDT uid, QString text, NetStringFunc func)
 {
     /// 初始化ChatGPT
     ChatGPTUtil* chatgpt = new ChatGPTUtil(this);

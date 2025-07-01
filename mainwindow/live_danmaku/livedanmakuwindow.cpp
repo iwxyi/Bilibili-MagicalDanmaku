@@ -91,8 +91,8 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     connect(listWidget, &QListWidget::itemDoubleClicked, this, [=](QListWidgetItem *item){
         auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
-        qint64 uid = danmaku.getUid();
-        if (uid)
+        UIDT uid = danmaku.getUid();
+        if (!uid.isEmpty())
         {
             showUserMsgHistory(uid, danmaku.getNickname());
         }
@@ -697,7 +697,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         // 新人：0级，3次以内
         if (msgType == MSG_DANMAKU && newbieTip && !danmaku.isPkLink())
         {
-            int count = us->danmakuCounts->value("danmaku/"+snum(danmaku.getUid())).toInt();
+            int count = us->danmakuCounts->value("danmaku/"+danmaku.getUid()).toInt();
             if (danmaku.getLevel() == 0 && count <= 1 && danmaku.getMedalLevel() <= 1)
             {
                 if (simpleMode)
@@ -916,7 +916,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
 
     // 主播判断
-    if (upUid && (danmaku.getUid() == upUid || (pkStatus && danmaku.getUid() == pkUid && !danmaku.is(MSG_MSG))))
+    if (!upUid.isEmpty() && (danmaku.getUid() == upUid || (pkStatus && danmaku.getUid() == pkUid && !danmaku.is(MSG_MSG))))
         text = (simpleMode ? "[主播] " : "<font color='#F08080'>[主播]</font> ") + text;
 
     if (danmaku.isRobot())
@@ -1068,7 +1068,7 @@ void LiveDanmakuWindow::resetItemsStyleSheet()
 
 void LiveDanmakuWindow::mergeGift(const LiveDanmaku &danmaku, int delayTime)
 {
-    qint64 uid = danmaku.getUid();
+    UIDT uid = danmaku.getUid();
     QString gift = danmaku.getGiftName();
     qint64 time = danmaku.getTimeline().toSecsSinceEpoch();
 
@@ -1111,7 +1111,7 @@ void LiveDanmakuWindow::showMenu()
     auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
     qInfo() << "菜单信息：" << danmaku.toString();
     QString msg = danmaku.getText();
-    qint64 uid = danmaku.getUid();
+    UIDT uid = danmaku.getUid();
     MessageType type = danmaku.getMsgType();
 
     QMenu* menu = new QMenu(this);
@@ -1232,7 +1232,7 @@ void LiveDanmakuWindow::showMenu()
 
     if (uid != 0)
     {
-        actionCopyUid->setText("复制UID：" + snum(uid));
+        actionCopyUid->setText("复制UID：" + uid);
         if (danmaku.isAdmin())
             actionUserInfo->setText("房管主页");
         else if (danmaku.getGuard() == 1)
@@ -1247,11 +1247,11 @@ void LiveDanmakuWindow::showMenu()
         if (danmaku.is(MSG_DANMAKU) || danmaku.is(MSG_SUPER_CHAT))
         {
             actionUserInfo->setText(actionUserInfo->text() +  "：LV" + snum(danmaku.getLevel()));
-            actionHistory->setText("消息记录：" + snum(us->danmakuCounts->value("danmaku/"+snum(uid)).toInt()) + "条");
+            actionHistory->setText("消息记录：" + snum(us->danmakuCounts->value("danmaku/"+uid).toInt()) + "条");
         }
         else if (danmaku.getMsgType() == MSG_GIFT || danmaku.getMsgType() == MSG_GUARD_BUY)
         {
-            actionHistory->setText("送礼总额：" + snum(us->danmakuCounts->value("gold/"+snum(uid)).toLongLong()/1000) + "元");
+            actionHistory->setText("送礼总额：" + snum(us->danmakuCounts->value("gold/"+uid).toLongLong()/1000) + "元");
             if (danmaku.is(MSG_GUARD_BUY))
                 actionMedal->setText("船员数量：" + snum(ac->currentGuards.size()));
             actionCopyGiftId->setText("礼物ID：" + snum(danmaku.getGiftId()));
@@ -1293,8 +1293,8 @@ void LiveDanmakuWindow::showMenu()
             actionStrongNotify->setText("移除强提醒");
         if (us->localNicknames.contains(uid))
             actionSetName->setText("专属昵称：" + us->localNicknames.value(uid));
-        if (us->userMarks->contains("base/" + snum(uid)))
-            actionSetName->setText("备注：" + us->userMarks->value("base/" + snum(uid)).toString());
+        if (us->userMarks->contains("base/" + uid))
+            actionSetName->setText("备注：" + us->userMarks->value("base/" + uid).toString());
         actionNotWelcome->setChecked(us->notWelcomeUsers.contains(uid));
         actionNotReply->setChecked(us->notReplyUsers.contains(uid));
 
@@ -1368,7 +1368,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionHistory);
     menu->addAction(actionFollow);
     menu->addAction(actionView);
-    if (enableBlock && uid)
+    if (enableBlock && !uid.isEmpty())
     {
         menu->addSeparator();
         if (!us->userBlockIds.contains(uid) && danmaku.getMsgType() != MSG_BLOCK)
@@ -1554,8 +1554,8 @@ void LiveDanmakuWindow::showMenu()
 
         // 保存特别关心
         QStringList ress;
-        foreach (qint64 uid, us->careUsers)
-            ress << QString::number(uid);
+        foreach (UIDT uid, us->careUsers)
+            ress << uid;
         us->setValue("danmaku/careUsers", ress.join(";"));
     });
     connect(actionStrongNotify, &QAction::triggered, this, [=]{
@@ -1576,8 +1576,8 @@ void LiveDanmakuWindow::showMenu()
 
         // 保存特别关心
         QStringList ress;
-        foreach (qint64 uid, us->strongNotifyUsers)
-            ress << QString::number(uid);
+        foreach (UIDT uid, us->strongNotifyUsers)
+            ress << uid;
         us->setValue("danmaku/strongNotifyUsers", ress.join(";"));
     });
     connect(actionSetName, &QAction::triggered, this, [=]{
@@ -1641,20 +1641,20 @@ void LiveDanmakuWindow::showMenu()
         // 设置昵称
         bool ok = false;
         QString mark;
-        if (us->userMarks->contains("base/" + snum(uid)))
-            mark = us->userMarks->value("base/" + snum(uid), "").toString();
+        if (us->userMarks->contains("base/" + uid))
+            mark = us->userMarks->value("base/" + uid, "").toString();
         QString tip = "设置【" + danmaku.getNickname() + "】的备注\n可通过%umark%放入至弹幕中";
         mark = QInputDialog::getText(this, "用户备注", tip, QLineEdit::Normal, mark, &ok);
         if (!ok)
             return ;
         if (mark.isEmpty())
         {
-            if (us->userMarks->contains("base/" + snum(uid)))
-                us->userMarks->remove("base/" + snum(uid));
+            if (us->userMarks->contains("base/" + uid))
+                us->userMarks->remove("base/" + uid);
         }
         else
         {
-            us->userMarks->setValue("base/" + snum(uid), mark);
+            us->userMarks->setValue("base/" + uid, mark);
             emit signalMarkUser(danmaku.getUid());
         }
     });
@@ -1665,8 +1665,8 @@ void LiveDanmakuWindow::showMenu()
             us->notWelcomeUsers.append(uid);
 
         QStringList ress;
-        foreach (qint64 uid, us->notWelcomeUsers)
-            ress << QString::number(uid);
+        foreach (UIDT uid, us->notWelcomeUsers)
+            ress << uid;
         us->setValue("danmaku/notWelcomeUsers", ress.join(";"));
     });
     connect(actionNotReply, &QAction::triggered, this, [=]{
@@ -1676,8 +1676,8 @@ void LiveDanmakuWindow::showMenu()
             us->notReplyUsers.append(uid);
 
         QStringList ress;
-        foreach (qint64 uid, us->notReplyUsers)
-            ress << QString::number(uid);
+        foreach (UIDT uid, us->notReplyUsers)
+            ress << uid;
         us->setValue("danmaku/notReplyUsers", ress.join(";"));
     });
     connect(actionSetGiftName, &QAction::triggered, this, [=]{
@@ -1864,17 +1864,17 @@ void LiveDanmakuWindow::showMenu()
         QDesktopServices::openUrl(QUrl(liveService->getApiUrl(ApiType::UserSpace, uid)));
     });
     connect(actionCopyUid, &QAction::triggered, this, [=]{
-        QApplication::clipboard()->setText(snum(uid));
+        QApplication::clipboard()->setText(uid);
     });
     connect(actionReplyUser, &QAction::triggered, this, [=]{
-        lineEdit->setText(lineEdit->text() + "@" + snum(uid) + " ");
+        lineEdit->setText(lineEdit->text() + "@" + uid + " ");
         lineEdit->setFocus();
     });
     connect(actionCopyGiftId, &QAction::triggered, this, [=]{
         QApplication::clipboard()->setText(snum(danmaku.getGiftId()));
     });
     connect(actionMedal, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(ApiType::RoomPage, danmaku.getAnchorRoomid().toLongLong())));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(ApiType::RoomPage, danmaku.getAnchorRoomid())));
     });
     connect(actionValue, &QAction::triggered, this, [=]{
 
@@ -2109,10 +2109,10 @@ void LiveDanmakuWindow::showPkMenu()
         QDesktopServices::openUrl(QUrl(liveService->getApiUrl(UserSpace, pkUid)));
     });
     connect(actionRank, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(RoomPage, pkRoomId)));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(RoomPage, QString::number(pkRoomId))));
     });
     connect(actionGuard, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(RoomPage, pkRoomId)));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(RoomPage, QString::number(pkRoomId))));
     });
     connect(actionAttention, &QAction::triggered, this, [=]{
         QDesktopServices::openUrl(QUrl(liveService->getApiUrl(UserFollows, pkUid)));
@@ -2133,7 +2133,7 @@ void LiveDanmakuWindow::showPkMenu()
         emit signalShowPkVideo();
     });
     connect(actionOnline, &QAction::triggered, this, [=]{
-        GuardOnlineDialog* god = new GuardOnlineDialog(us, snum(pkRoomId), snum(pkUid), this);
+        GuardOnlineDialog* god = new GuardOnlineDialog(us, snum(pkRoomId), pkUid, this);
         god->show();
     });
 
@@ -2199,12 +2199,12 @@ void LiveDanmakuWindow::setAIReply(bool reply)
 void LiveDanmakuWindow::startReply(QListWidgetItem *item, bool manual)
 {
     auto danmaku = LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
-    qint64 uid = danmaku.getUid();
+    UIDT uid = danmaku.getUid();
     // 无需回复的消息
-    if (!uid || us->notReplyUsers.contains(uid) || danmaku.isNoReply())
+    if (uid.isEmpty() || us->notReplyUsers.contains(uid) || danmaku.isNoReply())
         return ;
     // 不回复自己的消息
-    if (!us->AIReplySelf && danmaku.getUid() == ac->cookieUid.toLongLong())
+    if (!us->AIReplySelf && danmaku.getUid() == ac->cookieUid)
         return;
 
     QString msg = danmaku.getText();
@@ -2309,13 +2309,13 @@ void LiveDanmakuWindow::setNewbieTip(bool tip)
     this->newbieTip = tip;
 }
 
-void LiveDanmakuWindow::setIds(qint64 uid, qint64 roomId)
+void LiveDanmakuWindow::setIds(QString uid, qint64 roomId)
 {
     this->upUid = uid;
     this->roomId = roomId;
 }
 
-void LiveDanmakuWindow::markRobot(qint64 uid)
+void LiveDanmakuWindow::markRobot(QString uid)
 {
     for (int i = 0; i < listWidget->count(); i++)
     {
@@ -2330,7 +2330,7 @@ void LiveDanmakuWindow::markRobot(qint64 uid)
     }
 }
 
-void LiveDanmakuWindow::showFastBlock(qint64 uid, QString msg)
+void LiveDanmakuWindow::showFastBlock(QString uid, QString msg)
 {
     auto moveAni = [=](QWidget* widget, QPoint start, QPoint end, int duration, QEasingCurve curve) {
         QPropertyAnimation* ani = new QPropertyAnimation(widget, "pos");
@@ -2405,7 +2405,7 @@ void LiveDanmakuWindow::showFastBlock(qint64 uid, QString msg)
     timer->start();
 }
 
-void LiveDanmakuWindow::setPkStatus(int status, qint64 roomId, qint64 uid, QString uname)
+void LiveDanmakuWindow::setPkStatus(int status, qint64 roomId, QString uid, QString uname)
 {
     this->pkStatus = status;
     this->pkRoomId = roomId;
@@ -2574,7 +2574,7 @@ void LiveDanmakuWindow::adjustItemTextDynamic(QListWidgetItem *item)
 
 void LiveDanmakuWindow::getUserInfo(LiveDanmaku danmaku, QListWidgetItem* item)
 {
-    qint64 uid = danmaku.getUid();
+    UIDT uid = danmaku.getUid();
     if (hasGetUserHeader.contains(uid)) // 避免重复获取头像
         return ;
     if (uid == 0 || headerApiIsBanned) // 请求已经被拦截了
@@ -2605,7 +2605,7 @@ void LiveDanmakuWindow::getUserInfo(LiveDanmaku danmaku, QListWidgetItem* item)
     hasGetUserHeader.remove(uid);
 }
 
-void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem* item)
+void LiveDanmakuWindow::getUserHeadPortrait(UIDT uid, QString url, QListWidgetItem* item)
 {
     QString path = headPath(uid);
     if (!QFileInfo(path).exists())
@@ -2643,26 +2643,26 @@ void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidget
     label->setPixmap(QPixmap(path));
 }
 
-QString LiveDanmakuWindow::headPath(qint64 uid) const
+QString LiveDanmakuWindow::headPath(UIDT uid) const
 {
-    return headDir + snum(uid) + ".jpg";
+    return headDir + uid + ".jpg";
 }
 
-void LiveDanmakuWindow::showUserMsgHistory(qint64 uid, QString title)
+void LiveDanmakuWindow::showUserMsgHistory(UIDT uid, QString title)
 {
-    if (!uid)
+    if (uid.isEmpty())
         return ;
     QStringList sums;
-    qint64 c = us->danmakuCounts->value("danmaku/"+snum(uid)).toInt();
+    qint64 c = us->danmakuCounts->value("danmaku/"+uid).toInt();
     if(c)
         sums << snum(c)+" 条弹幕";
-    c = us->danmakuCounts->value("come/"+snum(uid)).toInt();
+    c = us->danmakuCounts->value("come/"+uid).toInt();
     if (c)
         sums << "进来 " + snum(c)+" 次";
-    c = us->danmakuCounts->value("gold/"+snum(uid)).toLongLong();
+    c = us->danmakuCounts->value("gold/"+uid).toLongLong();
     if (c)
         sums << "赠送 " + snum(c)+" 金瓜子";
-    c = us->danmakuCounts->value("silver/"+snum(uid)).toLongLong();
+    c = us->danmakuCounts->value("silver/"+uid).toLongLong();
     if (c)
         sums << snum(c)+" 银瓜子";
 

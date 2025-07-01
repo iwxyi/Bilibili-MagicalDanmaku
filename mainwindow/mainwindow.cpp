@@ -1084,7 +1084,7 @@ void MainWindow::initLiveService()
         triggerCmdEvent(cmd, danmaku, debug);
     });
 
-    connect(liveService, &LiveRoomService::signalLocalNotify, this, [=](const QString& text, qint64 uid) {
+    connect(liveService, &LiveRoomService::signalLocalNotify, this, [=](const QString& text, UIDT uid) {
         localNotify(text, uid);
     });
 
@@ -1170,7 +1170,7 @@ void MainWindow::initLiveService()
         {
             danmakuWindow->showStatusText();
             danmakuWindow->setToolTip(liveService->pkUname);
-            danmakuWindow->setPkStatus(1, liveService->pkRoomId.toLongLong(), liveService->pkUid.toLongLong(), liveService->pkUname);
+            danmakuWindow->setPkStatus(1, liveService->pkRoomId.toLongLong(), liveService->pkUid, liveService->pkUname);
         }
         ui->actionShow_PK_Video->setEnabled(true);
 
@@ -1201,7 +1201,7 @@ void MainWindow::initLiveService()
             danmakuWindow->setStatusText(text);
     });
 
-    connect(liveService, &LiveRoomService::signalPKStatusChanged, this, [=](int pkType, qint64 roomId, qint64 upUid, const QString& upUname) {
+    connect(liveService, &LiveRoomService::signalPKStatusChanged, this, [=](int pkType, qint64 roomId, UIDT upUid, const QString& upUname) {
         if (danmakuWindow)
             danmakuWindow->setPkStatus(pkType, roomId, upUid, upUname);
     });
@@ -1504,10 +1504,10 @@ void MainWindow::readConfig()
         if (sl.size() < 2)
             continue;
 
-        us->localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
+        us->localNicknames.insert(sl.at(0), sl.at(1));
     }
     if (us->localNicknames.empty())
-        us->localNicknames.insert(20285041, "神奇弹幕开发者");
+        us->localNicknames.insert("20285041", "神奇弹幕开发者");
 
     // 礼物别名
     us->giftAlias.clear();
@@ -1526,27 +1526,27 @@ void MainWindow::readConfig()
     QStringList usersS = us->value("danmaku/careUsers", "20285041").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersS)
     {
-        us->careUsers.append(s.toLongLong());
+        us->careUsers.append(s);
     }
     if (us->careUsers.empty())
-        us->careUsers.append(20285041);
+        us->careUsers.append("20285041");
 
     // 强提醒
     us->strongNotifyUsers.clear();
     QStringList usersSN = us->value("danmaku/strongNotifyUsers", "").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersSN)
     {
-        us->strongNotifyUsers.append(s.toLongLong());
+        us->strongNotifyUsers.append(s);
     }
     if (us->strongNotifyUsers.isEmpty())
-        us->strongNotifyUsers.append(20285041);
+        us->strongNotifyUsers.append("20285041");
 
     // 不自动欢迎
     us->notWelcomeUsers.clear();
     QStringList usersNW = us->value("danmaku/notWelcomeUsers", "").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersNW)
     {
-        us->notWelcomeUsers.append(s.toLongLong());
+        us->notWelcomeUsers.append(s);
     }
 
     // 不自动回复
@@ -1554,7 +1554,7 @@ void MainWindow::readConfig()
     QStringList usersNR = us->value("danmaku/notReplyUsers", "").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersNR)
     {
-        us->notReplyUsers.append(s.toLongLong());
+        us->notReplyUsers.append(s);
     }
 
     // 礼物连击
@@ -1829,7 +1829,7 @@ void MainWindow::readConfig()
     for (int i = 0; i < eternalBlockSize; i++)
     {
         EternalBlockUser eb = EternalBlockUser::fromJson(eternalBlockArray.at(i).toObject());
-        if (eb.uid && eb.roomId)
+        if (!eb.uid.isEmpty() && eb.roomId)
             us->eternalBlockUsers.append(eb);
     }
 
@@ -1983,10 +1983,10 @@ void MainWindow::initDanmakuWindow()
 
     connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
     connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), liveService, SLOT(sendMsg(QString)));
-    connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int, QString)), liveService, SLOT(addBlockUser(qint64, int, QString)));
-    connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), liveService, SLOT(delBlockUser(qint64)));
-    connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString,QString)), this, SLOT(eternalBlockUser(qint64,QString,QString)));
-    connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
+    connect(danmakuWindow, SIGNAL(signalAddBlockUser(QString, int, QString)), liveService, SLOT(addBlockUser(QString, int, QString)));
+    connect(danmakuWindow, SIGNAL(signalDelBlockUser(QString)), liveService, SLOT(delBlockUser(QString)));
+    connect(danmakuWindow, SIGNAL(signalEternalBlockUser(QString,QString,QString)), this, SLOT(eternalBlockUser(QString,QString,QString)));
+    connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(QString)), this, SLOT(cancelEternalBlockUser(QString)));
     connect(danmakuWindow, SIGNAL(signalAIReplyed(QString, LiveDanmaku)), this, SLOT(slotAIReplyed(QString, LiveDanmaku)));
     connect(danmakuWindow, SIGNAL(signalShowPkVideo()), this, SLOT(on_actionShow_PK_Video_triggered()));
     connect(danmakuWindow, &LiveDanmakuWindow::signalChangeWindowMode, this, [=]{
@@ -2000,7 +2000,7 @@ void MainWindow::initDanmakuWindow()
         qInfo() << "发送PK对面消息：" << liveService->pkRoomId << msg;
         liveService->sendRoomMsg(liveService->pkRoomId, msg);
     });
-    connect(danmakuWindow, &LiveDanmakuWindow::signalMarkUser, this, [=](qint64 uid){
+    connect(danmakuWindow, &LiveDanmakuWindow::signalMarkUser, this, [=](UIDT uid){
         if (us->judgeRobot)
             liveService->markNotRobot(uid);
     });
@@ -2015,11 +2015,11 @@ void MainWindow::initDanmakuWindow()
         }
     });
     connect(danmakuWindow, &LiveDanmakuWindow::signalAddCloudShieldKeyword, this, &MainWindow::addCloudShieldKeyword);
-    connect(danmakuWindow, SIGNAL(signalAppointAdmin(qint64)), liveService, SLOT(appointAdmin(qint64)));
-    connect(danmakuWindow, SIGNAL(signalDismissAdmin(qint64)), liveService, SLOT(dismissAdmin(qint64)));
+    connect(danmakuWindow, SIGNAL(signalAppointAdmin(QString)), liveService, SLOT(appointAdmin(QString)));
+    connect(danmakuWindow, SIGNAL(signalDismissAdmin(QString)), liveService, SLOT(dismissAdmin(QString)));
     danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
     danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
-    danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
+    danmakuWindow->setIds(ac->upUid, ac->roomId.toLongLong());
     danmakuWindow->setWindowIcon(this->windowIcon());
     danmakuWindow->setWindowTitle(this->windowTitle());
     danmakuWindow->hide();
@@ -2027,7 +2027,7 @@ void MainWindow::initDanmakuWindow()
     // PK中
     if (liveService->pkBattleType)
     {
-        danmakuWindow->setPkStatus(1, liveService->pkRoomId.toLongLong(), liveService->pkUid.toLongLong(), liveService->pkUname);
+        danmakuWindow->setPkStatus(1, liveService->pkRoomId.toLongLong(), liveService->pkUid, liveService->pkUname);
     }
 
     // 添加创建窗口之前的弹幕
@@ -2047,7 +2047,7 @@ void MainWindow::initDanmakuWindow()
 
         if (liveService->pking)
         {
-            danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
+            danmakuWindow->setIds(ac->upUid, ac->roomId.toLongLong());
         }
     });
 }
@@ -2089,7 +2089,7 @@ void MainWindow::initCodeRunner()
         triggerCmdEvent(cmd, danmaku, debug);
     });
 
-    connect(cr, &CodeRunner::signalLocalNotify, this, [=](const QString& text, qint64 uid) {
+    connect(cr, &CodeRunner::signalLocalNotify, this, [=](const QString& text, UIDT uid) {
         localNotify(text, uid);
     });
 
@@ -2716,7 +2716,7 @@ void MainWindow::slotRoomInfoChanged()
     }
 
     if (danmakuWindow)
-        danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
+        danmakuWindow->setIds(ac->upUid, ac->roomId.toLongLong());
 
     updatePermission();
 }
@@ -2727,12 +2727,12 @@ void MainWindow::slotRoomInfoChanged()
  */
 void MainWindow::slotTryBlockDanmaku(const LiveDanmaku &danmaku)
 {
-    const qint64 uid = danmaku.getUid();
+    const UIDT uid = danmaku.getUid();
     const QString& msg = danmaku.getText();
     const bool admin = danmaku.isAdmin();
     const int level = danmaku.getLevel();
     const int medal_level = danmaku.getMedalLevel();
-    const int danmuCount = us->danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;
+    const int danmuCount = us->danmakuCounts->value("danmaku/"+uid, 0).toInt()+1;
 
     bool blocked = false;
     auto testTipBlock = [&]{
@@ -2748,7 +2748,7 @@ void MainWindow::slotTryBlockDanmaku(const LiveDanmaku &danmaku)
             }
         }
     };
-    if (!us->debugPrint && (snum(uid) == ac->upUid || snum(uid) == ac->cookieUid)) // 是自己或UP主的，不屏蔽
+    if (!us->debugPrint && (uid == ac->upUid || uid == ac->cookieUid)) // 是自己或UP主的，不屏蔽
     {
         // 如果自动回复有对应的命令，则自动回复优先
         if (hasReply(msg))
@@ -2942,7 +2942,7 @@ void MainWindow::slotSendAttentionThank(const LiveDanmaku &danmaku)
 
 void MainWindow::slotNewGuardBuy(const LiveDanmaku &danmaku)
 {
-    const qint64 uid = danmaku.getUid();
+    const UIDT uid = danmaku.getUid();
     const QString& username = danmaku.getNickname();
 
     // 新船员数量事件
@@ -2998,7 +2998,7 @@ void MainWindow::localNotify(const QString &text)
     liveService->appendNewLiveDanmaku(LiveDanmaku(text));
 }
 
-void MainWindow::localNotify(const QString &text, qint64 uid)
+void MainWindow::localNotify(const QString &text, QString uid)
 {
     LiveDanmaku danmaku(text);
     danmaku.setUid(uid);
@@ -3115,7 +3115,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         text = "测试弹幕";
     QRegularExpressionMatch match;
 
-    qint64 uid = 123;
+    UIDT uid = "123";
     int r = qrand() % 7 + 1;
     if (text.startsWith("$"))
     {
@@ -3170,7 +3170,7 @@ void MainWindow::on_testDanmakuButton_clicked()
     }
     else if (text == "测试醒目留言")
     {
-        LiveDanmaku danmaku("测试用户", "测试弹幕", 1001, 12, QDateTime::currentDateTime(), "", "", 39, "醒目留言", 1, 30);
+        LiveDanmaku danmaku("测试用户", "测试弹幕", "1001", 12, QDateTime::currentDateTime(), "", "", 39, "醒目留言", 1, 30);
         liveService->appendNewLiveDanmaku(danmaku);
     }
     else if (text == "测试消息")
@@ -6070,7 +6070,7 @@ void MainWindow::updateOnlineRankGUI()
     for (int i = 0; i < liveService->onlineGoldRank.size(); i++)
     {
         const LiveDanmaku &danmaku = liveService->onlineGoldRank.at(i);
-        qint64 uid = danmaku.getUid();
+        UIDT uid = danmaku.getUid();
         if (!pl->userHeaders.contains(uid))
         {
             QString url = danmaku.extraJson.value("face").toString();
@@ -6100,8 +6100,8 @@ void MainWindow::updateOnlineRankGUI()
     int diff = 0;
     for (diff = 0; diff < liveService->onlineGoldRank.size() && diff < ui->onlineRankListWidget->count(); diff++)
     {
-        qint64 id1 = liveService->onlineGoldRank.at(diff).getUid();
-        qint64 id2 = ui->onlineRankListWidget->item(diff)->data(Qt::UserRole).toLongLong();
+        UIDT id1 = liveService->onlineGoldRank.at(diff).getUid();
+        UIDT id2 = ui->onlineRankListWidget->item(diff)->data(Qt::UserRole).toString();
         if (id1 != id2)
             break;
     }
@@ -6120,7 +6120,7 @@ void MainWindow::updateOnlineRankGUI()
     for (int i = diff; i < liveService->onlineGoldRank.size(); i++)
     {
         auto& danmaku = liveService->onlineGoldRank.at(i);
-        qint64 uid = danmaku.getUid();
+        UIDT uid = danmaku.getUid();
         if (pl->userHeaders.contains(uid))
         {
             // 创建widget
@@ -6305,7 +6305,7 @@ void MainWindow::showDiangeHistory()
     QMessageBox::information(this, "点歌历史", text);
 }
 
-void MainWindow::eternalBlockUser(qint64 uid, QString uname, QString msg)
+void MainWindow::eternalBlockUser(UIDT uid, QString uname, QString msg)
 {
     if (us->eternalBlockUsers.contains(EternalBlockUser(uid, ac->roomId.toLongLong(), msg)))
     {
@@ -6320,12 +6320,12 @@ void MainWindow::eternalBlockUser(qint64 uid, QString uname, QString msg)
     qInfo() << "添加永久禁言：" << uname << "    当前人数：" << us->eternalBlockUsers.size();
 }
 
-void MainWindow::cancelEternalBlockUser(qint64 uid)
+void MainWindow::cancelEternalBlockUser(UIDT uid)
 {
     cancelEternalBlockUser(uid, ac->roomId.toLongLong());
 }
 
-void MainWindow::cancelEternalBlockUser(qint64 uid, qint64 roomId)
+void MainWindow::cancelEternalBlockUser(UIDT uid, qint64 roomId)
 {
     EternalBlockUser user(uid, roomId, "");
     if (!us->eternalBlockUsers.contains(user))
@@ -6336,12 +6336,12 @@ void MainWindow::cancelEternalBlockUser(qint64 uid, qint64 roomId)
     qInfo() << "移除永久禁言：" << uid << "    当前人数：" << us->eternalBlockUsers.size();
 }
 
-void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid)
+void MainWindow::cancelEternalBlockUserAndUnblock(UIDT uid)
 {
     cancelEternalBlockUserAndUnblock(uid, ac->roomId.toLongLong());
 }
 
-void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid, qint64 roomId)
+void MainWindow::cancelEternalBlockUserAndUnblock(UIDT uid, qint64 roomId)
 {
     cancelEternalBlockUser(uid, roomId);
 
@@ -6682,7 +6682,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             qInfo() << "点歌成功" << song.simpleString() << latency;
 
             // 获取UID
-            qint64 uid = 0;
+            UIDT uid;
             for (int i = liveService->roomDanmakus.size()-1; i >= 0; i--)
             {
                 const LiveDanmaku danmaku = liveService->roomDanmakus.at(i);
@@ -7074,9 +7074,9 @@ void MainWindow::saveEveryGuard(LiveDanmaku danmaku)
            << danmaku.getNickname() << ","
            << danmaku.getGiftName() << ","
            << danmaku.getNumber() << ","
-           << us->danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt() << ","
+           << us->danmakuCounts->value("guard/" + danmaku.getUid()).toInt() << ","
            << danmaku.getUid() << ","
-           << us->userMarks->value("base/" + snum(danmaku.getUid()), "").toString() << "\n";
+           << us->userMarks->value("base/" + danmaku.getUid()).toString() << "\n";
 
     file.close();
 }
@@ -7832,7 +7832,7 @@ void MainWindow::restoreGameNumbers()
         QStringList sl = cr->heaps->value("game_numbers/r" + snum(i)).toString().split(";");
         auto& list = cr->gameNumberLists[i];
         list.clear();
-        foreach (QString s, sl)
+        foreach (UIDT s, sl)
             list << s.toLongLong();
     }
 }
@@ -9438,9 +9438,9 @@ void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
     if (!us->AIReplyMsgSend)
         return ;
 
-    qint64 uid = danmaku.getUid();
+    UIDT uid = danmaku.getUid();
     // 机器人自动发送的不回复（不然自己和自己打起来了）
-    if (snum(uid) == ac->cookieUid && cr->noReplyMsgs.contains(reply))
+    if (uid == ac->cookieUid && cr->noReplyMsgs.contains(reply))
         return ;
 
     // 过滤器
@@ -10606,7 +10606,7 @@ void MainWindow::exportAllGuardsByMonth(QString exportPath)
         QString nickname;
         QString giftName;
         int count;
-        qint64 uid;
+        UIDT uid;
         QString remark;
     };
 
@@ -10623,7 +10623,7 @@ void MainWindow::exportAllGuardsByMonth(QString exportPath)
             qWarning() << "不符合的格式：" << lines.at(i);
             continue;
         }
-        GuardTrade trade{cells[0], cells[2], cells[3], cells[4].toInt(), cells[6].toLongLong(), cells.size() >= 8 ? cells[7] : ""};
+        GuardTrade trade{cells[0], cells[2], cells[3], cells[4].toInt(), cells[6], cells.size() >= 8 ? cells[7] : ""};
         trades.append(trade);
     }
 
@@ -10641,7 +10641,7 @@ void MainWindow::exportAllGuardsByMonth(QString exportPath)
     }
 
     // 获取所有用户
-    QList<qint64> users;
+    QList<UIDT> users;
     QList<QString> nicknames;
     for (const GuardTrade& trade: trades)
     {
@@ -10687,7 +10687,7 @@ void MainWindow::exportAllGuardsByMonth(QString exportPath)
     for (int i = 0; i < users.size(); i++)
     {
         // 添加用户ID和昵称列
-        fullText += "\n" + snum(users.at(i)) + "," + nicknames.at(i);
+        fullText += "\n" + users.at(i) + "," + nicknames.at(i);
         // 添加每次上船的标记
         for (int j = 0; j < months.size(); j++)
         {
@@ -10856,7 +10856,7 @@ void MainWindow::on_stringSimilarCheck_clicked()
 
 void MainWindow::on_onlineRankListWidget_itemDoubleClicked(QListWidgetItem *item)
 {
-    openLink(liveService->getApiUrl(UserSpace, item->data(Qt::UserRole).toLongLong()));
+    openLink(liveService->getApiUrl(UserSpace, item->data(Qt::UserRole).toString()));
 }
 
 void MainWindow::on_actionShow_Gift_List_triggered()

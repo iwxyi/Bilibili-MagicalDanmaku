@@ -4,6 +4,8 @@
 #include "mysettings.h"
 #include "externalblockuser.h"
 
+#define UIDT QString
+
 struct SubAccount
 {
     QString uid;
@@ -22,18 +24,18 @@ public:
     {
     }
 
-    QHash<qint64, QString> localNicknames;             // 本地昵称
-    QHash<qint64, qint64> userComeTimes;               // 用户进来的时间（客户端时间戳为准）
-    QHash<qint64, qint64> userBlockIds;                // 本次用户屏蔽的ID
+    QHash<UIDT, QString> localNicknames;             // 本地昵称
+    QHash<UIDT, qint64> userComeTimes;               // 用户进来的时间（客户端时间戳为准）
+    QHash<UIDT, qint64> userBlockIds;                // 本次用户屏蔽的ID
     QSettings *danmakuCounts;                          // 保存弹幕次数的settings
     QSettings *userMarks;                              // 保存每位用户的设置
-    QList<qint64> careUsers;                           // 特别关心
-    QList<qint64> strongNotifyUsers;                   // 强提醒
+    QList<UIDT> careUsers;                           // 特别关心
+    QList<UIDT> strongNotifyUsers;                   // 强提醒
     QList<QPair<QString, QString>> customVariant;      // 自定义变量
     QList<QPair<QString, QString>> variantTranslation; // 变量翻译
     QList<QPair<QString, QString>> replaceVariant;     // 替换变量
-    QList<qint64> notWelcomeUsers;                     // 不自动欢迎的用户（某些领导、黑粉）
-    QList<qint64> notReplyUsers;                       // 不自动回复的用户
+    QList<UIDT> notWelcomeUsers;                     // 不自动欢迎的用户（某些领导、黑粉）
+    QList<UIDT> notReplyUsers;                       // 不自动回复的用户
     QHash<int, QString> giftAlias;                     // 礼物名字
     QList<EternalBlockUser> eternalBlockUsers;         // 永久禁言
 
@@ -91,7 +93,7 @@ public:
     bool complexCalc = false; // 启动复杂计算（禁用，有大bug）
     QJsonObject dynamicConfigs;  // 一些默认配置
 
-    QString getLocalNickname(qint64 uid) const
+    QString getLocalNickname(UIDT uid) const
     {
         if (localNicknames.contains(uid))
             return localNicknames.value(uid);

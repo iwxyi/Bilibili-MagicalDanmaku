@@ -44,7 +44,7 @@ public:
 
     virtual void releaseLiveData(bool prepare);
 
-    QList<LiveDanmaku> getDanmusByUID(qint64 uid, int count = 0) const;
+    QList<LiveDanmaku> getDanmusByUID(UIDT uid, int count = 0) const;
     QList<LiveDanmaku> getAllDanmus(int count = 0) const;
 
     void setSqlService(SqlService* service);
@@ -70,7 +70,7 @@ signals:
     void signalRobotAccountChanged();
     void signalSubAccountChanged(const QString& cookie, const SubAccount& subAccount);
     void signalRoomIdChanged(const QString &roomId); // 房间号改变，例如通过解析身份码导致的房间ID变更
-    void signalUpUidChanged(const QString &uid);
+    void signalUpUidChanged(const UIDT &uid);
     void signalUpFaceChanged(const QPixmap& pixmap);
     void signalUpInfoChanged();
     void signalUpSignatureChanged(const QString& signature);
@@ -119,7 +119,7 @@ signals:
     void signalBattleStartMatch();
 
     void signalDanmakuStatusChanged(const QString& text);
-    void signalPKStatusChanged(int pkType, qint64 roomId, qint64 upUid, const QString& upUname);
+    void signalPKStatusChanged(int pkType, qint64 roomId, UIDT upUid, const QString& upUname);
     void signalDanmakuAddBlockText(const QString& word, int second);
     void signalMergeGiftCombo(const LiveDanmaku& danmaku, int delay); // 弹幕姬的礼物合并
     void signalAutoMelonMsgChanged(const QString& msg);
@@ -131,7 +131,7 @@ signals:
     void signalPositiveVoteCountChanged(const QString& text);
 
     void signalTriggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug);
-    void signalLocalNotify(const QString& text, qint64 uid);
+    void signalLocalNotify(const QString& text, UIDT uid);
     void signalShowError(const QString& title, const QString& info);
     void signalNewHour();
     void signalNewDay();
@@ -155,15 +155,15 @@ public slots:
     /// 恢复之前的弹幕
     virtual void pullLiveDanmaku() { }
     /// 设置为管理员
-    virtual void appointAdmin(qint64 uid) {}
+    virtual void appointAdmin(QString uid) {}
     /// 取消管理员
-    virtual void dismissAdmin(qint64 uid) {}
+    virtual void dismissAdmin(QString uid) {}
     /// 禁言
-    virtual void addBlockUser(qint64 uid, int hour, QString msg) { addBlockUser(uid, ac->roomId, hour, msg); }
-    virtual void addBlockUser(qint64 uid, QString roomId, int hour, QString msg) {}
+    virtual void addBlockUser(QString uid, int hour, QString msg) { addBlockUser(uid, ac->roomId, hour, msg); }
+    virtual void addBlockUser(QString uid, QString roomId, int hour, QString msg) {}
     /// 取消禁言
-    virtual void delBlockUser(qint64 uid) { delBlockUser(uid, ac->roomId); }
-    virtual void delBlockUser(qint64 uid, QString roomId) {}
+    virtual void delBlockUser(QString uid) { delBlockUser(uid, ac->roomId); }
+    virtual void delBlockUser(QString uid, QString roomId) {}
     /// 禁言要通过禁言id来解除禁言，所以有两步操作
     virtual void delRoomBlockUser(qint64 id) {}
     /// 刷新直播间禁言的用户
@@ -284,7 +284,7 @@ public:
     /// 单独socket连接对面直播间
     virtual void connectPkRoom() {}
     /// 根据直播间弹幕，保存当前观众信息
-    virtual void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences){}
+    virtual void getRoomCurrentAudiences(QString roomId, QSet<UIDT> &audiences){}
     virtual void connectPkSocket() { }
     /// 获取PK对面直播间的信息
     virtual void getPkMatchInfo() {}
@@ -311,7 +311,7 @@ public:
     /// 事件处理
     virtual void processNewDayData() {}
     virtual void triggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug = false);
-    virtual void localNotify(const QString& text, qint64 uid = 0);
+    virtual void localNotify(const QString& text, UIDT uid = "");
     virtual void showError(const QString& title, const QString& desc = "");
     
     /// 弹幕新增
@@ -327,7 +327,7 @@ public:
     void sendLongText(QString text);
 
     /// 一些接口的网址
-    virtual QString getApiUrl(ApiType type, qint64 id) { return ""; }
+    virtual QString getApiUrl(ApiType type, UIDT id) { return ""; }
     virtual QStringList getRoomShieldKeywordsAsync(bool* ok) { if (ok) *ok = false; return QStringList(); }
     virtual void addRoomShieldKeywordsAsync(const QString& word) {}
     virtual void removeRoomShieldKeywordAsync(const QString& word) {}
@@ -340,9 +340,9 @@ public:
     virtual bool isPositiveVote() const { return false; }
 
     /// 动作项
-    virtual void showFollowCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const {}
-    virtual void showViewCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const {}
-    virtual void showGuardInAction(qint64 roomId, qint64 uid, QLabel* statusLabel, QAction* action) const {}
+    virtual void showFollowCountInAction(UIDT uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const {}
+    virtual void showViewCountInAction(UIDT uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const {}
+    virtual void showGuardInAction(qint64 roomId, UIDT uid, QLabel* statusLabel, QAction* action) const {}
     virtual void showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction* actionUser, QAction* actionRank) const {}
 
     /// 机器人判断
@@ -351,8 +351,8 @@ public:
     virtual void judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) {}
 
     /// 一些条件判断
-    bool isInFans(qint64 uid) const;
-    void markNotRobot(qint64 uid);
+    bool isInFans(UIDT uid) const;
+    void markNotRobot(UIDT uid);
 
 protected:
     // 连接信息
@@ -384,7 +384,7 @@ protected:
     QList<FanBean> fansList; // 最近的关注，按时间排序
 
     // 粉丝牌
-    QList<qint64> medalUpgradeWaiting; // 正在计算的升级
+    QList<UIDT> medalUpgradeWaiting; // 正在计算的升级
 
     // 船员
     bool updateGuarding = false;
@@ -446,11 +446,11 @@ protected:
     QString pkRoomId;
     QString pkUid;
     QString pkUname;
-    QSet<qint64> myAudience; // 自己这边的观众
-    QSet<qint64> oppositeAudience; // 对面的观众
+    QSet<UIDT> myAudience; // 自己这边的观众
+    QSet<UIDT> oppositeAudience; // 对面的观众
     QWebSocket* pkLiveSocket = nullptr; // 连接对面的房间
     QString pkToken;
-    QHash<qint64, qint64> cmAudience; // 自己这边跑过去串门了: timestamp10:串门，0已经回来/提示
+    QHash<UIDT, qint64> cmAudience; // 自己这边跑过去串门了: timestamp10:串门，0已经回来/提示
 
     // 私信
     QTimer* privateMsgTimer = nullptr;

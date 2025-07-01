@@ -22,7 +22,7 @@ public:
 signals:
 
 public slots:
-    void chat(qint64 uid, QString text, NetStringFunc func);
+    void chat(UIDT uid, QString text, NetStringFunc func);
     void clear();
 
 public:

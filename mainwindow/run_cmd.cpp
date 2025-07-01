@@ -442,7 +442,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             int hour = caps.at(2).toInt();
             QString msg = caps.at(3);
             liveService->addBlockUser(uid, hour, msg);
@@ -453,7 +453,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             int hour = caps.at(2).toInt();
             liveService->addBlockUser(uid, hour, "");
             return true;
@@ -463,7 +463,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             int hour = ui->autoBlockTimeSpin->value();
             liveService->addBlockUser(uid, hour, "");
             return true;
@@ -478,7 +478,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             liveService->delBlockUser(uid);
             return true;
         }
@@ -492,7 +492,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             QString uname = caps.at(2);
             QString msg = caps.at(3);
             eternalBlockUser(uid, uname, msg);
@@ -503,7 +503,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             QString uname = caps.at(2);
             eternalBlockUser(uid, uname, "");
             return true;
@@ -518,7 +518,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             liveService->appointAdmin(uid);
             return true;
         }
@@ -532,7 +532,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             liveService->dismissAdmin(uid);
             return true;
         }
@@ -588,7 +588,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps << cr->gameUsers[0].size();
             int chan = caps.at(1).toInt();
-            qint64 uid = caps.at(2).toLongLong();
+            UIDT uid = caps.at(2);
             if (chan < 0 || chan >= CHANNEL_COUNT)
                 chan = 0;
             cr->gameUsers[chan].append(uid);
@@ -600,7 +600,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps << cr->gameUsers[0].size();
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             cr->gameUsers[0].append(uid);
             return true;
         }
@@ -615,7 +615,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps << cr->gameUsers[0].size();
             int chan = caps.at(1).toInt();
-            qint64 uid = caps.at(2).toLongLong();
+            UIDT uid = caps.at(2);
             if (chan < 0 || chan >= CHANNEL_COUNT)
                 chan = 0;
             cr->gameUsers[chan].removeOne(uid);
@@ -627,7 +627,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps << cr->gameUsers[0].size();
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             cr->gameUsers[0].removeOne(uid);
             return true;
         }
@@ -642,10 +642,10 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps << cr->gameNumberLists[0].size();
             int chan = caps.at(1).toInt();
-            qint64 uid = caps.at(2).toLongLong();
+            qint64 num = caps.at(2).toLongLong();
             if (chan < 0 || chan >= CHANNEL_COUNT)
                 chan = 0;
-            cr->gameNumberLists[chan].append(uid);
+            cr->gameNumberLists[chan].append(num);
             saveGameNumbers(chan);
             return true;
         }
@@ -655,8 +655,8 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps << cr->gameNumberLists[0].size();
-            qint64 uid = caps.at(1).toLongLong();
-            cr->gameNumberLists[0].append(uid);
+            qint64 num = caps.at(1).toLongLong();
+            cr->gameNumberLists[0].append(num);
             saveGameNumbers(0);
             return true;
         }
@@ -671,10 +671,10 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps << cr->gameNumberLists[0].size();
             int chan = caps.at(1).toInt();
-            qint64 uid = caps.at(2).toLongLong();
+            qint64 num = caps.at(2).toLongLong();
             if (chan < 0 || chan >= CHANNEL_COUNT)
                 chan = 0;
-            cr->gameNumberLists[chan].removeOne(uid);
+            cr->gameNumberLists[chan].removeOne(num);
             saveGameNumbers(chan);
             return true;
         }
@@ -684,8 +684,8 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps << cr->gameNumberLists[0].size();
-            qint64 uid = caps.at(1).toLongLong();
-            cr->gameNumberLists[0].removeOne(uid);
+            qint64 num = caps.at(1).toLongLong();
+            cr->gameNumberLists[0].removeOne(num);
             saveGameNumbers(0);
             return true;
         }
@@ -903,7 +903,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QString msg = caps.at(2);
             msg = cr->toMultiLine(msg);
             qInfo() << "执行命令：" << caps;
-            localNotify(msg, uid.toLongLong());
+            localNotify(msg, uid);
             return true;
         }
     }
@@ -2193,7 +2193,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             if (ui->chatGPTRadio->isChecked())
             {
-                msg.replace(QRegularExpression("(?:ai|AI)Chat\\("), "ChatGPT(" + snum(danmaku.getUid()) + ",");
+                msg.replace(QRegularExpression("(?:ai|AI)Chat\\("), "ChatGPT(" + danmaku.getUid() + ",");
             }
             else
             {
@@ -2249,7 +2249,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             QString text = caps.at(2).trimmed();
             if (text.isEmpty())
                 return true;
@@ -2319,7 +2319,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             qInfo() << "执行命令：" << caps;
 
             if (!us->notWelcomeUsers.contains(uid))
@@ -2327,8 +2327,8 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                 us->notWelcomeUsers.append(uid);
 
                 QStringList ress;
-                foreach (qint64 uid, us->notWelcomeUsers)
-                    ress << QString::number(uid);
+                foreach (UIDT uid, us->notWelcomeUsers)
+                    ress << uid;
                 us->setValue("danmaku/notWelcomeUsers", ress.join(";"));
             }
 
@@ -2343,7 +2343,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             qInfo() << "执行命令：" << caps;
 
             if (us->notWelcomeUsers.contains(uid))
@@ -2351,8 +2351,8 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                 us->notWelcomeUsers.removeOne(uid);
 
                 QStringList ress;
-                foreach (qint64 uid, us->notWelcomeUsers)
-                    ress << QString::number(uid);
+                foreach (UIDT uid, us->notWelcomeUsers)
+                    ress << uid;
                 us->setValue("danmaku/notWelcomeUsers", ress.join(";"));
             }
 
@@ -2367,7 +2367,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qint64 uid = caps.at(1).toLongLong();
+            UIDT uid = caps.at(1);
             QString name = caps.at(2);
             qInfo() << "执行命令：" << caps;
             if (uid == 0)
