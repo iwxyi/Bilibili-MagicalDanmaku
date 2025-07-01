@@ -83,7 +83,7 @@ public:
     void updateWinningStreak(bool emitWinningStreak) override;
     void getPkInfoById(const QString &roomId, const QString &pkId) override;
     void connectPkRoom() override;
-    void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences) override;
+    void getRoomCurrentAudiences(QString roomId, QSet<UIDT> &audiences) override;
     void connectPkSocket() override;
     void getPkMatchInfo() override;
     void getPkOnlineGoldPage(int page = 0) override;
@@ -119,7 +119,7 @@ public:
     void handlePkMessage(QJsonObject json);
 
     /// 一些接口
-    QString getApiUrl(ApiType type, qint64 id) override;
+    QString getApiUrl(ApiType type, UIDT id) override;
     QStringList getRoomShieldKeywordsAsync(bool *ok) override;
     void addRoomShieldKeywordsAsync(const QString& word) override;
     void removeRoomShieldKeywordAsync(const QString &word) override;
@@ -132,9 +132,9 @@ public:
     int getPositiveVoteCount() const override;
     bool isPositiveVote() const override;
 
-    void showFollowCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const override;
-    void showViewCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const override;
-    void showGuardInAction(qint64 roomId, qint64 uid, QLabel* statusLabel, QAction* action) const override;
+    void showFollowCountInAction(UIDT uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const override;
+    void showViewCountInAction(UIDT uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const override;
+    void showGuardInAction(qint64 roomId, UIDT uid, QLabel* statusLabel, QAction* action) const override;
     void showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction* actionUser, QAction* actionRank) const override;
 
     void judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;
@@ -157,10 +157,10 @@ public slots:
     void pullLiveDanmaku() override;
     
     /// 用户管理
-    void appointAdmin(qint64 uid) override;
-    void dismissAdmin(qint64 uid) override;
-    void addBlockUser(qint64 uid, QString roomId, int hour, QString msg) override;
-    void delBlockUser(qint64 uid, QString roomId) override;
+    void appointAdmin(QString uid) override;
+    void dismissAdmin(QString uid) override;
+    void addBlockUser(QString uid, QString roomId, int hour, QString msg) override;
+    void delBlockUser(QString uid, QString roomId) override;
     void delRoomBlockUser(qint64 id) override;
     void refreshBlockList() override;
     void adjustDanmakuLongest() override;

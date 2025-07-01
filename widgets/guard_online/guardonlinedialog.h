@@ -14,7 +14,7 @@ class GuardOnlineDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit GuardOnlineDialog(QSettings* settings, QString roomId, QString upUid, QWidget *parent = nullptr);
+    explicit GuardOnlineDialog(QSettings* settings, QString roomId, UIDT upUid, QWidget *parent = nullptr);
     ~GuardOnlineDialog() override;
 
 private slots:
@@ -32,8 +32,8 @@ private:
     Ui::GuardOnlineDialog *ui;
     QSettings* settings;
     QString roomId;
-    QString upUid;
-    QList<qint64> guardIds;
+    UIDT upUid;
+    QList<UIDT> guardIds;
 };
 
 #endif // GUARDONLINEDIALOG_H

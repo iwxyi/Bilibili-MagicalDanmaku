@@ -91,18 +91,18 @@ protected:
 signals:
     void signalSendMsg(QString msg);
     void signalSendMsgToPk(QString msg);
-    void signalMarkUser(qint64 uid);
-    void signalAddBlockUser(qint64 uid, int hour, QString msg);
-    void signalDelBlockUser(qint64 uid);
-    void signalEternalBlockUser(qint64 uid, QString uname, QString msg);
-    void signalCancelEternalBlockUser(qint64 uid);
+    void signalMarkUser(QString uid);
+    void signalAddBlockUser(QString uid, int hour, QString msg);
+    void signalDelBlockUser(QString uid);
+    void signalEternalBlockUser(QString uid, QString uname, QString msg);
+    void signalCancelEternalBlockUser(QString uid);
     void signalChangeWindowMode();
     void signalAIReplyed(QString msg, LiveDanmaku danmaku);
     void signalShowPkVideo();
     void signalTransMouse(bool enabled);
     void signalAddCloudShieldKeyword(QString text);
-    void signalAppointAdmin(qint64 uid);
-    void signalDismissAdmin(qint64 uid);
+    void signalAppointAdmin(QString uid);
+    void signalDismissAdmin(QString uid);
 
 public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
@@ -127,12 +127,12 @@ public slots:
     void setEnableBlock(bool enable);
     void setListWidgetItemSpacing(int x);
     void setNewbieTip(bool tip);
-    void setIds(qint64 uid, qint64 roomId);
-    void markRobot(qint64 uid);
+    void setIds(UIDT uid, qint64 roomId);
+    void markRobot(UIDT uid);
 
-    void showFastBlock(qint64 uid, QString msg);
+    void showFastBlock(UIDT uid, QString msg);
 
-    void setPkStatus(int status, qint64 roomId, qint64 uid, QString pkUname);
+    void setPkStatus(int status, qint64 roomId, UIDT uid, QString pkUname);
     void showStatusText();
     void setStatusText(QString text);
     void setStatusTooltip(QString tooltip);
@@ -152,9 +152,9 @@ private:
     QLabel *getItemWidgetLabel(QListWidgetItem *item);
     void adjustItemTextDynamic(QListWidgetItem* item);
     void getUserInfo(LiveDanmaku danmaku, QListWidgetItem *item);
-    void getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem *item);
-    QString headPath(qint64 uid) const;
-    void showUserMsgHistory(qint64 uid, QString title);
+    void getUserHeadPortrait(QString uid, QString url, QListWidgetItem *item);
+    QString headPath(QString uid) const;
+    void showUserMsgHistory(QString uid, QString title);
     QString getPinyin(QString text);
     QVariant getCookies();
     void selectBgPicture();
@@ -180,7 +180,7 @@ private:
 #endif
     QString myPrevSendMsg; // 上次发送的内容，没有发送成功的话自动填充
     qint64 roomId = 0;
-    qint64 upUid = 0; // 当前主播的UID，用来显示主播标志
+    UIDT upUid = 0; // 当前主播的UID，用来显示主播标志
 
     bool enableAnimation = true;
     bool unameMsgWrap = false; // 名字和弹幕都单独一行
@@ -205,7 +205,7 @@ private:
 
     QString headDir; // 头像保存的路径/ (带/)
     bool headerApiIsBanned = false;
-    QSet<qint64> hasGetUserHeader;
+    QSet<UIDT> hasGetUserHeader;
 
     int fontHeight;
     int lineSpacing;
@@ -217,7 +217,7 @@ private:
     int pkStatus = 0;
     QLabel* statusLabel = nullptr;
     qint64 pkRoomId = 0;
-    qint64 pkUid = 0;
+    UIDT pkUid = 0;
     QString pkUname;
 
     QPixmap originPixmap;

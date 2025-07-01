@@ -36,7 +36,7 @@ struct HeaderStruct
 
 struct FanBean
 {
-    qint64 mid;
+    UIDT mid;
     QString uname;
     int attribute; // 0：未关注,2：已关注,6：已互粉
     qint64 mtime;
@@ -44,14 +44,14 @@ struct FanBean
 
 struct GiftCombo
 {
-    qint64 uid;
+    UIDT uid;
     QString uname;
     qint64 giftId;
     QString giftName;
     int count;          // 数量
     qint64 total_coins; // 金瓜子数量
 
-    GiftCombo(qint64 uid, QString uname, qint64 giftId, QString giftName, int count, int coins)
+    GiftCombo(UIDT uid, QString uname, qint64 giftId, QString giftName, int count, int coins)
         : uid(uid), uname(uname), giftId(giftId), giftName(giftName), count(count), total_coins(coins)
     {}
 

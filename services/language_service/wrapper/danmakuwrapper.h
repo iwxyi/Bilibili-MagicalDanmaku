@@ -20,7 +20,7 @@ public:
     Q_INVOKABLE QJsonObject toJson()  const { return danmaku.toJson(); }
     Q_INVOKABLE int getMsgType() const { return danmaku.getMsgType(); }
     Q_INVOKABLE QString getText() const { return danmaku.getText(); }
-    Q_INVOKABLE long long getUid() const { return danmaku.getUid(); }
+    Q_INVOKABLE UIDT getUid() const { return danmaku.getUid(); }
     Q_INVOKABLE QString getNickname() const { return danmaku.getNickname(); }
     Q_INVOKABLE QString getUname() const { return getNickname(); }
     Q_INVOKABLE QString getUnameColor() const { return danmaku.getUnameColor(); }

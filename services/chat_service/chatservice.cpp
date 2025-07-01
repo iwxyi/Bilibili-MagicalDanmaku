@@ -12,7 +12,7 @@ void ChatService::setLiveService(LiveRoomService *service)
     chatgpt->setLiveService(service);
 }
 
-void ChatService::chat(qint64 uid, QString text, NetStringFunc func)
+void ChatService::chat(UIDT uid, QString text, NetStringFunc func)
 {
     if (chatPlatform == ChatPlatform::ChatGPT)
     {
