@@ -1,5 +1,5 @@
-#ifndef LIVEROOMSERVICE_H
-#define LIVEROOMSERVICE_H
+#ifndef LIVESERVICEBASE_H
+#define LIVESERVICEBASE_H
 
 #include <QWebSocket>
 #include <QRegularExpression>
@@ -26,14 +26,14 @@ typedef std::function<void(QString)> StringFunc;
 
 class QLabel;
 
-class LiveRoomService : public QObject, public NetInterface, public LiveStatisticService
+class LiveServiceBase : public QObject, public NetInterface, public LiveStatisticService
 {
     Q_OBJECT
     friend class MainWindow;
     friend class CodeRunner;
     
 public:
-    explicit LiveRoomService(QObject *parent = nullptr);
+    explicit LiveServiceBase(QObject *parent = nullptr);
 
     /// 初始化所有变量，new、connect等
     virtual void init();
@@ -181,17 +181,17 @@ public slots:
 
 public:
     /// 获取机器人账号信息
-    virtual void getCookieAccount() = 0;
-    virtual void getAccountByCookie(const QString& cookie) = 0;
+    virtual void getCookieAccount() {}
+    virtual void getAccountByCookie(const QString& cookie) {}
     QVariant getCookies() const;
     /// 获取机器人账号信息
-    virtual void getRobotInfo() = 0;
+    virtual void getRobotInfo() {}
     /// 获取直播间信息
     virtual void getRoomInfo(bool reconnect, int reconnectCount = 0) = 0;
     /// 获取直播间Host信息
-    virtual void getDanmuInfo() = 0;
+    virtual void getDanmuInfo() {}
     /// 根据获得的Host信息，开始连接socket
-    virtual void startMsgLoop() = 0;
+    virtual void startMsgLoop() {}
     /// 初次连接socket，发送认证包
     virtual void sendVeriPacket(QWebSocket* socket, QString roomId, QString token) {}
     /// 连接后定时发送心跳包
@@ -478,4 +478,4 @@ protected:
     QList<QWebSocket*> robots_sockets;
 };
 
-#endif // LIVEROOMSERVICE_H
+#endif // LIVESERVICEBASE_H

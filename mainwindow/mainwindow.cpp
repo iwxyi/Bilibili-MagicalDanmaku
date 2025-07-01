@@ -36,6 +36,7 @@
 #include "bili_api_util.h"
 #include "pixmaputil.h"
 #include "emailutil.h"
+#include "douyin_liveservice.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -134,8 +135,10 @@ void MainWindow::initView()
                   ui->extensionPageButton,
                   ui->dataPageButton,
                   ui->preferencePageButton,
-                  ui->forumButton
+                  ui->forumButton,
+                  ui->platformButton
                 };
+    const int notPageCount = 2;
     for (int i = 0; i < sideButtonList.size(); i++)
     {
         auto button = sideButtonList.at(i);
@@ -147,7 +150,7 @@ void MainWindow::initView()
         button->setAttribute(Qt::WA_LayoutUsesWidgetRect);
 //        button->setChokingProp(0.08);
 
-        if (i == sideButtonList.size() - 1) // 最后面的不是切换页面，不设置
+        if (i == sideButtonList.size() - notPageCount) // 最后面的几个不是切换页面，不设置
             continue;
 
         connect(button, &InteractiveButtonBase::clicked, this, [=]{
@@ -815,8 +818,24 @@ void MainWindow::initPath()
 
 void MainWindow::initLiveService()
 {
-    liveService = new BiliLiveService(this);
-    // liveService = new BiliLiveOpenService(this);
+    // 平台
+    rt->livePlatform = (LivePlatform)(us->value("global/live_platform", 0).toInt());
+    qInfo() << "初始化直播服务，平台：" << rt->livePlatform;
+    switch (rt->livePlatform)
+    {
+    case Bilibili:
+        liveService = new BiliLiveService(this);
+        ui->platformButton->setIcon(QIcon(":/icons/platform/bilibili"));
+        break;
+    case Douyin:
+        liveService = new DouyinLiveService(this);
+        ui->platformButton->setIcon(QIcon(":/icons/platform/douyin"));
+        break;
+    default:
+        QMessageBox::critical(this, "直播服务", "当前平台暂不支持，使用默认的【哔哩哔哩】");
+        break;
+    }
+
     cr->setLiveService(liveService);
     liveService->setSqlService(&sqlService);
 
@@ -824,7 +843,7 @@ void MainWindow::initLiveService()
     liveService->setUserAgent(us->value("debug/userAgent", "").toString());
     
     /// 账号操作
-    connect(liveService, &LiveRoomService::signalRobotAccountChanged, this, [=]{
+    connect(liveService, &LiveServiceBase::signalRobotAccountChanged, this, [=]{
         ui->robotNameButton->setText(ac->cookieUname);
         ui->robotNameButton->adjustMinimumSize();
         ui->robotInfoWidget->setMinimumWidth(ui->robotNameButton->width());
@@ -838,56 +857,56 @@ void MainWindow::initLiveService()
         updatePermission();
         getPositiveVote();
     });
-    connect(liveService, &LiveRoomService::signalRobotHeadChanged, this, [=](const QPixmap& p) {
+    connect(liveService, &LiveServiceBase::signalRobotHeadChanged, this, [=](const QPixmap& p) {
         QPixmap f = p.scaled(ui->robotHeaderLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
         ui->robotHeaderLabel->setPixmap(f);
     });
 
     /// 流程操作
-    connect(liveService, &LiveRoomService::signalStartConnectRoom, this, [=]{
+    connect(liveService, &LiveServiceBase::signalStartConnectRoom, this, [=]{
         startConnectRoom();
     });
 
     /// 变量到UI
-    connect(liveService, &LiveRoomService::signalConnectionStateTextChanged, this, [=](const QString& text) {
+    connect(liveService, &LiveServiceBase::signalConnectionStateTextChanged, this, [=](const QString& text) {
         ui->connectStateLabel->setText(text);
     });
-    connect(liveService, &LiveRoomService::signalStatusChanged, this, [=](const QString& text) {
+    connect(liveService, &LiveServiceBase::signalStatusChanged, this, [=](const QString& text) {
         statusLabel->setText(text);
     });
-    connect(liveService, &LiveRoomService::signalLiveStatusChanged, this, [=](const QString& text) {
+    connect(liveService, &LiveServiceBase::signalLiveStatusChanged, this, [=](const QString& text) {
         ui->liveStatusButton->setText(text);
     });
 
     // 连接之后
-    connect(liveService, &LiveRoomService::signalRoomInfoChanged, this, &MainWindow::slotRoomInfoChanged);
+    connect(liveService, &LiveServiceBase::signalRoomInfoChanged, this, &MainWindow::slotRoomInfoChanged);
 
-    connect(liveService, &LiveRoomService::signalImUpChanged, this, [=](bool isUp){
+    connect(liveService, &LiveServiceBase::signalImUpChanged, this, [=](bool isUp){
         if (isUp)
         {
             ui->actionJoin_Battle->setEnabled(true);
         }
     });
 
-    connect(liveService, &LiveRoomService::signalRoomCoverChanged, this, [=](const QPixmap& pixmap) {
+    connect(liveService, &LiveServiceBase::signalRoomCoverChanged, this, [=](const QPixmap& pixmap) {
         setRoomCover(pixmap);
     });
 
-    connect(liveService, &LiveRoomService::signalRoomTitleChanged, this, [=](const QString& title) {
+    connect(liveService, &LiveServiceBase::signalRoomTitleChanged, this, [=](const QString& title) {
         ui->roomNameLabel->setText(title);
 
         this->setWindowTitle(title + " - " + ui->appNameLabel->text());
     });
 
-    connect(liveService, &LiveRoomService::signalRoomDescriptionChanged, this, [=](const QString& content) {
+    connect(liveService, &LiveServiceBase::signalRoomDescriptionChanged, this, [=](const QString& content) {
         ui->roomDescriptionBrowser->setPlainText(content);
     });
 
-    connect(liveService, &LiveRoomService::signalRoomTagsChanged, this, [=](const QStringList& tags) {
+    connect(liveService, &LiveServiceBase::signalRoomTagsChanged, this, [=](const QStringList& tags) {
         ui->tagsButtonGroup->initStringList(tags);
     });
 
-    connect(liveService, &LiveRoomService::signalUpFaceChanged, this, [=](const QPixmap& pixmap) {
+    connect(liveService, &LiveServiceBase::signalUpFaceChanged, this, [=](const QPixmap& pixmap) {
         QPixmap circlePixmap = PixmapUtil::toCirclePixmap(pixmap); // 圆图
 
         // 设置到窗口图标
@@ -905,15 +924,15 @@ void MainWindow::initLiveService()
         }
     });
 
-    connect(liveService, &LiveRoomService::signalUpSignatureChanged, this, [=](const QString& signature) {
+    connect(liveService, &LiveServiceBase::signalUpSignatureChanged, this, [=](const QString& signature) {
         ui->upLevelLabel->setText(signature);
     });
 
-    connect(liveService, &LiveRoomService::signalFinishDove, this, [=]{
+    connect(liveService, &LiveServiceBase::signalFinishDove, this, [=]{
         ui->doveCheck->setChecked(false);
     });
 
-    connect(liveService, &LiveRoomService::signalGuardsChanged, this, [=]{
+    connect(liveService, &LiveServiceBase::signalGuardsChanged, this, [=]{
         if (ui->saveMonthGuardCheck->isChecked())
             saveMonthGuard();
 
@@ -925,49 +944,49 @@ void MainWindow::initLiveService()
         ui->guardCountLabel->setText(snum(ac->currentGuards.size()));
     });
 
-    connect(liveService, &LiveRoomService::signalOnlineRankChanged, this, [=]{
+    connect(liveService, &LiveServiceBase::signalOnlineRankChanged, this, [=]{
         updateOnlineRankGUI();
     });
 
-    connect(liveService, &LiveRoomService::signalAutoAdjustDanmakuLongest, this, [=]{
+    connect(liveService, &LiveServiceBase::signalAutoAdjustDanmakuLongest, this, [=]{
         if (us->adjustDanmakuLongest)
             liveService->adjustDanmakuLongest();
     });
 
-    connect(liveService, &LiveRoomService::signalDanmuPopularChanged, this, [=](const QString& text){
+    connect(liveService, &LiveServiceBase::signalDanmuPopularChanged, this, [=](const QString& text){
         ui->danmuCountLabel->setToolTip(text);
     });
 
-    connect(liveService, &LiveRoomService::signalPopularChanged, this, [=](qint64 count){
+    connect(liveService, &LiveServiceBase::signalPopularChanged, this, [=](qint64 count){
         ui->popularityLabel->setText(snum(count));
     });
 
-    connect(liveService, &LiveRoomService::signalPopularTextChanged, this, [=](const QString& text){
+    connect(liveService, &LiveServiceBase::signalPopularTextChanged, this, [=](const QString& text){
         ui->popularityLabel->setToolTip(text);
     });
 
-    connect(liveService, &LiveRoomService::signalFansCountChanged, this, [=](qint64 count){
+    connect(liveService, &LiveServiceBase::signalFansCountChanged, this, [=](qint64 count){
         ui->fansCountLabel->setText(snum(count));
     });
 
-    connect(liveService, &LiveRoomService::signalSignInfoChanged, this, [=](const QString& text){
+    connect(liveService, &LiveServiceBase::signalSignInfoChanged, this, [=](const QString& text){
         ui->autoDoSignCheck->setText(text);
     });
 
-    connect(liveService, &LiveRoomService::signalSignDescChanged, this, [=](const QString& text){
+    connect(liveService, &LiveServiceBase::signalSignDescChanged, this, [=](const QString& text){
         ui->autoDoSignCheck->setToolTip(text);
     });
 
-    connect(liveService, &LiveRoomService::signalLOTInfoChanged, this, [=](const QString& text){
+    connect(liveService, &LiveServiceBase::signalLOTInfoChanged, this, [=](const QString& text){
         ui->autoLOTCheck->setText(text);
     });
 
-    connect(liveService, &LiveRoomService::signalLOTDescChanged, this, [=](const QString& text){
+    connect(liveService, &LiveServiceBase::signalLOTDescChanged, this, [=](const QString& text){
         ui->autoLOTCheck->setToolTip(text);
     });
 
     /// CMD事件
-    connect(liveService, &LiveRoomService::signalLiveStarted, this, [=]{
+    connect(liveService, &LiveServiceBase::signalLiveStarted, this, [=]{
         if (ui->recordCheck->isChecked())
             startLiveRecord();
         liveService->reconnectWSDuration = INTERVAL_RECONNECT_WS;
@@ -999,7 +1018,7 @@ void MainWindow::initLiveService()
         slotStartWork(); // 每个房间第一次开始工作
     });
 
-    connect(liveService, &LiveRoomService::signalLiveStopped, this, [=]{
+    connect(liveService, &LiveServiceBase::signalLiveStopped, this, [=]{
         finishLiveRecord();
         liveService->reconnectWSDuration = INTERVAL_RECONNECT_WS;
         this->liveTimeTimer->stop();
@@ -1022,99 +1041,99 @@ void MainWindow::initLiveService()
             liveService->connectServerTimer->start();
     });
 
-    connect(liveService, &LiveRoomService::signalReceiveDanmakuTotalCountChanged, this, [=](int count) {
+    connect(liveService, &LiveServiceBase::signalReceiveDanmakuTotalCountChanged, this, [=](int count) {
         ui->danmuCountLabel->setText(snum(count));
     });
 
-    connect(liveService, &LiveRoomService::signalTryBlockDanmaku, this, &MainWindow::slotTryBlockDanmaku);
+    connect(liveService, &LiveServiceBase::signalTryBlockDanmaku, this, &MainWindow::slotTryBlockDanmaku);
 
-    connect(liveService, &LiveRoomService::signalNewGiftReceived, this, &MainWindow::slotNewGiftReceived);
+    connect(liveService, &LiveServiceBase::signalNewGiftReceived, this, &MainWindow::slotNewGiftReceived);
 
-    connect(liveService, &LiveRoomService::signalSendUserWelcome, this, &MainWindow::slotSendUserWelcome);
+    connect(liveService, &LiveServiceBase::signalSendUserWelcome, this, &MainWindow::slotSendUserWelcome);
 
-    connect(liveService, &LiveRoomService::signalSendAttentionThank, this, &MainWindow::slotSendAttentionThank);
+    connect(liveService, &LiveServiceBase::signalSendAttentionThank, this, &MainWindow::slotSendAttentionThank);
 
-    connect(liveService, &LiveRoomService::signalNewGuardBuy, this, &MainWindow::slotNewGuardBuy);
+    connect(liveService, &LiveServiceBase::signalNewGuardBuy, this, &MainWindow::slotNewGuardBuy);
 
     /// 直播交互
-    connect(liveService, &LiveRoomService::signalGetRoomAndRobotFinished, this, [=]() {
+    connect(liveService, &LiveServiceBase::signalGetRoomAndRobotFinished, this, [=]() {
         triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
     });
 
-    connect(liveService, &LiveRoomService::signalStartWork, this, [=] {
+    connect(liveService, &LiveServiceBase::signalStartWork, this, [=] {
         slotStartWork();
     });
 
-    connect(liveService, &LiveRoomService::signalCanRecord, this, [=] {
+    connect(liveService, &LiveServiceBase::signalCanRecord, this, [=] {
         if (ui->recordCheck->isChecked() && liveService->isLiving())
             startLiveRecord();
     });
 
-    connect(liveService, &LiveRoomService::signalHeartTimeNumberChanged, this, [=](int num, int minute) {
+    connect(liveService, &LiveServiceBase::signalHeartTimeNumberChanged, this, [=](int num, int minute) {
         ui->acquireHeartCheck->setToolTip("今日已领" + snum(num) + "个小心心(" + snum(minute) + "分钟)");
     });
 
-    connect(liveService, &LiveRoomService::signalDanmakuLongestChanged, this, [=](int length) {
+    connect(liveService, &LiveServiceBase::signalDanmakuLongestChanged, this, [=](int length) {
         ui->danmuLongestSpin->setValue(length);
         on_danmuLongestSpin_editingFinished();
     });
 
-    connect(liveService, &LiveRoomService::signalRoomRankChanged, this, [=](const QString& desc, const QString& color) {
+    connect(liveService, &LiveServiceBase::signalRoomRankChanged, this, [=](const QString& desc, const QString& color) {
         ui->roomRankLabel->setStyleSheet("color: " + color + ";");
         ui->roomRankLabel->setText(desc);
         ui->roomRankLabel->setToolTip(QDateTime::currentDateTime().toString("更新时间：hh:mm:ss"));
     });
 
-    connect(liveService, &LiveRoomService::signalHotRankChanged, this, [=](int rank, const QString& area, const QString& msg) {
+    connect(liveService, &LiveServiceBase::signalHotRankChanged, this, [=](int rank, const QString& area, const QString& msg) {
         ui->roomRankLabel->setText(snum(rank));
         ui->roomRankTextLabel->setText(area + "榜");
         ui->roomRankLabel->setToolTip(msg);
     });
 
-    connect(liveService, &LiveRoomService::signalWatchCountChanged, this, [=](const QString& text) {
+    connect(liveService, &LiveServiceBase::signalWatchCountChanged, this, [=](const QString& text) {
         ui->watchedLabel->setToolTip(text);
     });
 
-    connect(liveService, &LiveRoomService::signalLikeChanged, this, [=](int count) {
+    connect(liveService, &LiveServiceBase::signalLikeChanged, this, [=](int count) {
         ui->popularityTextLabel->setToolTip("点赞数量：" + snum(count));
     });
 
     /// 信号传递
-    connect(liveService, &LiveRoomService::signalTriggerCmdEvent, this, [=](const QString& cmd, const LiveDanmaku& danmaku, bool debug) {
+    connect(liveService, &LiveServiceBase::signalTriggerCmdEvent, this, [=](const QString& cmd, const LiveDanmaku& danmaku, bool debug) {
         triggerCmdEvent(cmd, danmaku, debug);
     });
 
-    connect(liveService, &LiveRoomService::signalLocalNotify, this, [=](const QString& text, UIDT uid) {
+    connect(liveService, &LiveServiceBase::signalLocalNotify, this, [=](const QString& text, UIDT uid) {
         localNotify(text, uid);
     });
 
-    connect(liveService, &LiveRoomService::signalShowError, this, [=](const QString& title, const QString& info) {
+    connect(liveService, &LiveServiceBase::signalShowError, this, [=](const QString& title, const QString& info) {
         showError(title, info);
     });
 
-    connect(liveService, &LiveRoomService::signalUpdatePermission, this, [=] {
+    connect(liveService, &LiveServiceBase::signalUpdatePermission, this, [=] {
         updatePermission();
     });
 
-    connect(liveService, &LiveRoomService::signalNewHour, this, [=] {
+    connect(liveService, &LiveServiceBase::signalNewHour, this, [=] {
 
     });
 
-    connect(liveService, &LiveRoomService::signalNewDay, this, [=] {
+    connect(liveService, &LiveServiceBase::signalNewDay, this, [=] {
         // 永久禁言
         detectEternalBlockUsers();
     });
 
-    connect(liveService, &LiveRoomService::signalSendAutoMsg, this, [=](const QString& msg, const LiveDanmaku& danmaku) {
+    connect(liveService, &LiveServiceBase::signalSendAutoMsg, this, [=](const QString& msg, const LiveDanmaku& danmaku) {
         cr->sendAutoMsg(msg, danmaku);
     });
 
-    connect(liveService, &LiveRoomService::signalSendAutoMsgInFirst, this, [=](const QString& msg, const LiveDanmaku& danmaku, int interval) {
+    connect(liveService, &LiveServiceBase::signalSendAutoMsgInFirst, this, [=](const QString& msg, const LiveDanmaku& danmaku, int interval) {
         cr->sendAutoMsgInFirst(msg, danmaku, interval);
     });
 
     /// 大乱斗
-    connect(liveService, &LiveRoomService::signalBattleEnabled, this, [=](bool enable) {
+    connect(liveService, &LiveServiceBase::signalBattleEnabled, this, [=](bool enable) {
         if (enable)
         {
             ui->battleInfoWidget->show();
@@ -1125,39 +1144,39 @@ void MainWindow::initLiveService()
         }
     });
 
-    connect(liveService, &LiveRoomService::signalBattleRankGot, this, [=] {
+    connect(liveService, &LiveServiceBase::signalBattleRankGot, this, [=] {
         if (ui->battleInfoWidget->isHidden())
             ui->battleInfoWidget->show();
         ui->winningStreakLabel->setText("连胜" + snum(ac->winningStreak) + "场");
     });
-    connect(liveService, &LiveRoomService::signalBattleRankNameChanged, this, [=](const QString& text) {
+    connect(liveService, &LiveServiceBase::signalBattleRankNameChanged, this, [=](const QString& text) {
         ui->battleRankNameLabel->setText(text);
     });
 
-    connect(liveService, &LiveRoomService::signalBattleRankIconChanged, this, [=](const QPixmap& pixmap) {
+    connect(liveService, &LiveServiceBase::signalBattleRankIconChanged, this, [=](const QPixmap& pixmap) {
         QPixmap p = pixmap;
         if (!p.isNull())
             p = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
         ui->battleRankIconLabel->setPixmap(pixmap);
     });
 
-    connect(liveService, &LiveRoomService::signalBattleNumsChanged, this, [=](const QString& text) {
+    connect(liveService, &LiveServiceBase::signalBattleNumsChanged, this, [=](const QString& text) {
         ui->winningStreakLabel->setToolTip(text);
     });
 
-    connect(liveService, &LiveRoomService::signalBattleSeasonInfoChanged, this, [=](const QString& text) {
+    connect(liveService, &LiveServiceBase::signalBattleSeasonInfoChanged, this, [=](const QString& text) {
         ui->battleRankIconLabel->setToolTip(text);
     });
 
-    connect(liveService, &LiveRoomService::signalBattleNumsChanged, this, [=](const QString& text) {
+    connect(liveService, &LiveServiceBase::signalBattleNumsChanged, this, [=](const QString& text) {
         ui->winningStreakLabel->setToolTip(text);
     });
 
-    connect(liveService, &LiveRoomService::signalBattleScoreChanged, this, [=](const QString& text) {
+    connect(liveService, &LiveServiceBase::signalBattleScoreChanged, this, [=](const QString& text) {
         ui->battleRankNameLabel->setToolTip(text);
     });
 
-    connect(liveService, &LiveRoomService::signalBattlePrepared, this, [=] {
+    connect(liveService, &LiveServiceBase::signalBattlePrepared, this, [=] {
         // 处理PK对面直播间事件
         if (hasEvent("PK_MATCH_INFO"))
         {
@@ -1165,7 +1184,7 @@ void MainWindow::initLiveService()
         }
     });
 
-    connect(liveService, &LiveRoomService::signalBattleStarted, this, [=] {
+    connect(liveService, &LiveServiceBase::signalBattleStarted, this, [=] {
         if (danmakuWindow)
         {
             danmakuWindow->showStatusText();
@@ -1181,7 +1200,7 @@ void MainWindow::initLiveService()
         }
     });
 
-    connect(liveService, &LiveRoomService::signalBattleFinished, this, [=] {
+    connect(liveService, &LiveServiceBase::signalBattleFinished, this, [=] {
         if (danmakuWindow)
         {
             danmakuWindow->hideStatusText();
@@ -1190,23 +1209,23 @@ void MainWindow::initLiveService()
         }
     });
 
-    connect(liveService, &LiveRoomService::signalBattleStartMatch, this, [=] {
+    connect(liveService, &LiveServiceBase::signalBattleStartMatch, this, [=] {
         if (danmakuWindow)
             danmakuWindow->setStatusText("正在匹配...");
     });
 
     /// 弹幕姬
-    connect(liveService, &LiveRoomService::signalDanmakuStatusChanged, this, [=](const QString& text) {
+    connect(liveService, &LiveServiceBase::signalDanmakuStatusChanged, this, [=](const QString& text) {
         if (danmakuWindow)
             danmakuWindow->setStatusText(text);
     });
 
-    connect(liveService, &LiveRoomService::signalPKStatusChanged, this, [=](int pkType, qint64 roomId, UIDT upUid, const QString& upUname) {
+    connect(liveService, &LiveServiceBase::signalPKStatusChanged, this, [=](int pkType, qint64 roomId, UIDT upUid, const QString& upUname) {
         if (danmakuWindow)
             danmakuWindow->setPkStatus(pkType, roomId, upUid, upUname);
     });
 
-    connect(liveService, &LiveRoomService::signalDanmakuAddBlockText, this, [=](const QString& word, int second) {
+    connect(liveService, &LiveServiceBase::signalDanmakuAddBlockText, this, [=](const QString& word, int second) {
         if (danmakuWindow)
         {
             danmakuWindow->addBlockText(word);
@@ -1216,19 +1235,19 @@ void MainWindow::initLiveService()
         }
     });
 
-    connect(liveService, &LiveRoomService::signalMergeGiftCombo, this, [=](const LiveDanmaku& danmaku, int delayTime) {
+    connect(liveService, &LiveServiceBase::signalMergeGiftCombo, this, [=](const LiveDanmaku& danmaku, int delayTime) {
         if (danmakuWindow)
             danmakuWindow->mergeGift(danmaku, delayTime);
     });
 
     /// 交互
-    connect(liveService, &LiveRoomService::signalActionShowPKVideoChanged, this, [=](bool enabled) {
+    connect(liveService, &LiveServiceBase::signalActionShowPKVideoChanged, this, [=](bool enabled) {
         ui->actionShow_PK_Video->setEnabled(enabled);
     });
-    connect(liveService, &LiveRoomService::signalActionJoinBattleChanged, this, [=](bool enabled) {
+    connect(liveService, &LiveServiceBase::signalActionJoinBattleChanged, this, [=](bool enabled) {
         ui->actionJoin_Battle->setEnabled(enabled);
     });
-    connect(liveService, &LiveRoomService::signalAutoMelonMsgChanged, this, [=](const QString& msg) {
+    connect(liveService, &LiveServiceBase::signalAutoMelonMsgChanged, this, [=](const QString& msg) {
         ui->pkAutoMelonCheck->setToolTip(msg);
     });
 
@@ -1259,24 +1278,24 @@ void MainWindow::initLiveService()
     });
 
     // 大乱斗自动赠送吃瓜
-    connect(liveService->pkEndingTimer, &QTimer::timeout, liveService, &LiveRoomService::slotPkEndingTimeout);
+    connect(liveService->pkEndingTimer, &QTimer::timeout, liveService, &LiveServiceBase::slotPkEndingTimeout);
 
     // 私信功能开关
-    connect(liveService, &LiveRoomService::signalRefreshPrivateMsgEnabled, this, [=](bool enabled) {
+    connect(liveService, &LiveServiceBase::signalRefreshPrivateMsgEnabled, this, [=](bool enabled) {
         ui->receivePrivateMsgCheck->setChecked(enabled);
     });
 
     // 评价
-    connect(liveService, &LiveRoomService::signalPositiveVoteCountChanged, this, [=](const QString& text) {
+    connect(liveService, &LiveServiceBase::signalPositiveVoteCountChanged, this, [=](const QString& text) {
         ui->positiveVoteCheck->setText(text);
     });
 
-    connect(liveService, &LiveRoomService::signalPositiveVoteStateChanged, this, [=](bool like) {
+    connect(liveService, &LiveServiceBase::signalPositiveVoteStateChanged, this, [=](bool like) {
         ui->positiveVoteCheck->setChecked(like);
     });
 
     // 子账号
-    connect(liveService, &LiveRoomService::signalSubAccountChanged, this, &MainWindow::slotSubAccountChanged);
+    connect(liveService, &LiveServiceBase::signalSubAccountChanged, this, &MainWindow::slotSubAccountChanged);
 
 }
 
@@ -1285,9 +1304,6 @@ void MainWindow::initLiveService()
 /// 所以里面的所有变量都要做好重复初始化的准备
 void MainWindow::readConfig()
 {
-    // 平台
-    rt->livePlatform = (LivePlatform)(us->value("platform/live", 0).toInt());
-
     // 界面效果
     ui->closeGuiCheck->setChecked(us->closeGui = us->value("mainwindow/closeGui", false).toBool());
 
@@ -1956,7 +1972,7 @@ void MainWindow::initDanmakuWindow()
     danmakuWindow->hasReply = [=](const QString& text) { return hasReply(text); };
     danmakuWindow->rejectReply = [=](const LiveDanmaku& danmaku) { return cr->isFilterRejected("FILTER_AI_REPLY", danmaku); };
 
-    connect(liveService, &LiveRoomService::signalNewDanmaku, danmakuWindow, [=](const LiveDanmaku &danmaku) {
+    connect(liveService, &LiveServiceBase::signalNewDanmaku, danmakuWindow, [=](const LiveDanmaku &danmaku) {
         if (danmaku.is(MSG_DANMAKU))
         {
             if (cr->isFilterRejected("FILTER_DANMAKU_MSG", danmaku))
@@ -2060,11 +2076,11 @@ void MainWindow::initEvent()
     connect(liveService, SIGNAL(signalNewDanmaku(const LiveDanmaku&)), this, SLOT(slotDiange(const LiveDanmaku&)));
 
     // 滚屏
-    connect(liveService, &LiveRoomService::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
+    connect(liveService, &LiveServiceBase::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
         showScreenDanmaku(danmaku);
     });
 
-    connect(liveService, &LiveRoomService::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
+    connect(liveService, &LiveServiceBase::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
         if (danmaku.isPkLink()) // 大乱斗对面的弹幕不朗读
             return ;
 
@@ -3782,18 +3798,22 @@ void MainWindow::on_roomIdEdit_editingFinished()
 
     releaseLiveData();
 
-    // 判断是身份码还是房间号
-    bool isPureRoomId = (ac->roomId.contains(QRegularExpression("^\\d+$")));
-
-    // 先解析身份码
-    if (!isPureRoomId)
+    if (rt->livePlatform == Bilibili)
     {
-        ac->identityCode = ac->roomId;
-        ui->identityCodeEdit->setText(ac->identityCode);
-        us->set("live-open/identityCode", ac->identityCode);
-        startConnectIdentityCode();
-        return ;
+        // 判断是身份码还是房间号
+        bool isPureRoomId = (ac->roomId.contains(QRegularExpression("^\\d+$")));
+
+        // 先解析身份码
+        if (!isPureRoomId)
+        {
+            ac->identityCode = ac->roomId;
+            ui->identityCodeEdit->setText(ac->identityCode);
+            us->set("live-open/identityCode", ac->identityCode);
+            startConnectIdentityCode();
+            return ;
+        }
     }
+
 
     // 直接继续
     emit signalRoomChanged(ac->roomId);
@@ -4928,24 +4948,32 @@ void MainWindow::slotSocketError(QAbstractSocket::SocketError error)
  */
 void MainWindow::startConnectIdentityCode()
 {
-    MyJson json;
-    json.insert("code", ac->identityCode); // 主播身份码
-    json.insert("app_id", (qint64)BILI_APP_ID);
-    /* liveOpenService->post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
-        if (json.code() != 0)
-        {
-            showError("解析身份码出错", snum(json.code()) + " " + json.msg());
-            return ;
-        }
+    if (rt->livePlatform == Bilibili)
+    {
+        MyJson json;
+        json.insert("code", ac->identityCode); // 主播身份码
+        json.insert("app_id", (qint64)BILI_APP_ID);
+        /* liveOpenService->post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
+            if (json.code() != 0)
+            {
+                showError("解析身份码出错", snum(json.code()) + " " + json.msg());
+                return ;
+            }
 
-        auto data = json.data();
-        auto anchor = data.o("anchor_info");
-        qint64 roomId = anchor.l("room_id");
+            auto data = json.data();
+            auto anchor = data.o("anchor_info");
+            qint64 roomId = anchor.l("room_id");
 
-        // 通过房间号连接
-        ui->roomIdEdit->setText(snum(roomId));
-        on_roomIdEdit_editingFinished();
-    }); */
+            // 通过房间号连接
+            ui->roomIdEdit->setText(snum(roomId));
+            on_roomIdEdit_editingFinished();
+        }); */
+    }
+    else
+    {
+        QMessageBox::warning(this, "官方连接渠道", "当前平台暂不支持该接口");
+    }
+
 }
 
 void MainWindow::startConnectRoom()
@@ -8437,7 +8465,7 @@ void MainWindow::initDbService()
         sqlService.open();
     ui->databaseWidget->setService(&sqlService);
 
-    connect(liveService, &LiveRoomService::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
+    connect(liveService, &LiveServiceBase::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
         if (danmaku.isPkLink()) // 不包含PK同步的弹幕
             return ;
         if (danmaku.isNoReply() && !danmaku.isAutoSend()) // 不包含自动发送的弹幕
@@ -10750,7 +10778,7 @@ void MainWindow::on_receivePrivateMsgCheck_stateChanged(int arg1)
             liveService->privateMsgTimer = new QTimer(this);
             liveService->privateMsgTimer->setInterval(5000);
             liveService->privateMsgTimer->setSingleShot(false);
-            connect(liveService->privateMsgTimer, &QTimer::timeout, liveService, &LiveRoomService::refreshPrivateMsg);
+            connect(liveService->privateMsgTimer, &QTimer::timeout, liveService, &LiveServiceBase::refreshPrivateMsg);
         }
 
         liveService->privateMsgTimer->start();
@@ -11612,5 +11640,33 @@ void MainWindow::on_proxyTestIPButton_clicked()
         reply->deleteLater();
         manager->deleteLater();
     });
+}
+
+
+void MainWindow::on_platformButton_clicked()
+{
+    auto switchToPlatform = [=](LivePlatform pl) {
+        us->setValue("global/live_platform", pl);
+        tip_box->createTipCard(new NotificationEntry("", "切换直播平台", "重启生效"));
+    };
+
+    newFacileMenu;
+    menu->addAction(QIcon(":/icons/platform/bilibili"), "哔哩哔哩", [=]{
+        switchToPlatform(Bilibili);
+    })->check(rt->livePlatform == Bilibili);
+    menu->split();
+    menu->addAction(QIcon(":/icons/platform/douyin"), "抖音", [=]{
+        switchToPlatform(Douyin);
+    })->check(rt->livePlatform == Douyin);
+    menu->addAction(QIcon(":/icons/platform/huya"), "虎牙", [=]{
+        switchToPlatform(Huya);
+    })->check(rt->livePlatform == Huya)->disable();
+    menu->addAction(QIcon(":/icons/platform/douyu"), "斗鱼", [=]{
+        switchToPlatform(Douyu);
+    })->check(rt->livePlatform == Douyu)->disable();
+    menu->addAction(QIcon(":/icons/platform/kuaishou"), "快手", [=]{
+        switchToPlatform(Kuaishou);
+    })->check(rt->livePlatform == Kuaishou)->disable();
+    menu->exec();
 }
 

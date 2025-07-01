@@ -6,7 +6,7 @@
 #include "guardonlinedialog.h"
 #include "tx_nlp.h"
 #include "string_distance_util.h"
-#include "liveroomservice.h"
+#include "liveservicebase.h"
 
 QT_BEGIN_NAMESPACE
     extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
@@ -225,7 +225,7 @@ LiveDanmakuWindow::~LiveDanmakuWindow()
     us->setValue("livedanmakuwindow/geometry", this->saveGeometry());
 }
 
-void LiveDanmakuWindow::setLiveService(LiveRoomService *service)
+void LiveDanmakuWindow::setLiveService(LiveServiceBase *service)
 {
     this->liveService = service;
 }

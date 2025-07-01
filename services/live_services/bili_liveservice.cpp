@@ -16,7 +16,7 @@
 #include "rsautil.h"
 #include "debounce.h"
 
-BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
+BiliLiveService::BiliLiveService(QObject *parent) : LiveServiceBase(parent)
 {
     initWS();
 
@@ -42,7 +42,7 @@ BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
 
 void BiliLiveService::readConfig()
 {
-    LiveRoomService::readConfig();
+    LiveServiceBase::readConfig();
     todayHeartMinite = us->value("danmaku/todayHeartMinite").toInt();
     emit signalHeartTimeNumberChanged(todayHeartMinite/5, todayHeartMinite);
 }
@@ -55,7 +55,7 @@ void BiliLiveService::releaseLiveData(bool prepare)
 {
     liveTimestamp = QDateTime::currentMSecsSinceEpoch();
     xliveHeartBeatTimer->stop();
-    LiveRoomService::releaseLiveData(prepare);
+    LiveServiceBase::releaseLiveData(prepare);
 }
 
 void BiliLiveService::initWS()

@@ -5,7 +5,7 @@
 #include <QEventLoop>
 #include <QTimer>
 #include <QFile>
-#include "liveroomservice.h"
+#include "liveservicebase.h"
 
 class M3u8Downloader : public QObject
 {
@@ -16,7 +16,7 @@ public:
 
     bool isDownloading() const;
 
-    void SetLiveRoomService(LiveRoomService* live_room_service);
+    void SetLiveRoomService(LiveServiceBase* live_room_service);
 
 signals:
     void signalStarted();
@@ -61,7 +61,7 @@ private:
     // 录制参数里的expires
     qint64 ts_record_expires_timestamps = 0;
 
-    LiveRoomService* ptr_live_room_service = nullptr;
+    LiveServiceBase* ptr_live_room_service = nullptr;
 };
 
 #endif // M3U8DOWNLOADER_H

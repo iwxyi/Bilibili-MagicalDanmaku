@@ -7,7 +7,7 @@ ChatService::ChatService(QObject *parent) : QObject(parent)
     txNlp = new TxNlp(this);
 }
 
-void ChatService::setLiveService(LiveRoomService *service)
+void ChatService::setLiveService(LiveServiceBase *service)
 {
     chatgpt->setLiveService(service);
 }

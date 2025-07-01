@@ -761,6 +761,8 @@ private slots:
 
     void on_proxyTestIPButton_clicked();
 
+    void on_platformButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -948,7 +950,7 @@ private:
     SingleEntrance* fakeEntrance = nullptr;
     
     // 直播数据
-    LiveRoomService* liveService = nullptr;
+    LiveServiceBase* liveService = nullptr;
 
     // 启动与定时
     QTimer* syncTimer = nullptr;

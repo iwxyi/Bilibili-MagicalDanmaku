@@ -62,7 +62,7 @@
 typedef std::function<bool(const QString&)> FuncJudgeTextType;
 typedef std::function<bool(const LiveDanmaku&)> FuncJudgeDanmakuType;
 
-class LiveRoomService;
+class LiveServiceBase;
 
 class LiveDanmakuWindow : public QWidget
 {
@@ -75,7 +75,7 @@ public:
     LiveDanmakuWindow(QWidget *parent = nullptr);
     ~LiveDanmakuWindow() override;
 
-    void setLiveService(LiveRoomService *service);
+    void setLiveService(LiveServiceBase *service);
     void setChatService(ChatService* service);
 
 protected:
@@ -235,7 +235,7 @@ private:
 
     QString labelStyleSheet;
 
-    LiveRoomService *liveService = nullptr;
+    LiveServiceBase *liveService = nullptr;
     ChatService* chatService = nullptr;
 
     FuncJudgeTextType hasReply = nullptr;

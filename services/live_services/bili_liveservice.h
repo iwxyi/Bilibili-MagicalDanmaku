@@ -1,12 +1,12 @@
 #ifndef BILILIVESERVICE_H
 #define BILILIVESERVICE_H
 
-#include "liveroomservice.h"
+#include "liveservicebase.h"
 
 #define BILI_API_DOMAIN QString("https://live-open.biliapi.com")
 #define BILI_APP_ID 1659569945917
 
-class BiliLiveService : public LiveRoomService
+class BiliLiveService : public LiveServiceBase
 {
     Q_OBJECT
     friend class MainWindow;

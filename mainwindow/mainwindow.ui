@@ -226,6 +226,23 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="WaterZoomButton" name="platformButton">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="toolTip">
+          <string>直播论坛：提问/反馈/建议</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources/resource.qrc">
+           <normaloff>:/icons/platform/bilibili</normaloff>:/icons/platform/bilibili</iconset>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>

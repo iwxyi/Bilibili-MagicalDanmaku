@@ -56,6 +56,11 @@ public:
     int currentFans = 0;           // 粉丝数量
     int currentFansClub = 0;       // 粉丝团数量
     QHash<QString, QString> currentGuards; // 当前船员ID-Name
+
+    // 平台秘钥
+    QString appId;
+    QString appSecret;
+    QString appToken;
 };
 
 extern AccountInfo *ac;

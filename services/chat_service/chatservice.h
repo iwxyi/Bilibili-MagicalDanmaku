@@ -17,7 +17,7 @@ class ChatService : public QObject
 public:
     explicit ChatService(QObject *parent = nullptr);
 
-    void setLiveService(LiveRoomService* service);
+    void setLiveService(LiveServiceBase* service);
 
 signals:
 

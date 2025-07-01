@@ -118,7 +118,8 @@ SOURCES += \
     services/live_services/bili_liveopen_cmds.cpp \
     services/live_services/bili_liveopenservice.cpp \
     services/live_services/bili_liveservice.cpp \
-    services/live_services/liveroomservice.cpp \
+    services/live_services/douyin_liveservice.cpp \
+    services/live_services/liveservicebase.cpp \
     services/live_services/livestatisticservice.cpp \
     services/sql_service/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
@@ -266,7 +267,8 @@ HEADERS += \
     services/language_service/wrapper/settingswrapperstd.h \
     services/live_services/bili_liveopenservice.h \
     services/live_services/bili_liveservice.h \
-    services/live_services/liveroomservice.h \
+    services/live_services/douyin_liveservice.h \
+    services/live_services/liveservicebase.h \
     services/live_services/livestatisticservice.h \
     services/sql_service/sqlservice.h \
     order_player/importsongsdialog.h \

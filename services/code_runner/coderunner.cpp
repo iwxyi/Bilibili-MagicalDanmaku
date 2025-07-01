@@ -60,7 +60,7 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
     });
 }
 
-void CodeRunner::setLiveService(LiveRoomService *service)
+void CodeRunner::setLiveService(LiveServiceBase *service)
 {
     this->liveService = service;
 }
