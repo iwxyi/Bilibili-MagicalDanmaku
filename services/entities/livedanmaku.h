@@ -191,6 +191,7 @@ public:
         danmaku.reply_is_mystery = object.value("reply_is_mystery").toBool();
         danmaku.reply_type_enum = object.value("reply_type_enum").toInt();
         danmaku.wealth_level = object.value("honor_level").toInt();
+        danmaku.fromRoomId = object.value("from_room_id").toString();
         return danmaku;
     }
 
@@ -310,6 +311,10 @@ public:
         if (wealth_level > 0)
         {
             object.insert("honor_level", wealth_level);
+        }
+        if (!fromRoomId.isEmpty())
+        {
+            object.insert("from_room_id", fromRoomId);
         }
         return object;
     }
@@ -879,15 +884,15 @@ public:
         return *this;
     }
 
-    LiveDanmaku& withRoomId(QString roomId)
+    LiveDanmaku& setFromRoomId(QString roomId)
     {
-        this->roomId = roomId;
+        this->fromRoomId = roomId;
         return *this;
     }
 
     QString getRoomId() const
     {
-        return roomId;
+        return fromRoomId;
     }
 
     LiveDanmaku& withRetry(int r = 1)
@@ -956,6 +961,11 @@ public:
         return original_gift_name;
     }
 
+    QString getFromRoomId() const
+    {
+        return fromRoomId;
+    }
+
 protected:
     MessageType msgType = MSG_DANMAKU;
 
@@ -1019,7 +1029,7 @@ protected:
     int first = 0; // 初次：1；新的：2；礼物合并：>0
     int special = 0;
 
-    QString roomId;
+    QString fromRoomId;
     int retry = 0;
     QString ai_reply;
 

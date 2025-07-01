@@ -1467,6 +1467,8 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return snum(ac->liveStartTime);
     else if (key == "%live_duration_second%")
         return snum(QDateTime::currentSecsSinceEpoch() - ac->liveStartTime);
+    else if (key == "%from_room_id%")
+        return danmaku.getFromRoomId();
 
     // 是主播
     else if (key == "%is_up%")

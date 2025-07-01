@@ -4922,13 +4922,13 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg, const QSt
             if (errorMsg.contains("msg in 1s"))
             {
                 localNotify("[5s后重试]");
-                emit signalSendAutoMsgInFirst(_msg, LiveDanmaku().withRetry().withRoomId(roomId), 5000);
+                emit signalSendAutoMsgInFirst(_msg, LiveDanmaku().withRetry().setFromRoomId(roomId), 5000);
                 // TODO:发送这个信号后会强制识别为自动发送的弹幕，应该看情况要去掉no reply
             }
             else if (errorMsg.contains("msg repeat") || errorMsg.contains("频率过快"))
             {
                 localNotify("[4s后重试]");
-                emit signalSendAutoMsgInFirst(_msg, LiveDanmaku().withRetry().withRoomId(roomId), 4200);
+                emit signalSendAutoMsgInFirst(_msg, LiveDanmaku().withRetry().setFromRoomId(roomId), 4200);
             }
             else if (errorMsg.contains("超出限制长度"))
             {
@@ -4939,7 +4939,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg, const QSt
                 else
                 {
                     localNotify("[自动分割长度]");
-                    emit signalSendAutoMsgInFirst(splitLongDanmu(_msg, ac->danmuLongest).join("\\n"), LiveDanmaku().withRetry().withRoomId(roomId), 1000);
+                    emit signalSendAutoMsgInFirst(splitLongDanmu(_msg, ac->danmuLongest).join("\\n"), LiveDanmaku().withRetry().setFromRoomId(roomId), 1000);
                 }
             }
             else if (errorMsg == "f") // 系统敏感词

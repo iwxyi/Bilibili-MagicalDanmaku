@@ -1,4 +1,4 @@
-### v5.4 [Cron 定时事件](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.4)
+### v5.4 [Cron 定时事件、过滤器支持在线AI、Python虚拟环境](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.4)
 
 - 新增粉丝档案的观众消费能力分析
 - 新增 Cron 定时事件：以`TIME:`开头

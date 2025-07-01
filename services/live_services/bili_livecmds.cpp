@@ -818,6 +818,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             cs = "0" + cs;
         LiveDanmaku danmaku(username, msg, uid, level, QDateTime::fromMSecsSinceEpoch(timestamp),
                                                  unameColor, "#"+cs);
+        danmaku.setFromRoomId(pkRoomId);
         danmaku.setUserInfo(admin, vip, svip, uidentity, iphone, uguard);
         if (medal.size() >= 4)
         {
@@ -1085,6 +1086,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         danmaku.setDiscountPrice(discountPrice);
         danmaku.setWealthLevel(wealth_level);
         danmaku.setOriginalGiftName(originalGiftName);
+        danmaku.setFromRoomId(pkRoomId);
         if (!data.value("medal_info").isNull())
         {
             QJsonObject medalInfo = data.value("medal_info").toObject();
@@ -1340,6 +1342,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
 
         LiveDanmaku danmaku(uname, message, uid, user_level, QDateTime::fromSecsSinceEpoch(end_time), name_color, message_font_color,
                     gift_id, gift_name, num, price);
+        danmaku.setFromRoomId(pkRoomId);
         danmaku.setMedal(snum(anchor_roomid), medal_name, medal_level, medal_color, anchor_uname);
         appendNewLiveDanmaku(danmaku);
 
@@ -1455,6 +1458,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             username = localName;*/
         LiveDanmaku danmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)
                                         , true, unameColor, spreadDesc, spreadInfo));
+        danmaku.setFromRoomId(pkRoomId);
         appendNewLiveDanmaku(danmaku);
 
         triggerCmdEvent(cmd, danmaku.with(data));
@@ -1575,6 +1579,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
 
             danmaku = LiveDanmaku(guardLevel, uname, uid, QDateTime::currentDateTime());
         }
+        danmaku.setFromRoomId(pkRoomId);
 
         // userComeEvent(danmaku); // 用户进入就有提示了（舰长提示会更频繁）
         triggerCmdEvent(cmd, danmaku.with(data));
@@ -1658,6 +1663,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
                          QString("#%1").arg(fansMedal.value("medal_color").toInt(), 6, 16, QLatin1Char('0')),
                          "");
         danmaku.setWealthLevel(wealth_level);
+        danmaku.setFromRoomId(pkRoomId);
 
         bool opposite = pking &&
                 ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
@@ -1736,6 +1742,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         QString nickname = json.value("uname").toString();
         qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
         LiveDanmaku danmaku(LiveDanmaku(nickname, uid));
+        danmaku.setFromRoomId(pkRoomId);
         appendNewLiveDanmaku(danmaku);
         rt->blockedQueue.append(danmaku);
 
@@ -1762,6 +1769,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
                             guardCount == 0 ? 1 : ac->currentGuards.contains(uid) ? 0 : 2);
         danmaku.with(data);
         danmaku.setFirst(guardCount == 0);
+        danmaku.setFromRoomId(pkRoomId);
         appendNewLiveDanmaku(danmaku);
         appendLiveGuard(danmaku);
 
@@ -2299,6 +2307,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             else
             {
                 LiveDanmaku danmaku = LiveDanmaku(text).with(json);
+                danmaku.setFromRoomId(pkRoomId);
                 qInfo() << "NOTICE:" << array;
                 if (cr->isFilterRejected("FILTER_DANMAKU_NOTICE", danmaku))
                     return ;
@@ -2742,6 +2751,7 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
             cs = "0" + cs;
         LiveDanmaku danmaku(username, msg, uid, level, QDateTime::fromMSecsSinceEpoch(timestamp),
                                                  unameColor, "#"+cs);
+        danmaku.setFromRoomId(pkRoomId);
         if (medal.size() >= 4)
         {
             medal_level = medal[0].toInt();
@@ -2782,6 +2792,7 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
         /*if (!localName.isEmpty())
             username = localName;*/
         LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        danmaku.setFromRoomId(pkRoomId);
         QString anchorRoomId;
         if (!data.value("medal_info").isNull())
         {
@@ -2858,6 +2869,7 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
         QString localName = us->getLocalNickname(uid);
         LiveDanmaku danmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin,
                             unameColor, spreadDesc, spreadInfo);
+        danmaku.setFromRoomId(pkRoomId);
         danmaku.setMedal(snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())),
                          fansMedal.value("medal_name").toString(),
                          fansMedal.value("medal_level").toInt(),
