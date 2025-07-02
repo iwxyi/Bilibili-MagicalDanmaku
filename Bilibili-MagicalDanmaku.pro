@@ -63,6 +63,9 @@ INCLUDEPATH += \
     mainwindow/ \
     services/ \
     services/live_services/ \
+    services/live_services/base/ \
+    services/live_services/bilibili/ \
+    services/live_services/douyin/ \
     services/entities/ \
     services/code_runner/ \
     services/sql_service/ \
@@ -114,13 +117,13 @@ SOURCES += \
     services/language_service/js/networkwrapper.cpp \
     services/language_service/lua/luaengine.cpp \
     services/language_service/python/pythonengine.cpp \
-    services/live_services/bili_livecmds.cpp \
-    services/live_services/bili_liveopen_cmds.cpp \
-    services/live_services/bili_liveopenservice.cpp \
-    services/live_services/bili_liveservice.cpp \
-    services/live_services/douyin_liveservice.cpp \
-    services/live_services/liveservicebase.cpp \
-    services/live_services/livestatisticservice.cpp \
+    services/live_services/bilibili/bili_livecmds.cpp \
+    services/live_services/bilibili/bili_liveopen_cmds.cpp \
+    services/live_services/bilibili/bili_liveopenservice.cpp \
+    services/live_services/bilibili/bili_liveservice.cpp \
+    services/live_services/douyin/douyin_liveservice.cpp \
+    services/live_services/base/liveservicebase.cpp \
+    services/live_services/base/livestatisticservice.cpp \
     services/sql_service/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     services/voice_service/voiceservice.cpp \
@@ -265,11 +268,12 @@ HEADERS += \
     services/language_service/wrapper/danmakuwrapperstd.h \
     services/language_service/wrapper/settingswrapper.h \
     services/language_service/wrapper/settingswrapperstd.h \
-    services/live_services/bili_liveopenservice.h \
-    services/live_services/bili_liveservice.h \
-    services/live_services/douyin_liveservice.h \
-    services/live_services/liveservicebase.h \
-    services/live_services/livestatisticservice.h \
+    services/live_services/bilibili/bili_liveopenservice.h \
+    services/live_services/bilibili/bili_liveservice.h \
+    services/live_services/douyin/douyin_liveservice.h \
+    services/live_services/base/liveservicebase.h \
+    services/live_services/base/livestatisticservice.h \
+    services/live_services/base/api_type.h \
     services/sql_service/sqlservice.h \
     order_player/importsongsdialog.h \
     services/voice_service/voiceservice.h \

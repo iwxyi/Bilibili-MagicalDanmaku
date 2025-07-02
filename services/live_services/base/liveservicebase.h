@@ -67,6 +67,7 @@ signals:
     void signalSendAttentionThank(const LiveDanmaku& danmaku); // 发送大些关注
     void signalNewGuardBuy(const LiveDanmaku& danmaku); // 有人上舰长
 
+    void signalAutoAddCookie(QList<QNetworkCookie> cookies);
     void signalRobotAccountChanged();
     void signalSubAccountChanged(const QString& cookie, const SubAccount& subAccount);
     void signalRoomIdChanged(const QString &roomId); // 房间号改变，例如通过解析身份码导致的房间ID变更

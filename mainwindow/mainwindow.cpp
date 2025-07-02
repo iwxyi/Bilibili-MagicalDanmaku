@@ -867,6 +867,30 @@ void MainWindow::initLiveService()
         startConnectRoom();
     });
 
+    connect(liveService, &LiveServiceBase::signalAutoAddCookie, this, [=](QList<QNetworkCookie> cookies) {
+        QString ck = ac->browserCookie;
+        if (!ck.isEmpty() && !ck.trimmed().endsWith(";"))
+            ck += "; ";
+        for (const QNetworkCookie& cookie : cookies)
+        {
+            QString name = cookie.name();
+            QString value = cookie.value();
+            if (name.isEmpty() || value.isEmpty())
+                continue ;
+            if (ck.contains(name))
+            {
+                qInfo() << "Replace Cookie:" << name << "=" << value;
+                ck.replace(QRegularExpression("(^|;| )" + name + "=.*?;"), "$1" + name + "=" + value + ";");
+            }
+            else
+            {
+                qInfo() << "Add Cookie:" << name << "=" << value;
+                ck += name + "=" + value + ";";
+            }
+        }
+        autoSetCookie(ck);
+    });
+
     /// 变量到UI
     connect(liveService, &LiveServiceBase::signalConnectionStateTextChanged, this, [=](const QString& text) {
         ui->connectStateLabel->setText(text);
@@ -4566,28 +4590,34 @@ void MainWindow::autoSetCookie(const QString &s)
 {
     us->setValue("danmaku/browserCookie", ac->browserCookie = s);
     if (ac->browserCookie.isEmpty())
+    {
+        ac->userCookies = QVariant();
         return ;
+    }
 
     ac->userCookies = getCookies();
     QTimer::singleShot(10, [=]{
         liveService->getCookieAccount();
     });
 
-    // 自动设置弹幕格式
-    int posl = ac->browserCookie.indexOf("bili_jct=") + 9;
-    if (posl == -1)
-        return ;
-    int posr = ac->browserCookie.indexOf(";", posl);
-    if (posr == -1) posr = ac->browserCookie.length();
-    ac->csrf_token = ac->browserCookie.mid(posl, posr - posl);
-    qInfo() << "检测到csrf_token:" << ac->csrf_token;
+    if (rt->livePlatform == Bilibili)
+    {
+        // 自动设置弹幕格式
+        int posl = ac->browserCookie.indexOf("bili_jct=") + 9;
+        if (posl == -1)
+            return ;
+        int posr = ac->browserCookie.indexOf(";", posl);
+        if (posr == -1) posr = ac->browserCookie.length();
+        ac->csrf_token = ac->browserCookie.mid(posl, posr - posl);
+        qInfo() << "检测到csrf_token:" << ac->csrf_token;
 
-    if (ac->browserData.isEmpty())
-        ac->browserData = "color=4546550&fontsize=25&mode=4&msg=&rnd=1605156247&roomid=&bubble=5&csrf_token=&csrf=";
-    ac->browserData.replace(QRegularExpression("csrf_token=[^&]*"), "csrf_token=" + ac->csrf_token);
-    ac->browserData.replace(QRegularExpression("csrf=[^&]*"), "csrf=" + ac->csrf_token);
-    us->setValue("danmaku/browserData", ac->browserData);
-    qInfo() << "设置弹幕格式：" << ac->browserData;
+        if (ac->browserData.isEmpty())
+            ac->browserData = "color=4546550&fontsize=25&mode=4&msg=&rnd=1605156247&roomid=&bubble=5&csrf_token=&csrf=";
+        ac->browserData.replace(QRegularExpression("csrf_token=[^&]*"), "csrf_token=" + ac->csrf_token);
+        ac->browserData.replace(QRegularExpression("csrf=[^&]*"), "csrf=" + ac->csrf_token);
+        us->setValue("danmaku/browserData", ac->browserData);
+        qInfo() << "设置弹幕格式：" << ac->browserData;
+    }
 }
 
 QVariant MainWindow::getCookies() const
@@ -6647,10 +6677,12 @@ void MainWindow::on_actionSet_Cookie_triggered()
     if (!ok)
         return ;
 
-    if (!s.contains("SESSDATA="))
+    if (rt->livePlatform == Bilibili)
     {
-        QMessageBox::warning(this, "设置Cookie", "设置Cookie失败，这不是Bilibili的浏览器Cookie");
-        return ;
+        if (!s.contains("SESSDATA="))
+        {
+            QMessageBox::warning(this, "设置Cookie", "设置Cookie失败，这不是Bilibili的浏览器Cookie");
+        }
     }
 
     if (s.toLower().startsWith("cookie:"))
@@ -10045,7 +10077,7 @@ void MainWindow::on_robotNameButton_clicked()
     menu->addAction(ui->actionQRCode_Login);
     menu->addAction(ui->actionSet_Cookie);
     menu->addAction(ui->actionSet_Danmaku_Data_Format);
-    menu->split()->addAction(ui->actionLogout)->disable(ac->cookieUid.isEmpty());
+    menu->split()->addAction(ui->actionLogout)->disable(ac->browserCookie.isEmpty());
     menu->exec();
 }
 
