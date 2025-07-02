@@ -98,7 +98,7 @@ TipCard::TipCard(QWidget *parent, NotificationEntry *noti)
 //    title_label->setFixedHeight(getWidgetHeight(title_label));
     content_label->setFixedWidth(parentWidget()->width()-aop_w*4-TIP_CARD_CONTENT_MARGIN*2);
     content_label->setFixedHeight(getWidgetHeight(content_label));
-    int height = title_label->height() + content_label->height() + aop_h*4 + TIP_CARD_CONTENT_MARGIN*2 + margin_hlayout->margin() * 2;
+    int height = title_label->height() + content_label->height() + aop_h*4 + TIP_CARD_CONTENT_MARGIN*2 + margin_hlayout->contentsMargins().top() + margin_hlayout->contentsMargins().bottom();
     if (operator1_button != nullptr)
         height += operator1_button->height();
     setMinimumSize(100, max(50, height));
@@ -163,7 +163,7 @@ void TipCard::setBtnColor(QColor c)
         operator3_button->setTextColor(c);
 }
 
-void TipCard::enterEvent(QEvent *event)
+void TipCard::enterEvent(QEnterEvent *event)
 {
     ThreeDimenButton::enterEvent(event);
 

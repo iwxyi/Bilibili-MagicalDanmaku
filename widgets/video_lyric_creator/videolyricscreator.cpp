@@ -14,6 +14,7 @@
 #include <QScrollBar>
 #include "videolyricscreator.h"
 #include "ui_videolyricscreator.h"
+#include "qt_compat.h"
 
 VideoLyricsCreator::VideoLyricsCreator(QSettings* st, QWidget *parent) :
     QMainWindow(parent),
@@ -46,7 +47,7 @@ void VideoLyricsCreator::on_sendButton_clicked()
         return ;
     }
 
-    lyricList = ui->lyricsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
+    lyricList = ui->lyricsEdit->toPlainText().split("\n", SKIP_EMPTY_PARTS);
 
     // 判断歌词格式
     QRegularExpression re("^\\[\\d+[:\\.]\\d+\\.\\d+\\].*$");

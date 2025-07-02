@@ -15,7 +15,7 @@ ThreeDimenButton::ThreeDimenButton(QWidget* parent) : InteractiveButtonBase (par
 	setJitterAni(false);
 }
 
-void ThreeDimenButton::enterEvent(QEvent *event)
+void ThreeDimenButton::enterEvent(QEnterEvent *event)
 {
 
 }

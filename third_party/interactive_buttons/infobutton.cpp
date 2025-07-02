@@ -1,4 +1,6 @@
 #include "infobutton.h"
+#include "qt_compat_random.h"
+#include <QPainterPath>
 
 InfoButton::InfoButton(QWidget *parent) : InteractiveButtonBase(parent)
 {

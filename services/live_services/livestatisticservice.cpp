@@ -147,8 +147,13 @@ void LiveStatisticService::startSaveDanmakuToFile()
     danmuLogFile->open(QIODevice::WriteOnly | QIODevice::Append);
     danmuLogStream = new QTextStream(danmuLogFile);
     danmuLogStream->setGenerateByteOrderMark(true);
-    if (!externFileCodec.isEmpty())
-        danmuLogStream->setCodec(externFileCodec.toUtf8());
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    danmuLogStream->setCodec(externFileCodec.toUtf8().constData());
+#else
+    auto encoding = QStringConverter::encodingForName(externFileCodec.toUtf8());
+    if (encoding)
+        danmuLogStream->setEncoding(*encoding);
+#endif
 }
 
 void LiveStatisticService::finishSaveDanmuToFile()

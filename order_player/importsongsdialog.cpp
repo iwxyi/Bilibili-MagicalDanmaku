@@ -1,5 +1,6 @@
 #include "importsongsdialog.h"
 #include "ui_importsongsdialog.h"
+#include "qt_compat.h"
 
 ImportSongsDialog::ImportSongsDialog(QSettings *settings, QWidget *parent) :
     settings(settings), QDialog(parent),
@@ -20,7 +21,7 @@ ImportSongsDialog::~ImportSongsDialog()
 void ImportSongsDialog::on_importButton_clicked()
 {
     QString text = ui->plainTextEdit->toPlainText();
-    emit importMusics(ui->typeCombo->currentIndex(), text.split("\n", QString::SkipEmptyParts));
+    emit importMusics(ui->typeCombo->currentIndex(), text.split("\n", SKIP_EMPTY_PARTS));
     this->close();
 }
 

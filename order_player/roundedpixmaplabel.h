@@ -21,8 +21,12 @@ public:
 protected:
     void paintEvent(QPaintEvent *e) override
     {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         const QPixmap* pixmap = this->pixmap();
         if (!pixmap)
+#else
+        const QPixmap pixmap = this->pixmap();
+#endif
             return QLabel::paintEvent(e);
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
@@ -30,7 +34,11 @@ protected:
         QPainterPath path;
         path.addRoundedRect(rect(), radius, radius);
         painter.setClipPath(path);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         painter.drawPixmap(rect(), *pixmap);
+#else
+        painter.drawPixmap(rect(), pixmap);
+#endif
     }
 
 private:

@@ -1,4 +1,6 @@
 #include "warmwishutil.h"
+#include "qt_compat.h"
+#include "qt_compat_random.h"
 
 QString WarmWishUtil::getWarmWish(QString path)
 {
@@ -20,7 +22,7 @@ QStringList WarmWishUtil::getPromptWish(QString content)
 {
     QStringList f_list = getXmls(content, "WISH");
     if (f_list.size() == 0) // 不是标准XML，直接按行分割
-        return content.split("", QString::SkipEmptyParts);
+        return content.split("", SKIP_EMPTY_PARTS);
 
     // 获取当前时间（分钟数）
     QDateTime current_time = QDateTime::currentDateTime();

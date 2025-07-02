@@ -190,7 +190,7 @@ void M3u8Downloader::parseM3u8(const QByteArray &data)
             double double_one_fragment_duration = str_one_fragment_duration.toDouble();
             qint64 one_fragment_duration(double_one_fragment_duration);
             if (date_time.isValid()) {
-                qint64 current_timestamps = date_time.toTime_t();
+                qint64 current_timestamps = date_time.toSecsSinceEpoch();
                 qint64 video_update_timestamps = current_timestamps + one_fragment_duration;
                 UpdateTsRecordTimestampsCurrent(video_update_timestamps);
             }

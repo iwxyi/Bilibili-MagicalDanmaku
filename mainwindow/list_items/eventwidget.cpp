@@ -1,5 +1,6 @@
 #include "eventwidget.h"
 #include "fileutil.h"
+#include "qt_compat.h"
 
 QCompleter* EventWidget::completer = nullptr;
 
@@ -60,7 +61,7 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
     if (completer == nullptr)
     {
         auto model = new QStandardItemModel(this);
-        auto sl = readTextFile(":/documents/translation_events").split("\n", QString::SkipEmptyParts);
+        auto sl = readTextFile(":/documents/translation_events").split("\n", SKIP_EMPTY_PARTS);
         QList<QStandardItem*> items;
         for (auto s: sl)
             model->appendRow(new QStandardItem(s));

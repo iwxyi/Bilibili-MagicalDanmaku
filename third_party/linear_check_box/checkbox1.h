@@ -11,7 +11,7 @@ public:
     void setUncheckedColor(QColor c);
 
 protected:
-    void enterEvent(QEvent *e) override;
+    void enterEvent(QEnterEvent *e) override;
     void leaveEvent(QEvent *e) override;
 
     virtual void checkStateChanged(int state) override;

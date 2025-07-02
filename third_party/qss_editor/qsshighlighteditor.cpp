@@ -1,4 +1,5 @@
 #include "qsshighlighteditor.h"
+#include "qt_compat.h"
 
 QSSHighlightEditor::QSSHighlightEditor(QWidget *parent) : QPlainTextEdit(parent)
 {
@@ -85,8 +86,8 @@ void QSSHighlighter::highlightBlock(const QString &text)
             QString vals = match.captured(2);
             QColor c;
             {
-                QStringList ms = mode.split("", QString::SkipEmptyParts);
-                QStringList vs = vals.split(",", QString::SkipEmptyParts);
+                QStringList ms = mode.split("", SKIP_EMPTY_PARTS);
+                QStringList vs = vals.split(",", SKIP_EMPTY_PARTS);
                 int size = qMin(ms.size(), vs.size());
                 for (int i = 0; i < size; i++)
                 {

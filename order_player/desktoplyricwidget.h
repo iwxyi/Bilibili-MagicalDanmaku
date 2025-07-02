@@ -33,6 +33,7 @@
 #include <QPushButton>
 #include <QStringListModel>
 #include "facilemenu.h"
+#include "qt_compat_event.h"
 
 struct LyricBean
 {
@@ -74,8 +75,12 @@ public:
 protected:
     void showEvent(QShowEvent *event) override;
     void hideEvent(QHideEvent *event) override;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     bool nativeEvent(const QByteArray &eventType, void *message, long *result) override;
-    void enterEvent(QEvent *event) override;
+#else
+    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override;
+#endif
+    void enterEvent(QEnterEvent *event) override;
     void leaveEvent(QEvent *event) override;
     void mousePressEvent(QMouseEvent *e) override;
     void mouseMoveEvent(QMouseEvent *e) override;

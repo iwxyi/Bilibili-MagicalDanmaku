@@ -215,7 +215,12 @@ public:
         {
             param_json.insert("stream", true);
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
             request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+#else
+            request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                                 QNetworkRequest::NoLessSafeRedirectPolicy);
+#endif
             request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::AlwaysNetwork); // Events shouldn't be cached
         }
 

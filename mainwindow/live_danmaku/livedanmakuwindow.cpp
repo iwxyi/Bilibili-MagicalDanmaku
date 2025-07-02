@@ -7,6 +7,7 @@
 #include "tx_nlp.h"
 #include "string_distance_util.h"
 #include "liveroomservice.h"
+#include "qt_compat_random.h"
 
 QT_BEGIN_NAMESPACE
     extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
@@ -252,7 +253,11 @@ void LiveDanmakuWindow::hideEvent(QHideEvent *event)
     QWidget::hideEvent(event);
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 bool LiveDanmakuWindow::nativeEvent(const QByteArray &eventType, void *message, long *result)
+#else
+bool LiveDanmakuWindow::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
+#endif
 {
 #ifdef Q_OS_WIN32
     Q_UNUSED(eventType)
@@ -325,7 +330,9 @@ void LiveDanmakuWindow::resizeEvent(QResizeEvent *)
             if (!widget || !label)
                 continue;
             widget->setFixedWidth(w);
-            label->setFixedWidth(w - (portrait->isHidden() ? 0 : PORTRAIT_SIDE + widget->layout()->spacing()) - widget->layout()->margin()*2);
+            int marginsWidth = widget->layout()->contentsMargins().left()
+                               + widget->layout()->contentsMargins().right();
+            label->setFixedWidth(w - (portrait->isHidden() ? 0 : PORTRAIT_SIDE + widget->layout()->spacing()) - marginsWidth);
             label->adjustSize();
             widget->adjustSize();
             widget->resize(widget->sizeHint());
@@ -485,7 +492,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     label->setObjectName(msgTypeString(danmaku.getMsgType()));
     if (!labelStyleSheet.isEmpty())
         label->setStyleSheet(labelStyleSheet);
-    layout->setMargin(2);
+    layout->setContentsMargins(2, 2, 2, 2);
     layout->setAlignment(Qt::AlignLeft);
     widget->setLayout(layout);
     layout->activate();
@@ -515,13 +522,14 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
         portrait->setFixedSize(0, 0);
         portrait->hide();
     }
-    label->setFixedWidth(listWidget->contentsRect().width() - (portrait->isHidden() ? 0 : PORTRAIT_SIDE + widget->layout()->spacing())- widget->layout()->margin()*2);
+    int marginWidth = widget->layout()->contentsMargins().left() + widget->layout()->contentsMargins().right();
+    label->setFixedWidth(listWidget->contentsRect().width() - (portrait->isHidden() ? 0 : PORTRAIT_SIDE + widget->layout()->spacing())- marginWidth);
     widget->resize(listWidget->contentsRect().width(), 1);
     setItemWidgetText(item); // 会自动调整大小
 
     // 各种额外功能
     MessageType msgType = danmaku.getMsgType();
-    QRegExp replyRe("点歌|谢|欢迎");
+    QRegularExpression replyRe("点歌|谢|欢迎");
     if (msgType == MSG_DANMAKU)
     {
         // 自己的，成功发送了
@@ -530,16 +538,16 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 
         if (!danmaku.isNoReply() && !danmaku.isPkLink())
         {
-            QRegExp hei("[（）\\(\\)~]"); // 带有特殊字符的黑名单
+            QRegularExpression hei("[（）\\(\\)~]"); // 带有特殊字符的黑名单
 
             // 自动翻译
             if (autoTrans)
             {
                 QString msg = danmaku.getText();
-                QRegExp riyu("[\u0800-\u4e00]+");
-                QRegExp hanyu("([\u1100-\u11ff\uac00-\ud7af\u3130–bai\u318F\u3200–\u32FF\uA960–\uA97F\uD7B0–\uD7FF\uFF00–\uFFEF\\s]+)");
-                QRegExp eeyu("[А-Яа-яЁё]+");
-                QRegExp fanti("[\u3400-\u4db5]+");
+                QRegularExpression riyu("[\u0800-\u4e00]+");
+                QRegularExpression hanyu("([\u1100-\u11ff\uac00-\ud7af\u3130–bai\u318F\u3200–\u32FF\uA960–\uA97F\uD7B0–\uD7FF\uFF00–\uFFEF\\s]+)");
+                QRegularExpression eeyu("[А-Яа-яЁё]+");
+                QRegularExpression fanti("[\u3400-\u4db5]+");
                 if (msg.indexOf(hei) == -1)
                 {
                     if (msg.indexOf(riyu) != -1

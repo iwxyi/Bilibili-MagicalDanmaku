@@ -94,16 +94,23 @@ void SmoothListWidget::wheelEvent(QWheelEvent *event)
 {
     if (enabledSmoothScroll)
     {
-        if (event->delta() > 0) // 上滚
+        // Qt5/Qt6 兼容性处理：滚轮方向判断
+        int wheelDelta = 0;
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+        wheelDelta = event->angleDelta().y();
+#else
+        wheelDelta = event->delta();
+#endif
+        if (wheelDelta > 0) // 上滚
         {
             if (getScrollBar()->sliderPosition() == getScrollBar()->minimum() && !smooth_scrolls.size()) // 到顶部了
                 emit signalLoadTop();
             addSmoothScrollThread(-smoothScrollSpeed, smoothScrollDuration);
             toBottoming = 0;
         }
-        else if (event->delta() < 0) // 下滚
+        else if (wheelDelta < 0) // 下滚
         {
-            if (getScrollBar()->sliderPosition() == getScrollBar()->maximum() && !smooth_scrolls.size()) // 到顶部了
+            if (getScrollBar()->sliderPosition() == getScrollBar()->maximum() && !smooth_scrolls.size()) // 到底部了
                 emit signalLoadBottom();
             addSmoothScrollThread(smoothScrollSpeed, smoothScrollDuration);
         }

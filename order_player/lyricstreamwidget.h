@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QPainter>
 #include "desktoplyricwidget.h"
+#include "qt_compat.h"
 
 class LyricStreamWidget : public QWidget
 {
@@ -56,7 +57,7 @@ public:
         }
 
         // 遍历每一行
-        QStringList sl = text.split("\n", QString::SkipEmptyParts);
+        QStringList sl = text.split("\n", SKIP_EMPTY_PARTS);
         LyricBean prevLyric(false);
         qint64 currentTime = 0;
         lyricStream.clear();

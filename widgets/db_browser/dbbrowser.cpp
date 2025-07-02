@@ -10,6 +10,7 @@
 #include "usersettings.h"
 #include "interactivebuttonbase.h"
 #include "chatgptutil.h"
+#include "qt_compat.h"
 
 DBBrowser::DBBrowser(QWidget *parent) :
     QWidget(parent),
@@ -241,7 +242,7 @@ void DBBrowser::initVisualList()
     };
 
     // 遍历代码生成可视化界面
-    QStringList sl = text.split("\n", QString::SkipEmptyParts);
+    QStringList sl = text.split("\n", SKIP_EMPTY_PARTS);
     QString title, code;
     for (int i = 0; i < sl.size(); i++)
     {

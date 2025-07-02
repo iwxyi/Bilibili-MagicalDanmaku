@@ -74,6 +74,7 @@ INCLUDEPATH += \
     services/language_service/qml/ \
     services/language_service/wrapper/ \
     third_party/utils/ \
+    third_party/qt_compat/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
     third_party/interactive_buttons/ \
@@ -366,6 +367,9 @@ HEADERS += \
     third_party/notification/tipcard.h \
     third_party/qss_editor/qsseditdialog.h \
     third_party/qss_editor/qsshighlighteditor.h \
+    third_party/qt_compat/qt_compat.h \
+    third_party/qt_compat/qt_compat_event.h \
+    third_party/qt_compat/qt_compat_random.h \
     third_party/utils/ImageSimilarityUtil.h \
     third_party/utils/bili_api_util.h \
     third_party/utils/chatgptutil.h \

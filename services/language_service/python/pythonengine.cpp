@@ -5,6 +5,7 @@
 #include <QProcess>
 #include <QJsonDocument>
 #include <QFileSystemWatcher>
+#include "qt_compat_random.h"
 
 PythonEngine::PythonEngine(QObject *parent) : LanguageServiceBase(parent) {}
 

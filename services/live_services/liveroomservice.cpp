@@ -1,6 +1,7 @@
 #include <QRegularExpression>
 #include "liveroomservice.h"
 #include "coderunner.h"
+#include "qt_compat_random.h"
 
 LiveRoomService::LiveRoomService(QObject *parent) 
     : QObject(parent), NetInterface(this), LiveStatisticService(this)
@@ -594,7 +595,7 @@ QStringList LiveRoomService::splitLongDanmu(const QString& text, int maxOne) con
     sl.clear();
     QString lines = text;
     lines.replace("\r", "\n");
-    QStringList lineList = lines.split("\n", QString::SkipEmptyParts);
+    QStringList lineList = lines.split("\n", SKIP_EMPTY_PARTS);
     foreach (QString line, lineList) // 遍历每一行
     {
         int totalLen = line.length();
@@ -613,7 +614,7 @@ void LiveRoomService::sendLongText(QString text)
     if (text.contains("%n%"))
     {
         text.replace("%n%", "\n");
-        for (auto s : text.split("\n", QString::SkipEmptyParts))
+        for (auto s : text.split("\n", SKIP_EMPTY_PARTS))
         {
             sendLongText(s);
         }

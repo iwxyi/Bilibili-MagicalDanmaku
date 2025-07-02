@@ -1,4 +1,5 @@
 #include <QLabel>
+#include <QPainterPath>
 #include "facilemenu.h"
 
 QColor FacileMenu::normal_bg = QColor(255, 255, 255);
@@ -20,7 +21,7 @@ FacileMenu::FacileMenu(QWidget *parent) : QWidget(parent)
     main_vlayout = new QVBoxLayout();
     setLayout(main_hlayout);
     main_hlayout->addLayout(main_vlayout);
-    main_hlayout->setMargin(0);
+    main_hlayout->setContentsMargins(0, 0, 0, 0);
     main_hlayout->setSpacing(0);
 
     setStyleSheet("#FacileMenu { background: "+QVariant(normal_bg).toString()+"; border: none; border-radius:5px; }");
@@ -28,7 +29,20 @@ FacileMenu::FacileMenu(QWidget *parent) : QWidget(parent)
     setMouseTracking(true);
 
     // 获取窗口尺寸
+    QRect window_rect;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        // Qt5 使用 QDesktopWidget
     window_rect = QApplication::desktop()->availableGeometry();
+#else
+        // Qt6 使用 QScreen
+    QScreen *screen = QGuiApplication::primaryScreen();
+    if (screen) {
+        window_rect = screen->availableGeometry();
+    } else {
+        window_rect = QRect(0, 0, 1024, 768); // 默认值
+        qWarning() << "Failed to get primary screen, using default geometry";
+    }
+#endif
     window_height = window_rect.height();
 }
 
@@ -710,7 +724,19 @@ void FacileMenu::execute()
         int radius = qMin(64, qMin(width(), height())); // 模糊半径，也是边界
         rect.adjust(-radius, -radius, +radius, +radius);
         QScreen* screen = QApplication::screenAt(QCursor::pos());
-        QPixmap bg = screen->grabWindow(QApplication::desktop()->winId(), rect.left(), rect.top(), rect.width(), rect.height());
+        // 获取屏幕截图
+        QPixmap bg;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+            // Qt5 使用 QApplication::desktop()
+        bg = screen->grabWindow(QApplication::desktop()->winId(),
+                                rect.left(), rect.top(),
+                                rect.width(), rect.height());
+#else
+            // Qt6 使用 0 作为根窗口ID
+        bg = screen->grabWindow(0,
+                                rect.left(), rect.top(),
+                                rect.width(), rect.height());
+#endif
 
         // 开始模糊
         QT_BEGIN_NAMESPACE
@@ -1029,7 +1055,7 @@ void FacileMenu::itemMouseEntered(FacileMenuItem *item)
 FacileMenuItem *FacileMenu::createMenuItem(QIcon icon, QString text)
 {
     auto key = getShortcutByText(text);
-    text.replace(QRegExp("&([\\w\\d])\\b"), "\\1");
+    text.replace(QRegularExpression("&([\\w\\d])\\b"), "\\1");
     FacileMenuItem* item;
     if (!align_mid_if_alone)
     {

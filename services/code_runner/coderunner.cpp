@@ -11,6 +11,7 @@
 #include "fileutil.h"
 #include "ImageSimilarityUtil.h"
 #include "netutil.h"
+#include "qt_compat_random.h"
 
 CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
 {
@@ -152,7 +153,7 @@ bool CodeRunner::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int cha
     // 多段代码判断，在所有情况之前
     if (msg.contains(QRegularExpression("^\\s*-{3,}\\s*$", QRegularExpression::MultilineOption)))
     {
-        QStringList codes = msg.split(QRegularExpression("^\\s*-{3,}\\s*$", QRegularExpression::MultilineOption), QString::SkipEmptyParts);
+        QStringList codes = msg.split(QRegularExpression("^\\s*-{3,}\\s*$", QRegularExpression::MultilineOption), SKIP_EMPTY_PARTS);
         bool hasSuccess = false;
         foreach (QString code, codes)
         {
@@ -234,7 +235,7 @@ bool CodeRunner::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int cha
     {
         if (delayMine && QString::number(danmaku.getUid()) == ac->cookieUid) // 自己发的，自己回复，必须要延迟一会儿
         {
-            if (s.contains(QRegExp("cd\\d+\\s*:\\s*\\d+"))) // 带冷却通道，不能放前面
+            if (s.contains(QRegularExpression("cd\\d+\\s*:\\s*\\d+"))) // 带冷却通道，不能放前面
                 autoMsgTimer->start(); // 先启动，避免立即发送
             else
                 s = "\\n" + s; // 延迟一次发送的时间
@@ -265,7 +266,7 @@ void CodeRunner::sendAutoMsg(QString msgs, const LiveDanmaku &danmaku)
     }
 
     // 分割与发送
-    QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
+    QStringList sl = msgs.split("\\n", SKIP_EMPTY_PARTS);
     autoMsgQueues.append(qMakePair(sl, danmaku));
     if (/*!autoMsgTimer->isActive() &&*/ !inDanmakuDelay && !inDanmakuCd)
     {
@@ -283,7 +284,7 @@ void CodeRunner::sendAutoMsgInFirst(QString msgs, const LiveDanmaku &danmaku, in
             localNotify("[空弹幕，已忽略]");
         return ;
     }
-    QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
+    QStringList sl = msgs.split("\\n", SKIP_EMPTY_PARTS);
     autoMsgQueues.insert(0, qMakePair(sl, danmaku));
     if (interval > 0)
     {
@@ -433,7 +434,7 @@ void CodeRunner::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel
         QStringList caps = match.capturedTexts();
         QString full = caps.at(0);
         QString optionStr = caps.at(1);
-        QStringList options = optionStr.split(",", QString::SkipEmptyParts);
+        QStringList options = optionStr.split(",", SKIP_EMPTY_PARTS);
 
         // 遍历每一个选项
         foreach (auto option, options)
@@ -735,7 +736,7 @@ QStringList CodeRunner::getEditConditionStringList(QString plainText, LiveDanmak
         lastConditionDanmu.removeFirst();
 
     // 寻找条件为true的
-    QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
+    QStringList lines = plainText.split("\n", SKIP_EMPTY_PARTS);
     QStringList result;
     for (int i = 0; i < lines.size(); i++)
     {
@@ -754,8 +755,8 @@ QStringList CodeRunner::getEditConditionStringList(QString plainText, LiveDanmak
             QString s = result.at(i);
             if (s.contains(">") || s.contains("\\n")) // 包含多行或者命令的，不需要或者懒得判断长度
                 continue;
-            s = s.replace(QRegExp("^\\s+\\(\\s*[\\w\\d: ,]*\\s*\\)"), "").replace("*", "").trimmed(); // 去掉发送选项
-            // s = s.replace(QRegExp("^\\s+\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "").replace("*", "").trimmed();
+            s = s.replace(QRegularExpression("^\\s+\\(\\s*[\\w\\d: ,]*\\s*\\)"), "").replace("*", "").trimmed(); // 去掉发送选项
+            // s = s.replace(QRegularExpression("^\\s+\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "").replace("*", "").trimmed();
             if (s.length() > ac->danmuLongest && !s.contains("%"))
             {
                 if (us->debugPrint)
@@ -1590,7 +1591,17 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         case VoiceMS:
             return (voiceService->msTTS && voiceService->msTTS->isPlaying()) ? "1" : "0";
         case VoiceCustom:
-            return (voiceService->ttsDownloading || (voiceService->ttsPlayer && voiceService->ttsPlayer->state() == QMediaPlayer::State::PlayingState)) ? "1" : "0";
+            auto isMediaPlaying = [=](QMediaPlayer* player){
+                if (!player) return false;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+                return player->state() == QMediaPlayer::PlayingState;
+#else
+                return player->playbackState() == QMediaPlayer::PlayingState;
+#endif
+            };
+            return (voiceService->ttsDownloading
+                    || (voiceService->ttsPlayer && isMediaPlaying(voiceService->ttsPlayer)))
+                       ? "1" : "0";
         }
     }
     else if (key == "%mouse_x%")
@@ -1780,7 +1791,7 @@ QString CodeRunner::traverseJsonCode(const QString &keySeq, const QString &code,
 QString CodeRunner::replaceDynamicVariants(const QString &funcName, const QString &args, const LiveDanmaku& danmaku)
 {
     QRegularExpressionMatch match;
-    QStringList argList = args.split(QRegExp("\\s*,\\s*"));
+    QStringList argList = args.split(QRegularExpression("\\s*,\\s*"));
     auto errorArg = [=](QString tip){
         localNotify("函数%>"+funcName+"()%参数错误: " + tip);
         return "";
@@ -1990,7 +2001,7 @@ QString CodeRunner::replaceDynamicVariants(const QString &funcName, const QStrin
             if (tw->eventEdit->text() != filterName || !tw->check->isChecked())
                 continue;
 
-            QStringList sl = tw->body().split(QRegularExpression("\\s+"), QString::SkipEmptyParts);
+            QStringList sl = tw->body().split(QRegularExpression("\\s+"), SKIP_EMPTY_PARTS);
             foreach (QString s, sl)
             {
                 if (content.contains(s))
@@ -2019,7 +2030,7 @@ QString CodeRunner::replaceDynamicVariants(const QString &funcName, const QStrin
             if (tw->eventEdit->text() != filterName || !tw->check->isChecked())
                 continue;
 
-            QStringList sl = tw->body().split("\n", QString::SkipEmptyParts);
+            QStringList sl = tw->body().split("\n", SKIP_EMPTY_PARTS);
             foreach (QString s, sl)
             {
                 if (content.indexOf(QRegularExpression(s)) > -1)
@@ -2257,7 +2268,11 @@ QString CodeRunner::replaceDynamicVariants(const QString &funcName, const QStrin
         }
 
         QScreen *screen = screens.at(id);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         QImage image = screen->grabWindow(QApplication::desktop()->winId(), x, y, w, h).toImage();
+#else
+        QImage image = screen->grabWindow(0, x, y, w, h).toImage();
+#endif
 
         QImage comparedImage;
         if (cacheImages.contains(path))
@@ -2896,7 +2911,7 @@ void CodeRunner::simulateKeys(QString seq, bool press, bool release)
 #if defined(Q_OS_WIN)
     // 字符串转KEY
     QList<int>keySeq;
-    QStringList keyStrs = seq.toLower().split("+", QString::SkipEmptyParts);
+    QStringList keyStrs = seq.toLower().split("+", SKIP_EMPTY_PARTS);
 
     // 先判断修饰键
     /*if (keyStrs.contains("ctrl"))
@@ -3289,14 +3304,14 @@ QString CodeRunner::nicknameSimplify(const LiveDanmaku &danmaku) const
     // 去掉首尾数字
     QRegularExpression snumRe("^\\d+(\\D+)\\d*$");
     if (simp.indexOf(snumRe, 0, &match) > -1
-            && match.captured(1).indexOf(QRegExp("^[的是]")) == -1)
+            && match.captured(1).indexOf(QRegularExpression("^[的是]")) == -1)
     {
         simp = match.capturedTexts().at(1);
     }
     snumRe = QRegularExpression("^(\\D+)\\d+$");
     if (simp.indexOf(snumRe, 0, &match) > -1
             && match.captured(1) != "bili_"
-            && match.captured(1).indexOf(QRegExp("^[的是]")) == -1)
+            && match.captured(1).indexOf(QRegularExpression("^[的是]")) == -1)
     {
         simp = match.capturedTexts().at(1);
     }

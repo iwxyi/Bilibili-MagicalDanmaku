@@ -202,22 +202,29 @@ void ResizablePicture::getClipArea(QSize &originSize, QRect &imageArea, QRect& s
 
 void ResizablePicture::wheelEvent(QWheelEvent *event)
 {
-    QPoint pos = event->pos();
+    QPoint pos = event->position().toPoint(); // Qt6 使用 position()，Qt5 使用 pos()
     if (!label->geometry().contains(pos))
-        return ;
+        return;
+
+// 获取滚轮增量（兼容Qt5/Qt6）
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    int delta = event->delta(); // Qt5 直接使用 delta()
+#else
+    int delta = event->angleDelta().y(); // Qt6 使用 angleDelta()
+#endif
 
     // 设置缩放值
     double scale = 1;
-    if (event->delta() < 0)
+    if (delta < 0)
     {
         scale = 0.8;
     }
-    else if (event->delta() > 0)
+    else if (delta > 0)
     {
         scale = 1.25;
     }
     else
-        return ;
+        return;
 
     scaleTo(scale, pos);
 }

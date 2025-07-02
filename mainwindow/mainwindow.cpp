@@ -35,6 +35,8 @@
 #include "bili_api_util.h"
 #include "pixmaputil.h"
 #include "emailutil.h"
+#include "qt_compat.h"
+#include "qt_compat_random.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -217,7 +219,7 @@ void MainWindow::initView()
     ui->roomInfoMainWidget->setMinimumSize(ui->roomInfoMainWidget->sizeHint());
 
     // 限制
-    ui->roomIdEdit->setValidator(new QRegExpValidator(QRegExp("^\\w+$")));
+    ui->roomIdEdit->setValidator(new QRegExpValidator(QRegularExpression("^\\w+$")));
 
     // 切换房间
     roomSelectorBtn->show();
@@ -228,10 +230,10 @@ void MainWindow::initView()
         menu->addAction(ui->actionAdd_Room_To_List);
         menu->split();
 
-        QStringList list = us->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
+        QStringList list = us->value("custom/rooms", "").toString().split(";", SKIP_EMPTY_PARTS);
         for (int i = 0; i < list.size(); i++)
         {
-            QStringList texts = list.at(i).split(",", QString::SkipEmptyParts);
+            QStringList texts = list.at(i).split(",", SKIP_EMPTY_PARTS);
             if (texts.size() < 1)
                 continue ;
             QString id = texts.first();
@@ -732,11 +734,11 @@ void MainWindow::initObject()
     });
 
     // 读取自定义快捷房间
-    QStringList list = us->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList list = us->value("custom/rooms", "").toString().split(";", SKIP_EMPTY_PARTS);
     ui->menu_3->addSeparator();
     for (int i = 0; i < list.size(); i++)
     {
-        QStringList texts = list.at(i).split(",", QString::SkipEmptyParts);
+        QStringList texts = list.at(i).split(",", SKIP_EMPTY_PARTS);
         if (texts.size() < 1)
             continue ;
         QString id = texts.first();
@@ -1442,7 +1444,7 @@ void MainWindow::readConfig()
     // 点歌姬
     if (us->value("danmaku/playerWindow", false).toBool() && !musicWindow)
         on_actionShow_Order_Player_Window_triggered();
-    orderSongBlackList = us->value("music/blackListKeys", "").toString().split(" ", QString::SkipEmptyParts);
+    orderSongBlackList = us->value("music/blackListKeys", "").toString().split(" ", SKIP_EMPTY_PARTS);
 
     // 录播
     ui->recordCheck->setChecked(us->value("record/enabled", false).toBool());
@@ -1495,7 +1497,7 @@ void MainWindow::readConfig()
 
     // 本地昵称
     us->localNicknames.clear();
-    QStringList namePares = us->value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
+    QStringList namePares = us->value("danmaku/localNicknames").toString().split(";", SKIP_EMPTY_PARTS);
     foreach (QString pare, namePares)
     {
         QStringList sl = pare.split("=>");
@@ -1509,7 +1511,7 @@ void MainWindow::readConfig()
 
     // 礼物别名
     us->giftAlias.clear();
-    namePares = us->value("danmaku/giftNames").toString().split(";", QString::SkipEmptyParts);
+    namePares = us->value("danmaku/giftNames").toString().split(";", SKIP_EMPTY_PARTS);
     foreach (QString pare, namePares)
     {
         QStringList sl = pare.split("=>");
@@ -1521,7 +1523,7 @@ void MainWindow::readConfig()
 
     // 特别关心
     us->careUsers.clear();
-    QStringList usersS = us->value("danmaku/careUsers", "20285041").toString().split(";", QString::SkipEmptyParts);
+    QStringList usersS = us->value("danmaku/careUsers", "20285041").toString().split(";", SKIP_EMPTY_PARTS);
     foreach (QString s, usersS)
     {
         us->careUsers.append(s.toLongLong());
@@ -1531,7 +1533,7 @@ void MainWindow::readConfig()
 
     // 强提醒
     us->strongNotifyUsers.clear();
-    QStringList usersSN = us->value("danmaku/strongNotifyUsers", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList usersSN = us->value("danmaku/strongNotifyUsers", "").toString().split(";", SKIP_EMPTY_PARTS);
     foreach (QString s, usersSN)
     {
         us->strongNotifyUsers.append(s.toLongLong());
@@ -1541,7 +1543,7 @@ void MainWindow::readConfig()
 
     // 不自动欢迎
     us->notWelcomeUsers.clear();
-    QStringList usersNW = us->value("danmaku/notWelcomeUsers", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList usersNW = us->value("danmaku/notWelcomeUsers", "").toString().split(";", SKIP_EMPTY_PARTS);
     foreach (QString s, usersNW)
     {
         us->notWelcomeUsers.append(s.toLongLong());
@@ -1549,7 +1551,7 @@ void MainWindow::readConfig()
 
     // 不自动回复
     us->notReplyUsers.clear();
-    QStringList usersNR = us->value("danmaku/notReplyUsers", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList usersNR = us->value("danmaku/notReplyUsers", "").toString().split(";", SKIP_EMPTY_PARTS);
     foreach (QString s, usersNR)
     {
         us->notReplyUsers.append(s.toLongLong());
@@ -1611,7 +1613,7 @@ void MainWindow::readConfig()
     QString toutaGiftCountsStr = us->value("danmaku/toutaGiftCounts").toString();
     ui->toutaGiftCountsEdit->setText(toutaGiftCountsStr);
     liveService->toutaGiftCounts.clear();
-    foreach (QString s, toutaGiftCountsStr.split(" ", QString::SkipEmptyParts))
+    foreach (QString s, toutaGiftCountsStr.split(" ", SKIP_EMPTY_PARTS))
         liveService->toutaGiftCounts.append(s.toInt());
     restoreToutaGifts(us->value("danmaku/toutaGifts", "").toString());
 
@@ -5287,10 +5289,10 @@ void MainWindow::setPaletteBgProg(double x)
 void MainWindow::restoreToutaGifts(QString text)
 {
     liveService->toutaGifts.clear();
-    QStringList sl = text.split("\n", QString::SkipEmptyParts);
+    QStringList sl = text.split("\n", SKIP_EMPTY_PARTS);
     foreach (QString s, sl)
     {
-        QStringList l = s.split(" ", QString::SkipEmptyParts);
+        QStringList l = s.split(" ", SKIP_EMPTY_PARTS);
         // 礼物ID 名字 金瓜子
         if (l.size() < 3)
             continue;
@@ -5581,7 +5583,7 @@ void MainWindow::finishLiveRecord()
 void MainWindow::restoreCustomVariant(QString text)
 {
     us->customVariant.clear();
-    QStringList sl = text.split("\n", QString::SkipEmptyParts);
+    QStringList sl = text.split("\n", SKIP_EMPTY_PARTS);
 
     // 设置默认值
     if (sl.size() == 0)
@@ -5631,7 +5633,7 @@ void MainWindow::restoreVariantTranslation()
 
     // 变量
     QString text = readTextFile(":/documents/translation_variables");
-    QStringList sl = text.split("\n", QString::SkipEmptyParts);
+    QStringList sl = text.split("\n", SKIP_EMPTY_PARTS);
     QRegularExpression re("^\\s*(\\S+)\\s*=\\s?(.*)$");
     QRegularExpressionMatch match;
     foreach (QString s, sl)
@@ -5652,7 +5654,7 @@ void MainWindow::restoreVariantTranslation()
 
     // 方法
     text = readTextFile(":/documents/translation_methods");
-    sl = text.split("\n", QString::SkipEmptyParts);
+    sl = text.split("\n", SKIP_EMPTY_PARTS);
     re = QRegularExpression("^\\s*(\\S+)\\s*=\\s?(.*)$");
     foreach (QString s, sl)
     {
@@ -5672,7 +5674,7 @@ void MainWindow::restoreVariantTranslation()
 
     // 函数
     text = readTextFile(":/documents/translation_functions");
-    sl = text.split("\n", QString::SkipEmptyParts);
+    sl = text.split("\n", SKIP_EMPTY_PARTS);
     re = QRegularExpression("^\\s*(\\S+)\\s*=\\s?(.*)$");
     foreach (QString s, sl)
     {
@@ -5699,7 +5701,7 @@ void MainWindow::restoreVariantTranslation()
 void MainWindow::restoreReplaceVariant(QString text)
 {
     us->replaceVariant.clear();
-    QStringList sl = text.split("\n", QString::SkipEmptyParts);
+    QStringList sl = text.split("\n", SKIP_EMPTY_PARTS);
     foreach (QString s, sl)
     {
         QRegularExpression re("^\\s*(\\S+?)\\s*=\\s?(.*)$");
@@ -8284,7 +8286,7 @@ bool MainWindow::hasInstallVC2015()
 
     QMap<QString,QString>::const_iterator it = m_data.constBegin();
     while (it != m_data.constEnd()) {
-        if(it.value().contains(QRegExp("Microsoft Visual C\\+\\+ 20(1[56789]|[2-9])")))
+        if(it.value().contains(QRegularExpression("Microsoft Visual C\\+\\+ 20(1[56789]|[2-9])")))
             return true;
         ++it;
 
@@ -8638,8 +8640,11 @@ void MainWindow::on_actionMany_Robots_triggered()
 
     QSslConfiguration config = liveService->liveSocket->sslConfiguration();
     config.setPeerVerifyMode(QSslSocket::VerifyNone);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     config.setProtocol(QSsl::TlsV1SslV3);
-
+#else
+    config.setProtocol(QSsl::SecureProtocols);  // 使用安全协议集合
+#endif
     for (int i = 0; i < 1000; i++)
     {
         QWebSocket* socket = new QWebSocket();
@@ -8677,10 +8682,10 @@ void MainWindow::on_actionAdd_Room_To_List_triggered()
     if (ac->roomId.isEmpty())
         return ;
 
-    QStringList list = us->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList list = us->value("custom/rooms", "").toString().split(";", SKIP_EMPTY_PARTS);
     for (int i = 0; i < list.size(); i++)
     {
-        QStringList texts = list.at(i).split(",", QString::SkipEmptyParts);
+        QStringList texts = list.at(i).split(",", SKIP_EMPTY_PARTS);
         if (texts.size() < 1)
             continue ;
         QString id = texts.first();
@@ -9579,7 +9584,7 @@ void MainWindow::on_pkBlankButton_clicked()
                                          QLineEdit::Normal, liveService->toutaBlankList.join(";"), &ok);
     if (!ok)
         return ;
-    liveService->toutaBlankList = text.split(QRegExp("[^\\d]+"), QString::SkipEmptyParts);
+    liveService->toutaBlankList = text.split(QRegularExpression("[^\\d]+"), SKIP_EMPTY_PARTS);
     us->setValue("pk/blankList", liveService->toutaBlankList.join(";"));
 }
 
@@ -10067,7 +10072,7 @@ void MainWindow::on_musicBlackListButton_clicked()
                                                         "\n多个关键词用空格隔开，英文字母均使用小写", blackList, &ok);
     if (!ok)
         return ;
-    orderSongBlackList = blackList.split(" ", QString::SkipEmptyParts);
+    orderSongBlackList = blackList.split(" ", SKIP_EMPTY_PARTS);
     us->setValue("music/blackListKeys", blackList);
 }
 
@@ -10192,7 +10197,7 @@ void MainWindow::on_toutaGiftCountsEdit_textEdited(const QString &arg1)
 {
     // 允许的数量，如：1 2 3 4 5 10 11 100 101
     us->setValue("danmaku/toutaGiftCounts", arg1);
-    QStringList sl = arg1.split(" ", QString::SkipEmptyParts);
+    QStringList sl = arg1.split(" ", SKIP_EMPTY_PARTS);
     liveService->toutaGiftCounts.clear();
     foreach (QString s, sl)
     {
@@ -10554,7 +10559,7 @@ void MainWindow::exportAllGuardsByMonth(QString exportPath)
     /// 读取表格数据
     // 默认表格格式：日期 时间 昵称 礼物 数量 累计 UID 备注
     QString content = readTextFileAutoCodec(readPath);
-    QStringList lines = content.split("\n", QString::SkipEmptyParts);
+    QStringList lines = content.split("\n", SKIP_EMPTY_PARTS);
     QList<GuardTrade> trades;
     for (int i = 1; i < lines.size(); ++i)
     {
@@ -10975,7 +10980,7 @@ void MainWindow::on_recordFormatCheck_clicked()
             {
                 if (environment.startsWith("Path="))
                 {
-                    QStringList sl = environment.right(environment.length() - 5).split(";", QString::SkipEmptyParts);
+                    QStringList sl = environment.right(environment.length() - 5).split(";", SKIP_EMPTY_PARTS);
                     foreach (QString d, sl)
                     {
                         QString path = QDir(d).absoluteFilePath(ffmpegApp);

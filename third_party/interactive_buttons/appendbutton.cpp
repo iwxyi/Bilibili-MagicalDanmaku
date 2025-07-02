@@ -39,7 +39,7 @@ void AppendButton::paintEvent(QPaintEvent *event)
     painter.drawLine(QPointF((l+r)/2, t), QPointF((l+r)/2, b));
 }
 
-void AppendButton::enterEvent(QEvent *event)
+void AppendButton::enterEvent(QEnterEvent *event)
 {
     add_angle = 0;
     rotate_speed = 2;

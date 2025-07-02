@@ -12,7 +12,7 @@ void CheckBox1::setUncheckedColor(QColor c)
     update();
 }
 
-void CheckBox1::enterEvent(QEvent *e)
+void CheckBox1::enterEvent(QEnterEvent *e)
 {
     QCheckBox::enterEvent(e);
     startAnimation("hover_prog", getHoverProg(), 1, 300, QEasingCurve::OutBack);

@@ -8,7 +8,6 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QUrl>
-#include <QTextCodec>
 #include <QFile>
 #include <initializer_list>
 #include <QRegularExpression>

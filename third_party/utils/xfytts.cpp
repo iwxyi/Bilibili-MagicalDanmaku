@@ -3,6 +3,7 @@
 #include <QJsonValue>
 #include <QJsonDocument>
 #include <QJsonParseError>
+#include <QAudioSink>
 #include "xfytts.h"
 
 XfyTTS::XfyTTS(QString dataPath, QString APPID, QString APIKey, QString APISecret, QObject *parent)
@@ -13,12 +14,22 @@ XfyTTS::XfyTTS(QString dataPath, QString APPID, QString APIKey, QString APISecre
     QDir dir(savedDir);
     dir.mkpath(savedDir);
 
-    fmt.setSampleRate(16000);  //设定播放采样频率为44100Hz的音频文件
-    fmt.setSampleSize(16);     //设定播放采样格式（采样位数）为16位(bit)的音频文件。QAudioFormat支持的有8/16bit，即将声音振幅化为256/64k个等级
-    fmt.setChannelCount(1);    //设定播放声道数目为2通道（立体声）的音频文件。mono(平声道)的声道数目是1，stero(立体声)的声道数目是2
-    fmt.setCodec("audio/pcm"); //播放PCM数据（裸流）得设置编码器为"audio/pcm"。"audio/pcm"在所有的平台都支持，也就相当于音频格式的WAV,以线性方式无压缩的记录捕捉到的数据。如想使用其他编码格式 ，可以通过QAudioDeviceInfo::supportedCodecs()来获取当前平台支持的编码格式
-    fmt.setByteOrder(QAudioFormat::LittleEndian); //设定字节序，以小端模式播放音频文件
-    fmt.setSampleType(QAudioFormat::UnSignedInt); //设定采样类型。根据采样位数来设定。采样位数为8或16位则设置为QAudioFormat::UnSignedInt
+    fmt.setSampleRate(16000);       // 采样率 16kHz（常用语音采样率）
+    fmt.setChannelCount(1);         // 单声道（语音通常用单声道）
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    // Qt5 专用设置
+    fmt.setSampleSize(16);          // 采样位数 16-bit
+    fmt.setCodec("audio/pcm");      // PCM编码（裸流）
+    fmt.setByteOrder(QAudioFormat::LittleEndian); // 小端字节序
+    fmt.setSampleType(QAudioFormat::UnSignedInt); // 无符号整型采样
+#else
+    // Qt6 专用设置
+    fmt.setSampleFormat(QAudioFormat::Int16);     // 16位有符号整型（替代Qt5的setSampleSize+setSampleType）
+    // 注意：Qt6中不再需要单独设置：
+    // - codec（自动根据sampleFormat确定）
+    // - byteOrder（自动处理）
+#endif
 }
 
 void XfyTTS::speakText(QString text)
@@ -116,8 +127,11 @@ void XfyTTS::startConnect()
     // 设置安全套接字连接模式（不知道有啥用）
     QSslConfiguration config = socket->sslConfiguration();
     config.setPeerVerifyMode(QSslSocket::VerifyNone);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     config.setProtocol(QSsl::TlsV1SslV3);
-    socket->setSslConfiguration(config);
+#else
+    config.setProtocol(QSsl::SecureProtocols);  // 使用安全协议集合
+#endif    socket->setSslConfiguration(config);
 
     socket->open(url);
 }
@@ -197,9 +211,26 @@ void XfyTTS::playFile(QString filePath, bool deleteAfterPlay)
     QFile *inputFile = new QFile(filePath);
     inputFile->open(QIODevice::ReadOnly);
 
-    QAudioOutput *audio = new QAudioOutput(fmt);
-//    audio->setVolume(volume / 100.0); // 设置音量没有效果，1正常，0静音，但是0.x会呲呲呲的响
-    connect(audio, &QAudioOutput::stateChanged, this, [=](QAudio::State state) {
+    // Qt5/Qt6兼容处理
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    QAudioSink *audio = new QAudioSink(fmt, this);
+#else
+    QAudioOutput *audio = new QAudioOutput(fmt, this);
+#endif
+
+    // Qt5/Qt6状态枚举兼容
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    using AudioState = QAudio::State;
+#else
+    using AudioState = QAudio::State;
+#endif
+
+    // 连接状态变化信号
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    connect(audio, &QAudioSink::stateChanged, this, [=](AudioState state) {
+#else
+    connect(audio, &QAudioOutput::stateChanged, this, [=](AudioState state) {
+#endif
         if (state == QAudio::IdleState)
         {
             audio->stop();
@@ -213,9 +244,14 @@ void XfyTTS::playFile(QString filePath, bool deleteAfterPlay)
         }
         playing = false;
     });
-    audio->start(inputFile);
-}
 
+    // Qt5/Qt6启动方式兼容
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    audio->start(inputFile);
+#else
+    audio->start(inputFile);
+#endif
+}
 void XfyTTS::setAppId(QString s)
 {
     this->APPID = s.trimmed();

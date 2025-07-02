@@ -157,7 +157,7 @@ void TipBox::slotCardClosed(TipCard* removed_card)
         setAttribute(Qt::WA_TransparentForMouseEvents, true);
 }
 
-void TipBox::enterEvent(QEvent *event)
+void TipBox::enterEvent(QEnterEvent *event)
 {
     hovering = true;
     foreach (TipCard* card, cards) {

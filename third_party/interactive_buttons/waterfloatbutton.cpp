@@ -15,7 +15,7 @@ WaterFloatButton::WaterFloatButton(QString s, QWidget *parent) : InteractiveButt
     fore_paddings.left = fore_paddings.right = radius;
 }
 
-void WaterFloatButton::enterEvent(QEvent *event)
+void WaterFloatButton::enterEvent(QEnterEvent *event)
 {
 
 }

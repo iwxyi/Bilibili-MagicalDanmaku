@@ -7,6 +7,7 @@
 #include "variantviewer.h"
 #include "csvviewer.h"
 #include "chatgptutil.h"
+#include "qt_compat.h"
 
 void MainWindow::processRemoteCmd(QString msg, bool response)
 {
@@ -1155,7 +1156,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QString data = caps.at(3);
             QString callback = caps.size() > 4 ? caps.at(4) : "";
             data = cr->toMultiLine(data);
-            QStringList headers = headerS.split("&", QString::SkipEmptyParts);
+            QStringList headers = headerS.split("&", SKIP_EMPTY_PARTS);
 
             // 开始联网
             QNetworkAccessManager* manager = new QNetworkAccessManager;
@@ -1512,7 +1513,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QString code = caps.at(3);
             code = cr->toRunableCode(cr->toMultiLine(code));
             QString content = readTextFileAutoCodec(fileName);
-            QStringList lines = content.split("\n", QString::SkipEmptyParts);
+            QStringList lines = content.split("\n", SKIP_EMPTY_PARTS);
             for (int i = startLine; i < lines.size(); i++)
             {
                 LiveDanmaku dmk = danmaku;
@@ -1544,14 +1545,14 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QString code = caps.at(3);
             code = cr->toRunableCode(cr->toMultiLine(code));
             QString content = readTextFileAutoCodec(fileName);
-            QStringList lines = content.split("\n", QString::SkipEmptyParts);
+            QStringList lines = content.split("\n", SKIP_EMPTY_PARTS);
             for (int i = startLine; i < lines.size(); i++)
             {
                 LiveDanmaku dmk = danmaku;
                 dmk.setNumber(i+1);
                 dmk.setText(lines.at(i));
 
-                QStringList li = lines.at(i).split(QRegExp("\\s*,\\s*"));
+                QStringList li = lines.at(i).split(QRegularExpression("\\s*,\\s*"));
                 li.insert(0, lines.at(i));
                 dmk.setArgs(li);
 
@@ -1574,8 +1575,13 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QString path = cr->toFilePath(caps.at(1));
             qInfo() << "执行命令：" << caps;
             QMediaPlayer* player = new QMediaPlayer(this);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
             player->setMedia(QUrl::fromLocalFile(path));
             connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state) {
+#else
+            player->setSource(QUrl::fromLocalFile(path));
+            connect(player, &QMediaPlayer::playbackStateChanged, this, [=](QMediaPlayer::PlaybackState state) {
+#endif
                 if (state == QMediaPlayer::StoppedState)
                 {
                     player->deleteLater();
@@ -2007,7 +2013,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
     }
 
     // 播放暂停歌曲
-    if (msg.contains(QRegExp("(play|pause|toggle)(OrderSong|Music)")))
+    if (msg.contains(QRegularExpression("(play|pause|toggle)(OrderSong|Music)")))
     {
         re = RE("(play|pause|toggle)(OrderSong|Music)(State)?\\s*\\(\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
@@ -2432,7 +2438,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString event = caps.at(1);
             QString args = caps.at(2).trimmed();
-            QStringList argList = args.split(",", QString::SkipEmptyParts);
+            QStringList argList = args.split(",", SKIP_EMPTY_PARTS);
             argList.insert(0, caps.at(0));
             qInfo() << "执行命令：" << event << " 参数：" << argList.join(",");
             danmaku.setArgs(argList);
@@ -2537,7 +2543,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                 return MOUSEEVENTF_MIDDLEDOWN | MOUSEEVENTF_MIDDLEUP;
             else if (param == "x")
                 return MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP;
-            else if (param.indexOf(QRegExp("^\\d+$")) > -1)
+            else if (param.indexOf(QRegularExpression("^\\d+$")) > -1)
                 return param.toUShort();
             else
             {
@@ -2882,7 +2888,11 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                 return true;
             }
             QScreen *screen = screens.at(id);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
             QImage image = screen->grabWindow(QApplication::desktop()->winId(), x, y, w, h).toImage();
+#else
+            QImage image = screen->grabWindow(0, x, y, w, h).toImage();
+#endif
 
             QFileInfo info(path);
             QDir dir = info.absoluteDir();

@@ -1,5 +1,6 @@
 #include "luckydrawwindow.h"
 #include "ui_luckydrawwindow.h"
+#include "qt_compat_random.h"
 
 LuckyDrawWindow::LuckyDrawWindow(QSettings* st, QWidget *parent) :
     QMainWindow(parent),

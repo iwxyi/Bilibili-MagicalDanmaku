@@ -4,7 +4,6 @@
 #include <QDateTime>
 #include <QFile>
 #include <QTextStream>
-#include <QtMsgHandler>
 #include <QMessageLogContext>
 #include <QMutex>
 

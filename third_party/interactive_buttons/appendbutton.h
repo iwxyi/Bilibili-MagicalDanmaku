@@ -10,7 +10,7 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
-    void enterEvent(QEvent *event) override;
+    void enterEvent(QEnterEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
 
 public slots:

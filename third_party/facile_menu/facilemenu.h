@@ -7,7 +7,6 @@
 #include <QRegularExpression>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QDesktopWidget>
 #include <QApplication>
 #include <QScreen>
 #include <QMenu>

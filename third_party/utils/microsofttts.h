@@ -8,6 +8,13 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QAudioFormat>
 #include <QAudioOutput>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QAudioSink>
+#include <QMediaDevices>
+#else
+#include <QAudioOutput>
+#include <QAudioDeviceInfo>
+#endif
 
 class MicrosoftTTS : public QObject
 {
@@ -33,6 +40,8 @@ public slots:
 
 private:
     bool isDownloadingOrSpeaking() const;
+    void handleAudioState(QAudio::State state, QFile* file, bool deleteAfterPlay);
+    void cleanupResources(QFile* inputFile, bool deleteAfterPlay = false);
 
 private:
     QString savedDir;
@@ -42,6 +51,11 @@ private:
 
     QStringList speakQueue;
     QAudioOutput *audio = nullptr;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    QAudioOutput *audioOutput = nullptr;
+#else
+    QAudioSink *audioSink = nullptr;
+#endif
     QAudioFormat fmt;
     // bool getting = false; // 是否正在获取语音或正在播放
     QTimer* refreshTimer = nullptr; // 刷新token时间

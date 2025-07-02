@@ -1,13 +1,21 @@
 #include <QColorDialog>
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QAudioDeviceInfo>
 #include <QMediaService>
 #include <QAudioOutputSelectorControl>
+#else
+#include <QAudioDevice>
+#include <QAudioOutput>
+#include <QAudioSink>
+#endif
 #include "orderplayerwindow.h"
 #include "ui_orderplayerwindow.h"
 #include "stringutil.h"
 #include "fileutil.h"
 #include "importsongsdialog.h"
 #include "netutil.h"
+#include "qt_compat.h"
+#include "qt_compat_random.h"
 
 OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     : OrderPlayerWindow(QApplication::applicationDirPath() + "/", parent)
@@ -191,7 +199,18 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
 
     connect(ui->searchResultTable->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(sortSearchResult(int)));
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // Qt6 实现
+    if (auto *audioOutput = player->audioOutput()) {  // Qt6.5+ 使用 audioOutput()
+        audioOutput->setNotifyInterval(100);
+    }
+    // 或者对于更早的 Qt6 版本
+    // player->setNotifyInterval(100);  // Qt6.0-6.4 可以直接设置播放器
+#else
+    // Qt5 实现
     player->setNotifyInterval(100);
+#endif
+
     connect(player, &QMediaPlayer::positionChanged, this, [=](qint64 position){
         ui->playingCurrentTimeLabel->setText(msecondToString(position));
         slotPlayerPositionChanged();
@@ -217,7 +236,11 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
             playNext();
         }
     });
-    connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state){
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    connect(player, &QMediaPlayer::playbackStateChanged, this, [=](QMediaPlayer::PlaybackState state) {
+#else
+    connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state) {
+#endif
         if (state == QMediaPlayer::PlayingState)
         {
             ui->playButton->setIcon(QIcon(":/icons/pause"));
@@ -235,8 +258,17 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
                   << "(" << player->duration() / 1000 << ")";
         player->setPosition(position);
     });
-    connect(ui->volumeSlider, &ClickSlider::signalMoved, this, [=](int position){
+    connect(ui->volumeSlider, &ClickSlider::signalMoved, this, [=](int position) {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+        QAudioOutput *audioOutput = player->audioOutput();
+        if (audioOutput) {
+            // Qt6 音量范围是 0.0 到 1.0
+            audioOutput->setVolume(position / 100.0);
+        }
+#else
+        // Qt5 直接设置播放器音量 (0-100)
         player->setVolume(position);
+#endif
         settings.setValue("music/volume", position);
     });
 
@@ -288,7 +320,18 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
         ui->volumeSlider->setSliderPosition(volume);
     }
     ui->volumeSlider->setSliderPosition(volume);
-    player->setVolume(volume);
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    {
+        QAudioOutput *audioOutput = player->audioOutput();
+        if (audioOutput) {
+            // Qt6 音量范围是 0.0 到 1.0
+            audioOutput->setVolume(position / 100.0);
+        }
+    }
+#else
+    // Qt5 直接设置播放器音量 (0-100)
+    player->setVolume(position);
+#endif
 
     circleMode = static_cast<PlayCircleMode>(settings.value("music/mode", 0).toInt());
     if (circleMode == OrderList)
@@ -312,7 +355,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
 
     autoSwitchSource = settings.value("music/autoSwitchSource", true).toBool();
     validMusicTime = settings.value("music/validMusicTime", false).toBool();
-    blackList = settings.value("music/blackList", "").toString().split(" ", QString::SkipEmptyParts);
+    blackList = settings.value("music/blackList", "").toString().split(" ", SKIP_EMPTY_PARTS);
     intelliPlayer = settings.value("music/intelliPlayer", true).toBool();
 
     // 读取cookie
@@ -339,7 +382,16 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     // 播放设备
     outputDevice = settings.value("music/outputDevice").toString();
     setOutputDevice(outputDevice);
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    QAudioOutput *audioOutput = player->audioOutput();
+    if (audioOutput) {
+        // Qt6 使用 setCategory() 替代 setAudioRole()
+        audioOutput->setCategory(QAudio::MusicRole);
+    }
+#else
+    // Qt5 继续使用 setAudioRole()
     player->setAudioRole(QAudio::MusicRole);
+#endif
 
     // 还原上次播放的歌曲
     Song currentSong = Song::fromJson(settings.value("music/currentSong").toJsonObject());
@@ -454,20 +506,38 @@ const QPixmap OrderPlayerWindow::getCurrentSongCover() const
 
 bool OrderPlayerWindow::isPlaying() const
 {
+    // Qt5/Qt6 兼容性处理：状态检查
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    return player->playbackState() == QMediaPlayer::PlaybackState::PlayingState;
+#else
     return player->state() == QMediaPlayer::State::PlayingState;
+#endif
 }
 
 void OrderPlayerWindow::play()
 {
     if (!playingSong.isValid())
         playNext();
-    else if (player->state() != QMediaPlayer::State::PlayingState)
-        player->play();
+    else
+    {
+        // Qt5/Qt6 兼容性处理：状态检查
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+        if (player->playbackState() != QMediaPlayer::PlaybackState::PlayingState)
+#else
+        if (player->state() != QMediaPlayer::State::PlayingState)
+#endif
+            player->play();
+    }
 }
 
 void OrderPlayerWindow::pause()
 {
+    // Qt5/Qt6 兼容性处理：状态检查
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    if (player->playbackState() == QMediaPlayer::PlaybackState::PlayingState)
+#else
     if (player->state() == QMediaPlayer::State::PlayingState)
+#endif
         player->pause();
 }
 
@@ -478,7 +548,12 @@ void OrderPlayerWindow::togglePlayState()
 {
     if (playingSong.isValid())
     {
+        // Qt5/Qt6 兼容性处理：状态检查
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+        if (player->playbackState() == QMediaPlayer::PlaybackState::PausedState)
+#else
         if (player->state() == QMediaPlayer::State::PausedState)
+#endif
             player->play();
         else
             player->pause();
@@ -487,7 +562,6 @@ void OrderPlayerWindow::togglePlayState()
     {
         playNext();
     }
-
 }
 
 /**
@@ -815,7 +889,7 @@ void OrderPlayerWindow::parseSearchResult(QString key, QString addBy, bool notif
     if (!isImporting && !addBy.isEmpty() && key.trimmed().length() >= 1)
     {
         QString kk = transToReg(key);
-        QStringList words = kk.split(QRegExp("[- \\(\\)（）]+"), QString::SkipEmptyParts);
+        QStringList words = kk.split(QRegularExpression("[- \\(\\)（）]+"), SKIP_EMPTY_PARTS);
         QString exp = words.join(".*");
         QRegularExpression re(exp);
 
@@ -1454,7 +1528,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
 
     // 每个词组都要包含
     QStringList words;
-    words = key.split(QRegularExpression("[ \\-\\(\\)（）]+"), QString::SkipEmptyParts);
+    words = key.split(QRegularExpression("[ \\-\\(\\)（）]+"), SKIP_EMPTY_PARTS);
     foreach (Song song, searchResultSongs)
     {
         bool find = true;
@@ -3237,7 +3311,7 @@ void OrderPlayerWindow::restoreSourceQueue()
 {
     sourceQueueString = settings.value("music/sourceQueue", "网易云 QQ 咪咕").toString();
     qInfo() << "点歌顺序：" << sourceQueueString;
-    QStringList list = sourceQueueString.split(" ", QString::SkipEmptyParts);
+    QStringList list = sourceQueueString.split(" ", SKIP_EMPTY_PARTS);
     musicSourceQueue.clear();
     for (int i = 0; i < list.size(); i++)
     {
@@ -3652,7 +3726,7 @@ void OrderPlayerWindow::importSongs(const QStringList &lines)
             }
 
             song.name = songName;
-            QStringList names = artNames.split(QRegExp("[/、]"), QString::SkipEmptyParts);
+            QStringList names = artNames.split(QRegularExpression("[/、]"), SKIP_EMPTY_PARTS);
             foreach (auto name, names)
             {
                 song.artists.append(Artist(name));
@@ -4449,7 +4523,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         QString newText = QInputDialog::getText(this, "黑名单", "请输入黑名单关键词，字母小写，多个关键词使用空格隔开\n歌名或歌手包含任一关键词就不会显示在列表中\n例如屏蔽“翻唱 翻自 cover”可避免播放翻唱歌曲", QLineEdit::Normal, text, &ok);
         if (!ok || newText == text)
             return ;
-        blackList = newText.trimmed().split(" ", QString::SkipEmptyParts);
+        blackList = newText.trimmed().split(" ", SKIP_EMPTY_PARTS);
         for (int i = 0; i < blackList.size(); i++) // 转换为小写
             blackList[i] = blackList[i].toLower();
         settings.setValue("music/blackList", blackList.join(" "));

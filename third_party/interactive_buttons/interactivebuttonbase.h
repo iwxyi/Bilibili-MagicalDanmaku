@@ -9,12 +9,14 @@
 #include <QPropertyAnimation>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QPainterPath>
 #include <QDebug>
 #include <QDateTime>
 #include <QList>
 #include <QBitmap>
 #include <QtMath>
 #include <QSvgRenderer>
+#include "qt_compat_event.h"
 
 #define PI 3.1415926
 #define GOLDEN_RATIO 0.618
@@ -261,7 +263,7 @@ public:
 #endif
 
 protected:
-    void enterEvent(QEvent *event) override;
+    void enterEvent(QEnterEvent *event) override;
     void leaveEvent(QEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;

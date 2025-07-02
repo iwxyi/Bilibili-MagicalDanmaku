@@ -21,59 +21,63 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
     // 注入变量
     DanmakuWrapperStd *danmakuWrapper = new DanmakuWrapperStd(danmaku);
     lua->new_usertype<DanmakuWrapperStd>("DanmakuWrapperStd",
-        sol::constructors<DanmakuWrapperStd(const LiveDanmaku&) >(),
-        "toJson", &DanmakuWrapperStd::toJson,
-        "getMsgType", &DanmakuWrapperStd::getMsgType,
-        "getText", &DanmakuWrapperStd::getText,
-        "getUid", &DanmakuWrapperStd::getUid,
-        "getNickname", &DanmakuWrapperStd::getNickname,
-        "getUname", &DanmakuWrapperStd::getUname,
-        "getUnameColor", &DanmakuWrapperStd::getUnameColor,
-        "getTextColor", &DanmakuWrapperStd::getTextColor,
-        "getTimeline", &DanmakuWrapperStd::getTimeline,
-        "isAdmin", &DanmakuWrapperStd::isAdmin,
-        "getGuard", &DanmakuWrapperStd::getGuard,
-        "isVip", &DanmakuWrapperStd::isVip,
-        "isSvip", &DanmakuWrapperStd::isSvip,
-        "isUidentity", &DanmakuWrapperStd::isUidentity,
-        "getLevel", &DanmakuWrapperStd::getLevel,
-        "getWealthLevel", &DanmakuWrapperStd::getWealthLevel,
-        "getGiftId", &DanmakuWrapperStd::getGiftId,
-        "getGiftName", &DanmakuWrapperStd::getGiftName,
-        "getNumber", &DanmakuWrapperStd::getNumber,
-        "getTotalCoin", &DanmakuWrapperStd::getTotalCoin,
-        "isFirst", &DanmakuWrapperStd::isFirst,
-        "isReplyMystery", &DanmakuWrapperStd::isReplyMystery,
-        "getReplyTypeEnum", &DanmakuWrapperStd::getReplyTypeEnum,
-        "getAIReply", &DanmakuWrapperStd::getAIReply,
-        "getFaceUrl", &DanmakuWrapperStd::getFaceUrl
-    );
+                                         sol::constructors<DanmakuWrapperStd(const LiveDanmaku&) >(),
+                                         "toJson", &DanmakuWrapperStd::toJson,
+                                         "getMsgType", &DanmakuWrapperStd::getMsgType,
+                                         "getText", &DanmakuWrapperStd::getText,
+                                         "getUid", &DanmakuWrapperStd::getUid,
+                                         "getNickname", &DanmakuWrapperStd::getNickname,
+                                         "getUname", &DanmakuWrapperStd::getUname,
+                                         "getUnameColor", &DanmakuWrapperStd::getUnameColor,
+                                         "getTextColor", &DanmakuWrapperStd::getTextColor,
+                                         "getTimeline", &DanmakuWrapperStd::getTimeline,
+                                         "isAdmin", &DanmakuWrapperStd::isAdmin,
+                                         "getGuard", &DanmakuWrapperStd::getGuard,
+                                         "isVip", &DanmakuWrapperStd::isVip,
+                                         "isSvip", &DanmakuWrapperStd::isSvip,
+                                         "isUidentity", &DanmakuWrapperStd::isUidentity,
+                                         "getLevel", &DanmakuWrapperStd::getLevel,
+                                         "getWealthLevel", &DanmakuWrapperStd::getWealthLevel,
+                                         "getGiftId", &DanmakuWrapperStd::getGiftId,
+                                         "getGiftName", &DanmakuWrapperStd::getGiftName,
+                                         "getNumber", &DanmakuWrapperStd::getNumber,
+                                         "getTotalCoin", &DanmakuWrapperStd::getTotalCoin,
+                                         "isFirst", &DanmakuWrapperStd::isFirst,
+                                         "isReplyMystery", &DanmakuWrapperStd::isReplyMystery,
+                                         "getReplyTypeEnum", &DanmakuWrapperStd::getReplyTypeEnum,
+                                         "getAIReply", &DanmakuWrapperStd::getAIReply,
+                                         "getFaceUrl", &DanmakuWrapperStd::getFaceUrl
+                                         );
     lua->set("_danmaku", danmakuWrapper);
 
     // 注入settings变量
     lua->new_usertype<SettingsWrapperStd>("SettingsWrapperStd",
-        sol::constructors<SettingsWrapperStd(QSettings*) >(),
-        "read", &SettingsWrapperStd::read,
-        "readString", &SettingsWrapperStd::readString,
-        "readInt", &SettingsWrapperStd::readInt,
-        "readDouble", &SettingsWrapperStd::readDouble,
-        "readBool", &SettingsWrapperStd::readBool,
-        "readList", &SettingsWrapperStd::readList,
-        "readMap", &SettingsWrapperStd::readMap,
-        "readHash", &SettingsWrapperStd::readHash,
-        "readByteArray", &SettingsWrapperStd::readByteArray,
-        "readJson", &SettingsWrapperStd::readJson,
-        "write", &SettingsWrapperStd::write,
-        "writeString", &SettingsWrapperStd::writeString,
-        "writeInt", &SettingsWrapperStd::writeInt,
-        "writeDouble", &SettingsWrapperStd::writeDouble,
-        "writeBool", &SettingsWrapperStd::writeBool,
-        "writeList", &SettingsWrapperStd::writeList,
-        "writeMap", &SettingsWrapperStd::writeMap,
-        "writeHash", &SettingsWrapperStd::writeHash,
-        "contains", &SettingsWrapperStd::contains,
-        "remove", &SettingsWrapperStd::remove
-    );
+                                          sol::constructors<SettingsWrapperStd(QSettings*) >(),
+                                          "read", &SettingsWrapperStd::read,
+                                          "readString", &SettingsWrapperStd::readString,
+                                          "readInt", &SettingsWrapperStd::readInt,
+                                          "readDouble", &SettingsWrapperStd::readDouble,
+                                          "readBool", &SettingsWrapperStd::readBool,
+                                          "readList", &SettingsWrapperStd::readList,
+                                          "readMap", &SettingsWrapperStd::readMap,
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+                                          "readHash", &SettingsWrapperStd::readHash,
+#endif
+                                          "readByteArray", &SettingsWrapperStd::readByteArray,
+                                          "readJson", &SettingsWrapperStd::readJson,
+                                          "write", &SettingsWrapperStd::write,
+                                          "writeString", &SettingsWrapperStd::writeString,
+                                          "writeInt", &SettingsWrapperStd::writeInt,
+                                          "writeDouble", &SettingsWrapperStd::writeDouble,
+                                          "writeBool", &SettingsWrapperStd::writeBool,
+                                          "writeList", &SettingsWrapperStd::writeList,
+                                          "writeMap", &SettingsWrapperStd::writeMap,
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+                                          "writeHash", &SettingsWrapperStd::writeHash,
+#endif
+                                          "contains", &SettingsWrapperStd::contains,
+                                          "remove", &SettingsWrapperStd::remove
+                                          );
     SettingsWrapperStd *settingsWrapper = new SettingsWrapperStd(us);
     lua->set("settings", settingsWrapper);
     SettingsWrapperStd *heapsWrapper = new SettingsWrapperStd(heaps);
@@ -92,9 +96,9 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
     QString codeFrame;
     codeFrame = "function _processDanmaku(danmaku) \n"
                 + code + "\n"
-                "return ''\n"
-                "end\n\n"
-                "return _processDanmaku(_danmaku)";
+                         "return ''\n"
+                         "end\n\n"
+                         "return _processDanmaku(_danmaku)";
 
     // 运行代码
     std::string result;

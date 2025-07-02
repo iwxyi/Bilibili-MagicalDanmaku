@@ -9,27 +9,55 @@ MicrosoftTTS::MicrosoftTTS(QString dataPath, QString areaCode, QString key, QObj
     QDir dir(savedDir);
     dir.mkpath(savedDir);
 
-    fmt.setSampleRate(24000);  // 与微软TTS服务输出匹配
-    fmt.setSampleSize(16);     // 16位采样
-    fmt.setChannelCount(1);    // 单声道
-    fmt.setCodec("audio/pcm"); // 使用PCM格式
-    fmt.setByteOrder(QAudioFormat::LittleEndian);
-    fmt.setSampleType(QAudioFormat::SignedInt);
-
-    // 检查音频格式是否支持
-    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
-
-    if (!info.isFormatSupported(fmt))
     {
-        qWarning() << "MicrosoftTTS 不支持的音频格式，尝试使用最接近的格式";
-        fmt = info.nearestFormat(fmt);
-        qDebug() << "MicrosoftTTS 使用最接近的格式:";
+        // 设置音频格式
+        QAudioFormat fmt;
+        fmt.setSampleRate(24000);  // 采样率
+        fmt.setChannelCount(1);    // 单声道
+
+        // Qt5/Qt6 兼容的格式设置
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        // Qt5 设置方式
+        fmt.setSampleSize(16);
+        fmt.setByteOrder(QAudioFormat::LittleEndian);
+        fmt.setSampleType(QAudioFormat::SignedInt);
+        fmt.setCodec("audio/pcm");
+#else
+        // Qt6 设置方式
+        fmt.setSampleFormat(QAudioFormat::Int16);
+#endif
+
+        // Qt5/Qt6 兼容的设备检查
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+        bool isSupported = info.isFormatSupported(fmt);
+        if (!isSupported) {
+            qWarning() << "不支持的音频格式，尝试使用最接近的格式";
+            fmt = info.nearestFormat(fmt);
+        }
+#else
+        QAudioDevice info = QMediaDevices::defaultAudioOutput();
+        bool isSupported = info.isFormatSupported(fmt);
+        if (!isSupported) {
+            qWarning() << "Qt6不再提供nearestFormat，请手动调整格式参数";
+            // Qt6下需要手动调整格式，例如尝试其他采样格式
+            fmt.setSampleFormat(QAudioFormat::Float);  // 尝试浮点格式
+            isSupported = info.isFormatSupported(fmt);
+        }
+#endif
+
+        // 输出最终格式信息
+        qDebug() << "最终使用的音频格式:";
         qDebug() << "  采样率:" << fmt.sampleRate();
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         qDebug() << "  采样大小:" << fmt.sampleSize();
-        qDebug() << "  声道数:" << fmt.channelCount();
         qDebug() << "  编码格式:" << fmt.codec();
         qDebug() << "  字节序:" << fmt.byteOrder();
         qDebug() << "  采样类型:" << fmt.sampleType();
+#else
+        qDebug() << "  采样格式:" << fmt.sampleFormat();
+#endif
+        qDebug() << "  声道数:" << fmt.channelCount();
     }
 
     refreshTimer = new QTimer(this);
@@ -182,44 +210,58 @@ void MicrosoftTTS::playFile(QString filePath, bool deleteAfterPlay)
 {
     playing = true;
     QFile *inputFile = new QFile(filePath);
-    inputFile->open(QIODevice::ReadOnly);
-
-    audio = new QAudioOutput(fmt);
-    connect(audio, &QAudioOutput::stateChanged, this, [=](QAudio::State state) {
-        qDebug() << "MicrosoftTTS 音频状态变化:" << state;
-        if (state == QAudio::IdleState)
-        {
-            audio->stop();
-            audio->deleteLater();
-            audio = nullptr;
-            inputFile->close();
-            if (deleteAfterPlay)
-                inputFile->remove();
-            inputFile->deleteLater();
-
-            // 播放下一个
-            speakNext();
-        }
-        else if (state == QAudio::StoppedState)
-        {
-            if (audio->error() != QAudio::NoError)
-            {
-                qWarning() << "MicrosoftTTS 音频播放错误:" << audio->error();
-                emit signalError("音频播放错误: " + QString::number(audio->error()));
-            }
-        }
-    });
-
-    // 检查音频格式是否支持
-    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
-    if (!info.isFormatSupported(fmt))
-    {
-        qWarning() << "MicrosoftTTS 不支持的音频格式，尝试使用最接近的格式";
-        fmt = info.nearestFormat(fmt);
-        qInfo() << "使用格式:" << fmt;
+    if (!inputFile->open(QIODevice::ReadOnly)) {
+        qWarning() << "无法打开音频文件:" << filePath;
+        inputFile->deleteLater();
+        return;
     }
 
-    audio->start(inputFile);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    // Qt5 实现
+    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+    if (!info.isFormatSupported(fmt)) {
+        fmt = info.nearestFormat(fmt);
+    }
+    audioOutput = new QAudioOutput(fmt, this);
+
+    connect(audioOutput, &QAudioOutput::stateChanged, this, [=](QAudio::State state) {
+        handleAudioState(state, inputFile, deleteAfterPlay);
+    });
+#else
+    // Qt6 实现
+    QAudioDevice device = QMediaDevices::defaultAudioOutput();
+    audioSink = new QAudioSink(device, fmt, this);
+
+    connect(audioSink, &QAudioSink::stateChanged, this, [=]() {
+        handleAudioState(audioSink->state(), inputFile, deleteAfterPlay);
+    });
+#endif
+
+// 开始播放
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    audioOutput->start(inputFile);
+#else
+    audioSink->start(inputFile);
+#endif
+}
+
+void MicrosoftTTS::handleAudioState(QAudio::State state, QFile* file, bool deleteAfterPlay)
+{
+    if (state == QAudio::IdleState || state == QAudio::StoppedState) {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        audioOutput->stop();
+        audioOutput->deleteLater();
+#else
+        audioSink->stop();
+        audioSink->deleteLater();
+#endif
+
+        file->close();
+        if (deleteAfterPlay) file->remove();
+        file->deleteLater();
+
+        QMetaObject::invokeMethod(this, &MicrosoftTTS::speakNext, Qt::QueuedConnection);
+    }
 }
 
 void MicrosoftTTS::setAreaCode(QString area)

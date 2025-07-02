@@ -5,6 +5,7 @@
 #include <QStandardItemModel>
 #include <QClipboard>
 #include <QLabel>
+#include <QPainterPath>
 #include "bili_liveservice.h"
 #include "netutil.h"
 #include "bili_api_util.h"
@@ -15,6 +16,7 @@
 #include "httpuploader.h"
 #include "rsautil.h"
 #include "debounce.h"
+#include "qt_compat.h"
 
 BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
 {
@@ -469,7 +471,7 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         ac->roomTitle = roomInfo.value("title").toString();
         ac->upName = anchorInfo.value("base_info").toObject().value("uname").toString();
         ac->roomDescription = roomInfo.value("description").toString();
-        ac->roomTags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
+        ac->roomTags = roomInfo.value("tags").toString().split(",", SKIP_EMPTY_PARTS);
         ac->liveStartTime = roomInfo.value("live_start_time").toDouble();
 
 #ifdef ZUOQI_ENTRANCE
@@ -695,7 +697,11 @@ void BiliLiveService::startMsgLoop()
     // 设置安全套接字连接模式（不知道有啥用）
     QSslConfiguration config = liveSocket->sslConfiguration();
     config.setPeerVerifyMode(QSslSocket::VerifyNone);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     config.setProtocol(QSsl::TlsV1SslV3);
+#else
+    config.setProtocol(QSsl::SecureProtocols);  // 使用安全协议集合
+#endif
     liveSocket->setSslConfiguration(config);
 
     liveSocket->open(host);
@@ -714,7 +720,7 @@ void BiliLiveService::sendVeriPacket(QWebSocket *socket, QString roomId, QString
     }
     QByteArray ba;
     // ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
-    ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"type\": 2, \"key\": \""+ac->cookieToken+"\", \"buvid\":\"" + ac->buvid + "\"}");
+    ba.append(("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"type\": 2, \"key\": \""+ac->cookieToken+"\", \"buvid\":\"" + ac->buvid + "\"}").toUtf8());
     qInfo() << "认证包内容：" << QString(ba);
     ba = BiliApiUtil::makePack(ba, OP_AUTH);
     SOCKET_DEB << "发送认证包：" << ba;
@@ -2416,7 +2422,7 @@ void BiliLiveService::myLiveSetTags()
         return ;
 
     QStringList oldTags = ac->roomTags;
-    QStringList newTags = content.split(" ", QString::SkipEmptyParts);
+    QStringList newTags = content.split(" ", SKIP_EMPTY_PARTS);
 
     auto toPost = [=](QString action, QString tag){
         QString rst = NetUtil::postWebData("https://api.live.bilibili.com/room/v1/Room/update",
@@ -3308,7 +3314,11 @@ void BiliLiveService::connectPkSocket()
             pkLiveSocket = new QWebSocket();
         QSslConfiguration config = pkLiveSocket->sslConfiguration();
         config.setPeerVerifyMode(QSslSocket::VerifyNone);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         config.setProtocol(QSsl::TlsV1SslV3);
+#else
+        config.setProtocol(QSsl::SecureProtocols);  // 使用安全协议集合
+#endif
         pkLiveSocket->setSslConfiguration(config);
         pkLiveSocket->open(host);
     });

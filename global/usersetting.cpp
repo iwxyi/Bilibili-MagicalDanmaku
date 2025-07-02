@@ -1,6 +1,7 @@
 #include "usersettings.h"
 #include <QRegularExpression>
 #include <QDebug>
+#include "qt_compat_random.h"
 
 QString UserSettings::getSubAccountCookie(const QString &arg) const
 {

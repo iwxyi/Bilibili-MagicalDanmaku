@@ -3,6 +3,7 @@
 
 #include <QSettings>
 #include <QColor>
+#include "qt_compat.h"
 
 class MySettings : public QSettings
 {
@@ -177,7 +178,7 @@ public:
                 continue;
             QString left = s.left(pos);
             QString right = s.right(s.length() - pos - 1);
-            val.insert(left.toLongLong(), right.split(split, QString::SkipEmptyParts));
+            val.insert(left.toLongLong(), right.split(split, SKIP_EMPTY_PARTS));
         }
     }
 };

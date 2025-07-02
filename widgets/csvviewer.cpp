@@ -3,6 +3,7 @@
 #include "facilemenu.h"
 #include "orderplayerwindow.h"
 #include "fileutil.h"
+#include "qt_compat.h"
 
 CSVViewer::CSVViewer(QString filePath, QWidget *parent) : QDialog(parent)
 {
@@ -63,7 +64,7 @@ void CSVViewer::read()
     model->clear();
     startModify();
     QString content = readTextFileAutoCodec(filePath, &fileCodec);
-    QStringList lines = content.split("\n", QString::SkipEmptyParts);
+    QStringList lines = content.split("\n", SKIP_EMPTY_PARTS);
     if (lines.size())
     {
         QStringList cells = lines.first().split(",");

@@ -15,7 +15,7 @@ void HoverButton::banEnter(bool ban)
     ban_enter = ban;
 }
 
-void HoverButton::enterEvent(QEvent *event)
+void HoverButton::enterEvent(QEnterEvent *event)
 {
     emit signalEntered(mapFromGlobal(QCursor::pos()));
     return QPushButton::enterEvent(event);

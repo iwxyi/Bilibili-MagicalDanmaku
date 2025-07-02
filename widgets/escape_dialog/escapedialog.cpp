@@ -12,7 +12,7 @@ EscapeDialog::EscapeDialog(QString title, QString msg, QString esc, QString nor,
     QVBoxLayout* main_vlayout = new QVBoxLayout;
     msg_lab = new QLabel(msg, this);
     main_vlayout->addWidget(msg_lab);
-    main_vlayout->setMargin(MARGIN);
+    main_vlayout->setContentsMargins(MARGIN, MARGIN, MARGIN, MARGIN);
     main_vlayout->addSpacing(MARGIN);
     setLayout(main_vlayout);
 

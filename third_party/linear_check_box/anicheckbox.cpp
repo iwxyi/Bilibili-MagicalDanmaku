@@ -55,7 +55,7 @@ void AniCheckBox::paintEvent(QPaintEvent *)
     painter.restore();
 }
 
-void AniCheckBox::enterEvent(QEvent *e)
+void AniCheckBox::enterEvent(QEnterEvent *e)
 {
     QCheckBox::enterEvent(e);
     startAnimation("hover_prog", getHoverProg(), 1);

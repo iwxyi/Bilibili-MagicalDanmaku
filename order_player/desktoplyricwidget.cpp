@@ -1,6 +1,7 @@
 #include <QFontDatabase>
 #include <QComboBox>
 #include "desktoplyricwidget.h"
+#include "qt_compat.h"
 
 DesktopLyricWidget::DesktopLyricWidget(QSettings& settings, QWidget *parent) : QWidget(parent),
     settings(settings)
@@ -55,7 +56,7 @@ void DesktopLyricWidget::setLyric(QString text)
     }
 
     // 遍历每一行
-    QStringList sl = text.split("\n", QString::SkipEmptyParts);
+    QStringList sl = text.split("\n", SKIP_EMPTY_PARTS);
     LyricBean prevLyric(false);
     qint64 currentTime = 0;
     lyricStream.clear();
@@ -123,7 +124,11 @@ void DesktopLyricWidget::hideEvent(QHideEvent *event)
     settings.setValue("music/desktopLyricGeometry", this->saveGeometry());
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 bool DesktopLyricWidget::nativeEvent(const QByteArray &eventType, void *message, long *result)
+#else
+bool DesktopLyricWidget::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
+#endif
 {
 #if defined(Q_OS_WIN)
     Q_UNUSED(eventType)
@@ -158,7 +163,7 @@ bool DesktopLyricWidget::nativeEvent(const QByteArray &eventType, void *message,
     return false;         //此处返回false，留给其他事件处理器处理
 }
 
-void DesktopLyricWidget::enterEvent(QEvent *event)
+void DesktopLyricWidget::enterEvent(QEnterEvent *event)
 {
     hovering = true;
     update();

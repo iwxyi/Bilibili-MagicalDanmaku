@@ -8,6 +8,7 @@
 #include <QList>
 #include <QDateTime>
 #include <QDebug>
+#include "qt_compat.h"
 
 #define JSON_VAL_LONG(json, x) static_cast<qint64>(json.value(#x).toDouble())
 #define JVAL_LONG(x) static_cast<qint64>(json.value(#x).toDouble())
@@ -335,7 +336,7 @@ struct Song
         if (pos > -1)
         {
             song.name = fileName.right(fileName.length() - pos - 1).trimmed();
-            QStringList ars = fileName.left(pos).trimmed().split("、", QString::SkipEmptyParts);
+            QStringList ars = fileName.left(pos).trimmed().split("、", SKIP_EMPTY_PARTS);
             foreach (auto a, ars)
                 song.artists.append(Artist(a));
             song.artistNames = ars.join("/");

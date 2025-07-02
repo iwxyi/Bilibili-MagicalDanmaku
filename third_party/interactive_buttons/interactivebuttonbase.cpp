@@ -1,4 +1,6 @@
 #include "interactivebuttonbase.h"
+#include <QFile>
+#include <QRegularExpression>
 
 /**
  * 所有内容的初始化
@@ -635,7 +637,19 @@ void InteractiveButtonBase::setFontSizeT(int f)
 void InteractiveButtonBase::setHover()
 {
     if (!hovering && inArea(mapFromGlobal(QCursor::pos())))
-        InteractiveButtonBase::enterEvent(new QEvent(QEvent::Type::None));
+    {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        InteractiveButtonBase::enterEvent(new QEvent(QEvent::Enter));
+#else
+        QPointF localPos = mapFromGlobal(QCursor::pos());
+        QPointF screenPos = QCursor::pos();
+        // Qt6 不再提供 mapToWindow，改用 mapToGlobal + 窗口位置计算
+        QWidget *window = this->window();
+        QPointF globalPos = mapToGlobal(localPos);
+        QPointF windowPos = window->mapFromGlobal(globalPos);
+        InteractiveButtonBase::enterEvent(new QEnterEvent(localPos, windowPos, screenPos));
+#endif
+    }
 }
 
 /**
@@ -1118,7 +1132,7 @@ void InteractiveButtonBase::discardHoverPress(bool force)
 /**
  * 鼠标移入事件，触发 hover 时间戳
  */
-void InteractiveButtonBase::enterEvent(QEvent *event)
+void InteractiveButtonBase::enterEvent(QEnterEvent *event)
 {
     if (_block_hover) // 临时屏蔽hover事件
     {
@@ -1165,7 +1179,19 @@ void InteractiveButtonBase::mousePressEvent(QMouseEvent *event)
     if (event->button() == Qt::LeftButton)
     {
         if (!hovering)
-            InteractiveButtonBase::enterEvent(new QEvent(QEvent::Type::None));
+        {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+            InteractiveButtonBase::enterEvent(new QEvent(QEvent::Enter));
+#else
+            QPointF localPos = mapFromGlobal(QCursor::pos());
+            QPointF screenPos = QCursor::pos();
+            // Qt6 不再提供 mapToWindow，改用 mapToGlobal + 窗口位置计算
+            QWidget *window = this->window();
+            QPointF globalPos = mapToGlobal(localPos);
+            QPointF windowPos = window->mapFromGlobal(globalPos);
+            InteractiveButtonBase::enterEvent(new QEnterEvent(localPos, windowPos, screenPos));
+#endif
+        }
 
         pressing = true;
         press_pos = mouse_pos;
@@ -1324,7 +1350,19 @@ void InteractiveButtonBase::resizeEvent(QResizeEvent *event)
 void InteractiveButtonBase::focusInEvent(QFocusEvent *event)
 {
     if (!hovering && inArea(mapFromGlobal(QCursor::pos())))
-        InteractiveButtonBase::enterEvent(new QEvent(QEvent::Type::None));
+    {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        InteractiveButtonBase::enterEvent(new QEvent(QEvent::Enter));
+#else
+        QPointF localPos = mapFromGlobal(QCursor::pos());
+        QPointF screenPos = QCursor::pos();
+        // Qt6 不再提供 mapToWindow，改用 mapToGlobal + 窗口位置计算
+        QWidget *window = this->window();
+        QPointF globalPos = mapToGlobal(localPos);
+        QPointF windowPos = window->mapFromGlobal(globalPos);
+        InteractiveButtonBase::enterEvent(new QEnterEvent(localPos, windowPos, screenPos));
+#endif
+    }
 
     focusing = true;
     emit signalFocusIn();
@@ -1968,7 +2006,7 @@ void InteractiveButtonBase::reloadSvgColor()
             QByteArray data = file.readAll();
             QString str(data);
             // 替换fill="xxx"为当前颜色
-            str.replace(QRegExp("fill=\"#?\\w+\""), "fill=\"" + icon_color.name() + "\"");
+            str.replace(QRegularExpression("fill=\"#?\\w+\""), "fill=\"" + icon_color.name() + "\"");
             svg_render->load(str.toUtf8());
             file.close();
         }

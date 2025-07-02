@@ -15,7 +15,7 @@ WaterCircleButton::WaterCircleButton(QPixmap pixmap, QWidget *parent) : Interact
 
 }
 
-void WaterCircleButton::enterEvent(QEvent *event)
+void WaterCircleButton::enterEvent(QEnterEvent *event)
 {
 
 }

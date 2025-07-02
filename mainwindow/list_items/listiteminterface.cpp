@@ -11,7 +11,7 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
 
     vlayout = new QVBoxLayout(this);
     setLayout(vlayout);
-    vlayout->setMargin(vlayout->margin() + _cardMargin);
+    vlayout->setContentsMargins(vlayout->contentsMargins() + _cardMargin);
     vlayout->setSpacing(2);
 
     check = new QCheckBox("启用", this);
@@ -22,7 +22,7 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
     hlayout->addWidget(new QWidget(this));
     hlayout->addWidget(btn);
     hlayout->setStretch(1, 1);
-    hlayout->setMargin(0);
+    hlayout->setContentsMargins(0, 0, 0, 0);
     vlayout->addLayout(hlayout);
 
     btn->setBorderColor(Qt::black);

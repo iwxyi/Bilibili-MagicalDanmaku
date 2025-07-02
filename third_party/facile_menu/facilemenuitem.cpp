@@ -1,3 +1,5 @@
+#include <QPainterPath>
+#include <QRegularExpression>
 #include "facilemenuitem.h"
 
 FacileMenuItem::FacileMenuItem(QWidget *parent) : InteractiveButtonBase(parent)
@@ -225,7 +227,7 @@ FacileMenuItem *FacileMenuItem::text(bool exp, QString str)
     {
         // 去掉快捷键符号
         // 注意：这里设置文字不会改变原来的快捷键！
-        setText(str.replace(QRegExp("&([\\w\\d])\\b"), "\\1"));
+        setText(str.replace(QRegularExpression("&([\\w\\d])\\b"), "\\1"));
         // 调整大小
         setFixedForeSize();
     }

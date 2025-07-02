@@ -4,6 +4,7 @@
 #include <QString>
 #include <QDebug>
 #include <QRegularExpression>
+#include "qt_compat.h"
 
 #define CALC_DEB if (0) qDebug() // 输出计算相关的信息
 
@@ -17,7 +18,7 @@ public:
     static bool judgeCondition(QString exprs)
     {
         CALC_DEB << "判断表达式：" << exprs;
-        QStringList orExps = exprs.split(QRegularExpression("(;|\\|\\|)"), QString::SkipEmptyParts);
+        QStringList orExps = exprs.split(QRegularExpression("(;|\\|\\|)"), SKIP_EMPTY_PARTS);
         bool isTrue = false;
         QRegularExpression compRe("^\\s*([^<>=!]*?)\\s*([<>=!~]{1,2})\\s*([^<>=!]*?)\\s*$");
         QRegularExpression intRe("^[\\d\\+\\-\\*\\/% \\(\\)]+$");
@@ -26,7 +27,7 @@ public:
         foreach (QString orExp, orExps)
         {
             isTrue = true;
-            QStringList andExps = orExp.split(QRegularExpression("(,|&&)"), QString::SkipEmptyParts);
+            QStringList andExps = orExp.split(QRegularExpression("(,|&&)"), SKIP_EMPTY_PARTS);
             CALC_DEB << "表达式or内：" << andExps;
             foreach (QString exp, andExps)
             {

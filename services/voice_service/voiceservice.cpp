@@ -103,7 +103,15 @@ void VoiceService::speakText(QString text)
     }
         break;
     case VoiceCustom:
-        if (ttsDownloading || (ttsPlayer && ttsPlayer->state() == QMediaPlayer::State::PlayingState))
+        auto isMediaPlaying = [=](QMediaPlayer* player){
+            if (!player) return false;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+            return player->state() == QMediaPlayer::PlayingState;
+#else
+            return player->playbackState() == QMediaPlayer::PlayingState;
+#endif
+        };
+        if (ttsDownloading || (ttsPlayer && isMediaPlaying(ttsPlayer)))
         {
             ttsQueue.append(text);
         }
@@ -202,7 +210,16 @@ void VoiceService::playNetAudio(QString url)
         if (!ttsPlayer)
         {
             ttsPlayer = new QMediaPlayer(this);
-            connect(ttsPlayer, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state){
+
+            // 连接状态改变信号（兼容Qt5/Qt6）
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+            connect(ttsPlayer, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state) {
+#else
+            // Qt6需要设置音频输出
+            QAudioOutput *audioOutput = new QAudioOutput(this);
+            ttsPlayer->setAudioOutput(audioOutput);
+            connect(ttsPlayer, &QMediaPlayer::playbackStateChanged, this, [=](QMediaPlayer::PlaybackState state) {
+#endif
                 if (state == QMediaPlayer::StoppedState)
                 {
                     QFile file(path);
@@ -211,7 +228,13 @@ void VoiceService::playNetAudio(QString url)
                 }
             });
         }
+
+// 设置媒体源（兼容Qt5/Qt6）
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         ttsPlayer->setMedia(QUrl::fromLocalFile(path));
+#else
+        ttsPlayer->setSource(QUrl::fromLocalFile(path));
+#endif
 
         ttsPlayer->play();
     });

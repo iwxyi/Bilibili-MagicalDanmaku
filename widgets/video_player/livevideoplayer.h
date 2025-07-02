@@ -3,8 +3,14 @@
 
 #include <QDialog>
 #include <QMediaPlayer>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QMediaPlayer>
+#include <QAudioOutput>  // Qt6 需要单独的音频输出
+#else
+#include <QMediaPlayer>
 #include <QMediaPlaylist>
 #include <QMediaContent>
+#endif
 #include <QSettings>
 #include <QNetworkRequest>
 #include <QNetworkAccessManager>
@@ -14,7 +20,6 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QVideoWidget>
-#include <QVideoProbe>
 #include <QDir>
 #include "videosurface.h"
 #include "picturebrowser.h"

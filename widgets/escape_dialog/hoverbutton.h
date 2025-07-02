@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QKeyEvent>
+#include "qt_compat_event.h"
 
 class HoverButton : public QPushButton
 {
@@ -16,7 +17,7 @@ public:
     void banEnter(bool ban = true);
 
 protected:
-    void enterEvent(QEvent* event) override;
+    void enterEvent(QEnterEvent* event) override;
     void leaveEvent(QEvent* event)override;
     void mousePressEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;

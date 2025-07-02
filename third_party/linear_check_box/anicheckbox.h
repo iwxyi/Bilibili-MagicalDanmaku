@@ -6,6 +6,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QDebug>
+#include "qt_compat_event.h"
 
 class AniCheckBox : public QCheckBox
 {
@@ -20,7 +21,7 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *) override;
-    void enterEvent(QEvent *e) override;
+    void enterEvent(QEnterEvent *e) override;
     void leaveEvent(QEvent *e) override;
     bool hitButton(const QPoint &) const override;
 

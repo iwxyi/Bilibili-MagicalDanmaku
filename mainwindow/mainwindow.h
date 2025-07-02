@@ -10,7 +10,6 @@
 #include <QNetworkCookie>
 #include <QMessageBox>
 #include <QInputDialog>
-#include <QTextCodec>
 #include <stdio.h>
 #include <iostream>
 #include <QtWebSockets/QWebSocket>

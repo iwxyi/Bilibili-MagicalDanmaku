@@ -54,7 +54,7 @@ QString toFileName(QString text)
 
 bool canRegExp(const QString& str, const QString& pat)
 {
-    return QRegExp(pat).indexIn(str) > -1;
+    return QRegularExpression(pat).indexIn(str) > -1;
 }
 
 /**
@@ -62,7 +62,7 @@ bool canRegExp(const QString& str, const QString& pat)
  */
 QString transToReg(QString s)
 {
-//    s = s.replace(QRegExp("[\\.\\+\\-\\*\\^\\$\\(\\)\\[\\]\\{\\}]"), "\\\\1");
+//    s = s.replace(QRegularExpression("[\\.\\+\\-\\*\\^\\$\\(\\)\\[\\]\\{\\}]"), "\\\\1");
     s = s.replace(".", "\\.")
             .replace("+", "\\+")
             .replace("-", "\\-")

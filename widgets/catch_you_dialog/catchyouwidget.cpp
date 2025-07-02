@@ -1,7 +1,5 @@
 #include <QInputDialog>
 #include <QMediaPlayer>
-#include <QMediaPlaylist>
-#include <QMediaContent>
 #include <QSettings>
 #include <QNetworkRequest>
 #include <QNetworkAccessManager>
@@ -10,8 +8,6 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
-#include <QVideoWidget>
-#include <QVideoProbe>
 #include <QDir>
 #include <QMenu>
 #include <QAction>

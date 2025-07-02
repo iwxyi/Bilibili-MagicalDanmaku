@@ -9,7 +9,11 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QTextStream>
-#include <QTextCodec>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QtCore5Compat/QTextCodec>  // Qt6 需要显式包含
+#else
+#include <QTextCodec>  // Qt5 直接可用
+#endif
 #include <QFileInfo>
 #include <QDir>
 #include <QStandardPaths>
