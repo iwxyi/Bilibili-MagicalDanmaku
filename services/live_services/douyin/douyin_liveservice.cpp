@@ -1,6 +1,7 @@
 #include "douyin_liveservice.h"
 #include "fileutil.h"
 #include "stringutil.h"
+#include "douyinsignaturehelper.h"
 
 DouyinLiveService::DouyinLiveService(QObject *parent) : LiveServiceBase(parent)
 {
@@ -271,7 +272,11 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
     QString roomId = ac->roomId;
     QString uniqueId = ac->cookieUid;
     QString serverUrl = "wss://webcast5-ws-web-lf.douyin.com/webcast/im/push/v2/";
-    QString signature = getSignature(roomId, uniqueId);
+    // QString signature = getSignature(roomId, uniqueId);
+
+    DouyinSignatureHelper helper;
+    QString signature = helper.getSignature(roomId, uniqueId);
+
     QStringList params{
         "aid", "6383",
         "app_name", "douyin_web",

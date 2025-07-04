@@ -1,4 +1,4 @@
-QT       += core gui network websockets multimedia multimediawidgets sql svg qml
+QT       += core gui network websockets multimedia multimediawidgets sql svg qml webenginewidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -124,6 +124,7 @@ SOURCES += \
     services/live_services/douyin/douyin_liveservice.cpp \
     services/live_services/base/liveservicebase.cpp \
     services/live_services/base/livestatisticservice.cpp \
+    services/live_services/douyin/douyinsignaturehelper.cpp \
     services/sql_service/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     services/voice_service/voiceservice.cpp \
@@ -274,6 +275,8 @@ HEADERS += \
     services/live_services/base/liveservicebase.h \
     services/live_services/base/livestatisticservice.h \
     services/live_services/base/api_type.h \
+    services/live_services/douyin/douyinsignaturehelper.h \
+    services/live_services/douyin/silentwebenginepage.h \
     services/sql_service/sqlservice.h \
     order_player/importsongsdialog.h \
     services/voice_service/voiceservice.h \
