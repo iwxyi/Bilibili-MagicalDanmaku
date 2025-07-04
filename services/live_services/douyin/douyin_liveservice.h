@@ -3,20 +3,31 @@
 
 #include "liveservicebase.h"
 
+enum DouyinLiveStatus
+{
+    PREPARE = 1,
+    LIVING = 2,
+    PAUSE = 3,
+    END = 4
+};
+
 class DouyinLiveService : public LiveServiceBase
 {
 public:
     DouyinLiveService(QObject* parent = nullptr);
-
-    virtual void getRoomInfo(bool reconnect, int reconnectCount = 0) override;
 
 private:
     void initWS();
 
 protected:
     void startConnect() override;
+    virtual void getRoomInfo(bool reconnect, int reconnectCount = 0) override;
     virtual void setUrlCookie(const QString & url, QNetworkRequest * request) override;
     virtual void autoAddCookie(QList<QNetworkCookie> cookies) override;
+    virtual void getDanmuInfo() override;
+    QString getSignature(QString roomId, QString uniqueId);
+    QByteArray imFetch(QString roomId, QString uniqueId);
+    void imPush(QString cursor, QString internalExt);
 };
 
 #endif // DOUYIN_LIVESERVICE_H

@@ -154,6 +154,10 @@ void BiliLiveService::initWS()
         emit signalConnectionStateTextChanged(str);
     });
 
+    connect(liveSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, [=](QAbstractSocket::SocketError error){
+        qWarning() << "连接错误：" << error;
+    });
+
     heartTimer = new QTimer(this);
     heartTimer->setInterval(30000);
     connect(heartTimer, &QTimer::timeout, this, [=]{

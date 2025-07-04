@@ -1,5 +1,6 @@
 #include "douyin_liveservice.h"
 #include "fileutil.h"
+#include "stringutil.h"
 
 DouyinLiveService::DouyinLiveService(QObject *parent) : LiveServiceBase(parent)
 {
@@ -9,6 +10,38 @@ DouyinLiveService::DouyinLiveService(QObject *parent) : LiveServiceBase(parent)
 void DouyinLiveService::initWS()
 {
     liveSocket = new QWebSocket();
+    connect(liveSocket, &QWebSocket::connected, this, [=](){
+        qInfo() << "连接成功";
+    });
+    connect(liveSocket, &QWebSocket::disconnected, this, [=](){
+        qInfo() << "连接断开";
+    });
+    connect(liveSocket, &QWebSocket::textMessageReceived, this, [=](QString message){
+        qDebug() << "收到消息：" << message;
+    });
+    connect(liveSocket, &QWebSocket::binaryMessageReceived, this, [=](QByteArray message){
+        qDebug() << "收到二进制消息：" << message;
+    });
+    connect(liveSocket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
+        SOCKET_DEB << "stateChanged" << state;
+        QString str = "未知";
+        if (state == QAbstractSocket::UnconnectedState)
+            str = "未连接";
+        else if (state == QAbstractSocket::ConnectingState)
+            str = "连接中";
+        else if (state == QAbstractSocket::ConnectedState)
+            str = "已连接";
+        else if (state == QAbstractSocket::BoundState)
+            str = "已绑定";
+        else if (state == QAbstractSocket::ClosingState)
+            str = "断开中";
+        else if (state == QAbstractSocket::ListeningState)
+            str = "监听中";
+        qDebug() << "[socket.state]" << str;
+    });
+    connect(liveSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, [=](QAbstractSocket::SocketError error){
+        qWarning() << "连接错误：" << error;
+    });
 }
 
 void DouyinLiveService::startConnect()
@@ -95,10 +128,11 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         // 解析数据
         MyJson state = json.o("state");
         MyJson roomInfo = state.o("roomStore").o("roomInfo");
-        ac->roomId = roomInfo.s("roomId");
+        ac->roomId = roomInfo.s("roomId"); // 和入口的roomid不是同一个，而且很长
         MyJson room = roomInfo.o("room");
         ac->roomTitle = room.s("title");
-        qInfo() << "直播间信息：" << ac->roomTitle << ac->roomId;
+        DouyinLiveStatus roomStatus = (DouyinLiveStatus)room.i("status");
+        qInfo() << "直播间信息：" << ac->roomTitle << ac->roomId << roomStatus;
         
         MyJson anchor = roomInfo.o("anchor");
         QJsonArray avatarThumb = anchor.o("avatar_thumb").a("url_list");
@@ -120,11 +154,15 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         MyJson odin = userStore.o("odin");
         QString userId = odin.s("user_id");
         QString userUniqueId = odin.s("user_unique_id");
+        int userType = odin.i("user_type"); // 匿名是12
+        ac->cookieUid = userUniqueId;
         qInfo() << "用户信息：用户唯一ID" << userUniqueId;
 
         emit signalRoomIdChanged(ac->roomId);
         emit signalUpUidChanged(ac->upUid);
         emit signalRoomInfoChanged();
+
+        getDanmuInfo();
     });
 }
 
@@ -142,4 +180,160 @@ void DouyinLiveService::setUrlCookie(const QString &url, QNetworkRequest *reques
 void DouyinLiveService::autoAddCookie(QList<QNetworkCookie> cookies)
 {
     emit signalAutoAddCookie(cookies);
+}
+
+/// 获取初次连接信息
+void DouyinLiveService::getDanmuInfo()
+{
+    qInfo() << "获取连接信息";
+    // QByteArray ba = imFetch(ac->roomId, ac->cookieUid);
+    qint64 timestamp10 = QDateTime::currentSecsSinceEpoch();
+    QString cursor = QString("r-7497180536918546638_d-1_u-1_fh-7497179772733760010_t-%1").arg(timestamp10);
+    QString internalExt = QString("internal_src:dim|wss_push_room_id:%2|wss_push_did:%3|first_req_ms:%1|fetch_time:%1|seq:1|wss_info:0-%1-0-0|wrds_v:7497180515443673855")
+                                .arg(timestamp10).arg(ac->roomId).arg(ac->cookieUid);
+    imPush(cursor, internalExt);
+}
+
+/// 通过在线库进行计算。
+/// !已经失效，计算出来的库不准确！
+QString DouyinLiveService::getSignature(QString roomId, QString uniqueId)
+{
+    MyJson signatureObj = postToJson("https://dy.nsapps.cn/signature", QString(R"({"roomId": "%1", "uniqueId": "%2"})").arg(roomId).arg(uniqueId).toUtf8(),
+                                     "", QList<QPair<QString, QString>>{{"content-type", "application/json"}});
+    QString signature = signatureObj.data().s("signature");
+    qInfo() << "signature:" << signature;
+    return signature;
+}
+
+/// 组建初次连接的信息
+/// 主要是为了获取 cursor、internalExt 这两个值
+/// !返回一直是 json code=0 的返回值，有问题
+QByteArray DouyinLiveService::imFetch(QString roomId, QString uniqueId)
+{
+    // 默认参数
+    QStringList params{
+        "aid", "6383",
+        "app_name", "douyin_web",
+        "browser_language", "zh-CN",
+        "browser_name", "Mozilla",
+        "browser_online", "true",
+        "browser_platform", "Win32",
+        "browser_version", "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+        "compress", "gzip",
+        "cookie_enabled", "true",
+        "cursor", "",
+        "device_platform", "web",
+        "did_rule", "3",
+        "endpoint", "live_pc",
+        "heartbeatDuration", "0",
+        "host", "https://live.douyin.com",
+        "identity", "audience",
+        "insert_task_id", "",
+        "internal_ext", "",
+        "last_rtt", "0",
+        "live_id", "1",
+        "live_reason", "",
+        "need_persist_msg_count", "15",
+        "resp_content_type", "protobuf",
+        "screen_height", "1080",
+        "screen_width", "1920",
+        "support_wrds", "1",
+        "tz_name", "Asia/Shanghai",
+        "update_version_code", "1.0.14-beta.0",
+        "version_code", "180800",       // 版本号
+        "webcast_sdk_version", "1.0.14-beta.0"
+    };
+
+    // 请求需要一些关键参数：msToken、a_bogus
+    QString msToken = getRandomKey(182);
+    msToken = "cBgW7_8D2uXhhUXswTHAzp3REMGP67Ap-VEarQHwuu8ixtEtii4A-yZE5B-XEFDUa51Do27Ym3Ob7DbFNs-BoY6a_IVog5MfNgXfYYFBvIZzlqNmod7TKxzGUfIW0D-sypQKVxxGmFqq-ElXNAvhi3PyLCixJUSaQZX_TG0bA8YPotTCA7P7dBM%3D";
+    params << "room_id" << roomId << "user_unique_id" << uniqueId << "msToken" << msToken;
+
+    // 一个加密参数，须通过上侧 params 参数计算，感兴趣自己去逆向，这里不解析，不一定验证
+    QString aBogus = "E7sjkw6LDZ85ed%2FtYCjoy4dlVUglrs8yieiORKIK9PK%2FGHlP0RPRhPaiaxzKm%2FAzYSB0ho37vEzAbxVc%2FxUk1ZnkwmpfSMzWOz%2FV9Smo%2FqZDGBk2I3b%2FeGbEwi4PUS4PKACvE5E160UqILQfprVolMKy7Aen5ub8Tqp9d3UZexK15SDqpZ18unjZi7tq9j%3D%3D";
+    params << "live_pc" << roomId << "a_bogus" << aBogus;
+
+    QString paramsStr;
+    for (int i = 0; i < params.size(); i += 2)
+    {
+        paramsStr += params[i] + "=" + urlDecode(params[i + 1]) + "&";
+    }
+    paramsStr.chop(1);
+
+    QString url = "https://live.douyin.com/webcast/im/fetch/?" + paramsStr;
+    QByteArray ba = getToBytes(url);
+    qDebug() << ba;
+    return ba;
+}
+
+void DouyinLiveService::imPush(QString cursor, QString internalExt)
+{
+    QString roomId = ac->roomId;
+    QString uniqueId = ac->cookieUid;
+    QString serverUrl = "wss://webcast5-ws-web-lf.douyin.com/webcast/im/push/v2/";
+    QString signature = getSignature(roomId, uniqueId);
+    QStringList params{
+        "aid", "6383",
+        "app_name", "douyin_web",
+        "browser_language", "zh-CN",
+        "browser_name", "Mozilla",
+        "browser_online", "true",
+        "browser_platform", "Win32",
+        "browser_version", "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+        "compress", "gzip",
+        "cookie_enabled", "true",
+        "device_platform", "web",
+        "did_rule", "3",
+        "endpoint", "live_pc",
+        "heartbeatDuration", "0",
+        "host", "https://live.douyin.com",
+        "identity", "audience",
+        "im_path", "/webcast/im/fetch/",
+        "insert_task_id", "",
+        "last_rtt", "0",
+        "live_id", "1",
+        "live_reason", "",
+        "maxCacheMessageNumber", "20",
+        "need_persist_msg_count", "15",
+        "resp_content_type", "protobuf",
+        "room_id", roomId,
+        "screen_height", "1080",
+        "screen_width", "1920",
+        "support_wrds", "1",
+        "tz_name", "Asia/Shanghai",
+        "update_version_code", "1.0.14-beta.0",
+        "user_unique_id", uniqueId,
+        "version_code", "180800",       // 版本号
+        "webcast_sdk_version", "1.0.14-beta.0",
+        "cursor", cursor,
+        "internal_ext", internalExt,
+        "signature", signature,
+    };
+
+    QString paramsStr;
+    for (int i = 0; i < params.size(); i += 2)
+    {
+        paramsStr += params[i] + "=" + urlDecode(params[i + 1]) + "&";
+    }
+    paramsStr.chop(1);
+    
+    QString backupUrl = serverUrl;
+    backupUrl.replace("lq", "lf");
+
+    // 开始连接
+    QString url = serverUrl + "?" + paramsStr;
+    qInfo() << "开始连接：" << url;
+    QSslConfiguration config = liveSocket->sslConfiguration();
+    config.setProtocol(QSsl::TlsV1_2OrLater);
+    liveSocket->setSslConfiguration(config);
+
+    // 需要带相同的Cookie，否则会Refuse。但是实测可以用其他账号的cookie
+    QNetworkRequest request;
+    request.setUrl(QUrl(url));
+    request.setRawHeader("Cookie", ac->browserCookie.toUtf8());
+    request.setHeader(QNetworkRequest::UserAgentHeader, "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36");
+    request.setRawHeader("Referer", "https://live.douyin.com/");
+    request.setRawHeader("Origin", "https://live.douyin.com");
+    
+    liveSocket->open(request);
 }

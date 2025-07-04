@@ -880,7 +880,7 @@ void MainWindow::initLiveService()
             if (ck.contains(name))
             {
                 qInfo() << "Replace Cookie:" << name << "=" << value;
-                ck.replace(QRegularExpression("(^|;| )" + name + "=.*?;"), "$1" + name + "=" + value + ";");
+                ck.replace(QRegularExpression("(^|;| )" + name + "=.*?;"), "\\1" + name + "=" + value + ";");
             }
             else
             {
@@ -888,6 +888,7 @@ void MainWindow::initLiveService()
                 ck += name + "=" + value + ";";
             }
         }
+        qDebug() << "自动添加Cookie：" << ck;
         autoSetCookie(ck);
     });
 
@@ -10076,7 +10077,7 @@ void MainWindow::on_robotNameButton_clicked()
     newFacileMenu;
     menu->addAction(ui->actionQRCode_Login);
     menu->addAction(ui->actionSet_Cookie);
-    menu->addAction(ui->actionSet_Danmaku_Data_Format);
+    menu->addAction(ui->actionSet_Danmaku_Data_Format)->hide(rt->livePlatform != Bilibili);
     menu->split()->addAction(ui->actionLogout)->disable(ac->browserCookie.isEmpty());
     menu->exec();
 }

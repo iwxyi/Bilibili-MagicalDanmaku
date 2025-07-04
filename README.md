@@ -3540,3 +3540,4 @@ if (settings.read("daka_today_%uid%") == 1)
 > - 服务端模块：https://github.com/nikhilm/qhttpserver
 > - 数据库模块：https://blog.csdn.net/gongjianbo1992/article/details/88070605
 > - 计算器：https://github.com/nefuddos/Calculater
+> - 抖音API接口：https://github.com/skmcj/dycast
