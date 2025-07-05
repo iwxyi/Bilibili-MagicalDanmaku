@@ -27,7 +27,7 @@ CONFIG += resources_big
 # DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 win32{
-    DEFINES += ENABLE_SHORTCUT ENABLE_TRAY ENABLE_TEXTTOSPEECH ENABLE_LUA
+    DEFINES += ENABLE_SHORTCUT ENABLE_TRAY ENABLE_TEXTTOSPEECH ENABLE_LUA ENABLE_PROTOBUF
 }
 macx{
     DEFINES += ENABLE_TEXTTOSPEECH ENABLE_LUA
@@ -103,9 +103,7 @@ INCLUDEPATH += \
     third_party/mfaudioendpointcontrol_fixed/ \
     third_party/m3u8_downloader/ \
     third_party/brotli/include/ \
-    third_party/cron/ \
-    third_party/protobuf/include/ \
-    third_party/abseil/include/
+    third_party/cron/
 
 SOURCES += \
     global/usersetting.cpp \
@@ -122,7 +120,6 @@ SOURCES += \
     services/live_services/bili_liveopen_cmds.cpp \
     services/live_services/bili_liveopenservice.cpp \
     services/live_services/bili_liveservice.cpp \
-    services/live_services/bili_protobuf/interact_word_v2.pb.cc \
     services/live_services/liveroomservice.cpp \
     services/live_services/livestatisticservice.cpp \
     services/sql_service/sqlservice.cpp \
@@ -271,7 +268,6 @@ HEADERS += \
     services/language_service/wrapper/settingswrapperstd.h \
     services/live_services/bili_liveopenservice.h \
     services/live_services/bili_liveservice.h \
-    services/live_services/bili_protobuf/interact_word_v2.pb.h \
     services/live_services/liveroomservice.h \
     services/live_services/livestatisticservice.h \
     services/sql_service/sqlservice.h \
@@ -526,6 +522,25 @@ contains(DEFINES, ENABLE_LUA) {
     }
 }
 
+contains(DEFINES, ENABLE_PROTOBUF) {
+    INCLUDEPATH += \
+        third_party/protobuf/include/ \
+        third_party/abseil/include/
+
+    HEADERS += \
+        services/live_services/bili_protobuf/interact_word_v2.pb.h
+
+    SOURCES += \
+        services/live_services/bili_protobuf/interact_word_v2.pb.cc
+
+    win32 {
+
+    } else {
+        LIBS += -L$$PWD/third_party/protobuf/lib/x64_osx/ -lprotobuf
+        LIBS += -L$$PWD/third_party/abseil/lib/x64_osx/ -labsl_base -labsl_strings
+    }
+}
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
@@ -571,11 +586,6 @@ DEPENDPATH += $$PWD/third_party/libs
 contains(ANDROID_TARGET_ARCH,x86) {
     ANDROID_PACKAGE_SOURCE_DIR = \
         $$PWD/android
-}
-
-osx {
-    LIBS += -L$$PWD/third_party/protobuf/lib/ -lprotobuf
-    LIBS += -L$$PWD/third_party/abseil/lib/ -labsl_base -labsl_strings
 }
 
 # 使用qBreakpad生成dump

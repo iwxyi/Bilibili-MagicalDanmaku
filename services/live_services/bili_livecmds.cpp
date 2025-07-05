@@ -1,8 +1,10 @@
 #include "bili_liveservice.h"
 #include "utils/bili_api_util.h"
 #include "coderunner.h"
+#ifdef ENABLE_PROTOBUF
 #include "bili_protobuf/interact_word_v2.pb.h"
 #include <google/protobuf/message.h>
+#endif
 
 /**
  * 接收到原始数据
@@ -1798,11 +1800,11 @@ void BiliLiveService::handleMessage(QJsonObject json)
         QByteArray pb = QByteArray::fromBase64(pb_base64.toUtf8());
         qDebug() << pb.length() << pb;
         // 开始解析PB
+#ifdef ENABLE_PROTOBUF
 
-        InteractWordV2 interactWordV2;
-        interactWordV2.ParseFromString(pb.data());
-        qint64 uid = interactWordV2.uid();
-        qDebug() << "--------------------" << uid;
+
+#endif
+
     }
     else if (cmd == "ROOM_BLOCK_MSG") // 被禁言
     {

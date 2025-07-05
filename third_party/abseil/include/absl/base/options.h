@@ -94,7 +94,7 @@
 // User code should not inspect this macro.  To check in the preprocessor if
 // absl::any is a typedef of std::any, use the feature macro ABSL_USES_STD_ANY.
 
-#define ABSL_OPTION_USE_STD_ANY 1
+#define ABSL_OPTION_USE_STD_ANY 0
 
 
 // ABSL_OPTION_USE_STD_OPTIONAL
@@ -121,7 +121,7 @@
 // absl::optional is a typedef of std::optional, use the feature macro
 // ABSL_USES_STD_OPTIONAL.
 
-#define ABSL_OPTION_USE_STD_OPTIONAL 1
+#define ABSL_OPTION_USE_STD_OPTIONAL 0
 
 
 // ABSL_OPTION_USE_STD_STRING_VIEW
@@ -148,7 +148,7 @@
 // absl::string_view is a typedef of std::string_view, use the feature macro
 // ABSL_USES_STD_STRING_VIEW.
 
-#define ABSL_OPTION_USE_STD_STRING_VIEW 1
+#define ABSL_OPTION_USE_STD_STRING_VIEW 0
 
 // ABSL_OPTION_USE_STD_VARIANT
 //
@@ -174,7 +174,7 @@
 // absl::variant is a typedef of std::variant, use the feature macro
 // ABSL_USES_STD_VARIANT.
 
-#define ABSL_OPTION_USE_STD_VARIANT 1
+#define ABSL_OPTION_USE_STD_VARIANT 0
 
 // ABSL_OPTION_USE_STD_ORDERING
 //
@@ -226,7 +226,7 @@
 // allowed.
 
 #define ABSL_OPTION_USE_INLINE_NAMESPACE 1
-#define ABSL_OPTION_INLINE_NAMESPACE_NAME lts_20240722
+#define ABSL_OPTION_INLINE_NAMESPACE_NAME lts_20250127
 
 // ABSL_OPTION_HARDENED
 //
@@ -235,7 +235,10 @@
 //
 // A value of 0 means that "hardened" mode is not enabled.
 //
-// A value of 1 means that "hardened" mode is enabled.
+// A value of 1 means that "hardened" mode is enabled with all checks.
+//
+// A value of 2 means that "hardened" mode is partially enabled, with
+// only a subset of checks chosen to minimize performance impact.
 //
 // Hardened builds have additional security checks enabled when `NDEBUG` is
 // defined. Defining `NDEBUG` is normally used to turn `assert()` macro into a
