@@ -5,6 +5,8 @@
 #include "bili_protobuf/interact_word_v2.pb.h"
 #include <google/protobuf/message.h>
 #endif
+#include "bili_nanopb/interact_word_v2.pb.h"
+#include "nanopb/pb_decode.h"
 
 /**
  * 接收到原始数据
@@ -1801,10 +1803,29 @@ void BiliLiveService::handleMessage(QJsonObject json)
         qDebug() << pb.length() << pb;
         // 开始解析PB
 #ifdef ENABLE_PROTOBUF
-
+        InteractWordV2 iwv;
+        iwv.ParseFromArray(pb.data(), pb.size());
+        qDebug() << "-----------------" << iwv.uid();
 
 #endif
 
+        // 1. 获取原始数据指针和长度
+        const uint8_t* buffer = reinterpret_cast<const uint8_t*>(pb.constData());
+        size_t size = pb.size();
+
+        // 2. 初始化消息结构体（清空原有数据）
+        InteractWordV2 iw2 = InteractWordV2_init_zero;
+
+        // 3. 创建输入流
+        pb_istream_t stream = pb_istream_from_buffer(buffer, size);
+
+        // 4. 解析数据
+        if (!pb_decode(&stream, InteractWordV2_fields, &iw2)) {
+            qDebug() << "Decoding failed:" << PB_GET_ERROR(&stream);
+            return;
+        }
+
+        qDebug() << "-----------------------uid:" << iw2.uid << "   uname:" << QString(iw2.uname);
     }
     else if (cmd == "ROOM_BLOCK_MSG") // 被禁言
     {
