@@ -1,10 +1,6 @@
 #include "bili_liveservice.h"
 #include "utils/bili_api_util.h"
 #include "coderunner.h"
-#ifdef ENABLE_PROTOBUF
-#include "bili_protobuf/interact_word_v2.pb.h"
-#include <google/protobuf/message.h>
-#endif
 #include "bili_nanopb/interact_word_v2.pb.h"
 #include "nanopb/pb_decode.h"
 
@@ -824,7 +820,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             cs = "0" + cs;
         LiveDanmaku danmaku(username, msg, uid, level, QDateTime::fromMSecsSinceEpoch(timestamp),
                                                  unameColor, "#"+cs);
-        danmaku.setFromRoomId(pkRoomId);
+        danmaku.setFromRoomId(ac->roomId);
         danmaku.setUserInfo(admin, vip, svip, uidentity, iphone, uguard);
         if (medal.size() >= 4)
         {
@@ -1092,7 +1088,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         danmaku.setDiscountPrice(discountPrice);
         danmaku.setWealthLevel(wealth_level);
         danmaku.setOriginalGiftName(originalGiftName);
-        danmaku.setFromRoomId(pkRoomId);
+        danmaku.setFromRoomId(ac->roomId);
         if (!data.value("medal_info").isNull())
         {
             QJsonObject medalInfo = data.value("medal_info").toObject();
@@ -1348,7 +1344,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
 
         LiveDanmaku danmaku(uname, message, snum(uid), user_level, QDateTime::fromSecsSinceEpoch(end_time), name_color, message_font_color,
                     gift_id, gift_name, num, price);
-        danmaku.setFromRoomId(pkRoomId);
+        danmaku.setFromRoomId(ac->roomId);
         danmaku.setMedal(snum(anchor_roomid), medal_name, medal_level, medal_color, anchor_uname);
         appendNewLiveDanmaku(danmaku);
 
@@ -1464,7 +1460,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             username = localName;*/
         LiveDanmaku danmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)
                                         , true, unameColor, spreadDesc, spreadInfo));
-        danmaku.setFromRoomId(pkRoomId);
+        danmaku.setFromRoomId(ac->roomId);
         appendNewLiveDanmaku(danmaku);
 
         triggerCmdEvent(cmd, danmaku.with(data));
@@ -1731,7 +1727,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
                          QString("#%1").arg(fansMedal.value("medal_color").toInt(), 6, 16, QLatin1Char('0')),
                          "");
         danmaku.setWealthLevel(wealth_level);
-        danmaku.setFromRoomId(pkRoomId);
+        danmaku.setFromRoomId(roomId);
 
         bool opposite = pking &&
                 ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
@@ -1800,15 +1796,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         int dmscore = data.i("dmscore");
         QString pb_base64 = data.s("pb"); // 这是base64编码
         QByteArray pb = QByteArray::fromBase64(pb_base64.toUtf8());
-        qDebug() << pb.length() << pb;
         // 开始解析PB
-#ifdef ENABLE_PROTOBUF
-        InteractWordV2 iwv;
-        iwv.ParseFromArray(pb.data(), pb.size());
-        qDebug() << "-----------------" << iwv.uid();
-
-#endif
-
         // 1. 获取原始数据指针和长度
         const uint8_t* buffer = reinterpret_cast<const uint8_t*>(pb.constData());
         size_t size = pb.size();
@@ -1825,7 +1813,34 @@ void BiliLiveService::handleMessage(QJsonObject json)
             return;
         }
 
-        qDebug() << "-----------------------uid:" << iw2.uid << "   uname:" << QString(iw2.uname);
+        qint64 uid = iw2.uid;
+        QString uname = iw2.uname;
+        qint64 timestamp = iw2.timestamp;
+        int msgType = iw2.msg_type; // 1是进入
+        qint64 roomId = iw2.room_id;
+        int guardLevel = iw2.guard_level;
+        qInfo() << "用户进入：" << uname << uid << msgType << roomId << guardLevel << timestamp;
+
+        auto fansMedal = iw2.fans_medal;
+        auto rankInfo = iw2.rank_info;
+        auto userInfo = iw2.uinfo;
+        auto baseInfo = userInfo.base;
+        auto medalInfo = userInfo.medal_info;
+        auto wealthInfo = userInfo.wealth;
+        auto guardInfo = userInfo.guard;
+        LiveDanmaku danmaku;
+        danmaku.setTime(QDateTime::fromSecsSinceEpoch(timestamp));
+        danmaku.setFromRoomId(ac->roomId);
+        danmaku.setUser(baseInfo.uname, snum(iw2.uid), baseInfo.face, baseInfo.name_color_str);
+        danmaku.setMedal(snum(medalInfo.ruid), medalInfo.medal_name, medalInfo.medal_level, medalInfo.v2_medal_color_text);
+
+        if (msgType == 1)
+        {
+            danmaku.setMsgType(MSG_WELCOME);
+            receiveUserCome(danmaku);
+        }
+
+        triggerCmdEvent(cmd, danmaku.with(data));
     }
     else if (cmd == "ROOM_BLOCK_MSG") // 被禁言
     {

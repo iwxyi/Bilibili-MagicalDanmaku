@@ -459,6 +459,11 @@ public:
         this->msgType = MSG_SHARE;
     }
 
+    void setMsgType(MessageType type)
+    {
+        this->msgType = type;
+    }
+
     void setNickname(const QString& name)
     {
         this->nickname = name;
