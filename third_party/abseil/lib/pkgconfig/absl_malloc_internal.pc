@@ -1,0 +1,12 @@
+prefix=/opt/homebrew/Cellar/abseil/20240722.1
+exec_prefix=${prefix}
+libdir=/opt/homebrew/Cellar/abseil/20240722.1/lib
+includedir=/opt/homebrew/Cellar/abseil/20240722.1/include
+
+Name: absl_malloc_internal
+Description: Abseil malloc_internal library
+URL: https://abseil.io/
+Version: 20240722
+Requires: absl_base = 20240722, absl_base_internal = 20240722, absl_config = 20240722, absl_core_headers = 20240722, absl_dynamic_annotations = 20240722, absl_raw_logging_internal = 20240722
+Libs: -L${libdir}  -labsl_malloc_internal 
+Cflags: -I${includedir} -Wno-float-conversion -Wno-implicit-float-conversion -Wno-implicit-int-float-conversion -Wno-unknown-warning-option -DNOMINMAX

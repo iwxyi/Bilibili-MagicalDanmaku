@@ -14,7 +14,6 @@
 #define JVAL_INT(x) json.value(#x).toInt()
 #define JVAL_STR(x) json.value(#x).toString()
 #define snum(x) QString::number(x)
-#define cast(x,y)  static_cast<x>(y)
 
 enum MusicSource
 {

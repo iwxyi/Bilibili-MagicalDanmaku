@@ -464,6 +464,15 @@ public:
         this->nickname = name;
     }
 
+    void setUser(QString name, UIDT uid, QString face, QString unameColor = "", QString textColor = "")
+    {
+        this->nickname = name;
+        this->uid = uid;
+        this->faceUrl = face;
+        this->uname_color = unameColor;
+        this->text_color = textColor;
+    }
+
     void setMedal(QString roomId, QString name, int level, QString color, QString up = "")
     {
         this->anchor_roomid = roomId;

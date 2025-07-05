@@ -1,0 +1,12 @@
+prefix=/opt/homebrew/Cellar/abseil/20240722.1
+exec_prefix=${prefix}
+libdir=/opt/homebrew/Cellar/abseil/20240722.1/lib
+includedir=/opt/homebrew/Cellar/abseil/20240722.1/include
+
+Name: absl_algorithm
+Description: Abseil algorithm library
+URL: https://abseil.io/
+Version: 20240722
+Requires: absl_config = 20240722
+Libs: -L${libdir}  
+Cflags: -I${includedir} -Wno-float-conversion -Wno-implicit-float-conversion -Wno-implicit-int-float-conversion -Wno-unknown-warning-option -DNOMINMAX

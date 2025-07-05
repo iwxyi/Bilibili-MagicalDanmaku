@@ -103,7 +103,9 @@ INCLUDEPATH += \
     third_party/mfaudioendpointcontrol_fixed/ \
     third_party/m3u8_downloader/ \
     third_party/brotli/include/ \
-    third_party/cron/
+    third_party/cron/ \
+    third_party/protobuf/include/ \
+    third_party/abseil/include/
 
 SOURCES += \
     global/usersetting.cpp \
@@ -120,6 +122,7 @@ SOURCES += \
     services/live_services/bili_liveopen_cmds.cpp \
     services/live_services/bili_liveopenservice.cpp \
     services/live_services/bili_liveservice.cpp \
+    services/live_services/bili_protobuf/interact_word_v2.pb.cc \
     services/live_services/liveroomservice.cpp \
     services/live_services/livestatisticservice.cpp \
     services/sql_service/sqlservice.cpp \
@@ -268,6 +271,7 @@ HEADERS += \
     services/language_service/wrapper/settingswrapperstd.h \
     services/live_services/bili_liveopenservice.h \
     services/live_services/bili_liveservice.h \
+    services/live_services/bili_protobuf/interact_word_v2.pb.h \
     services/live_services/liveroomservice.h \
     services/live_services/livestatisticservice.h \
     services/sql_service/sqlservice.h \
@@ -567,6 +571,11 @@ DEPENDPATH += $$PWD/third_party/libs
 contains(ANDROID_TARGET_ARCH,x86) {
     ANDROID_PACKAGE_SOURCE_DIR = \
         $$PWD/android
+}
+
+osx {
+    LIBS += -L$$PWD/third_party/protobuf/lib/ -lprotobuf
+    LIBS += -L$$PWD/third_party/abseil/lib/ -labsl_base -labsl_strings
 }
 
 # 使用qBreakpad生成dump

@@ -1,0 +1,12 @@
+prefix=/opt/homebrew/Cellar/abseil/20240722.1
+exec_prefix=${prefix}
+libdir=/opt/homebrew/Cellar/abseil/20240722.1/lib
+includedir=/opt/homebrew/Cellar/abseil/20240722.1/include
+
+Name: absl_hash
+Description: Abseil hash library
+URL: https://abseil.io/
+Version: 20240722
+Requires: absl_bits = 20240722, absl_city = 20240722, absl_config = 20240722, absl_core_headers = 20240722, absl_endian = 20240722, absl_fixed_array = 20240722, absl_function_ref = 20240722, absl_meta = 20240722, absl_int128 = 20240722, absl_strings = 20240722, absl_optional = 20240722, absl_variant = 20240722, absl_utility = 20240722, absl_low_level_hash = 20240722
+Libs: -L${libdir}  -labsl_hash 
+Cflags: -I${includedir} -Wno-float-conversion -Wno-implicit-float-conversion -Wno-implicit-int-float-conversion -Wno-unknown-warning-option -DNOMINMAX
