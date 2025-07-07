@@ -1834,10 +1834,40 @@ void BiliLiveService::handleMessage(QJsonObject json)
         danmaku.setUser(baseInfo.uname, snum(iw2.uid), baseInfo.face, baseInfo.name_color_str);
         danmaku.setMedal(snum(medalInfo.ruid), medalInfo.medal_name, medalInfo.medal_level, medalInfo.v2_medal_color_text);
 
-        if (msgType == 1)
+        if (msgType == 1) // 欢迎
         {
             danmaku.setMsgType(MSG_WELCOME);
             receiveUserCome(danmaku);
+        }
+        else if (msgType == 2) // 关注
+        {
+            danmaku.transToAttention(timestamp);
+            appendNewLiveDanmaku(danmaku);
+
+            emit signalSendAttentionThank(danmaku);
+
+            triggerCmdEvent("ATTENTION", danmaku.with(data)); // !这个是单独修改的
+        }
+        else if (msgType == 3) // 分享
+        {
+            danmaku.transToShare();
+            localNotify(uname + "分享了直播间", snum(uid));
+
+            triggerCmdEvent("SHARE", danmaku.with(data));
+        }
+        else if (msgType == 4) // 特别关注
+        {
+            danmaku.transToAttention(timestamp);
+            danmaku.setSpecial(1);
+            appendNewLiveDanmaku(danmaku);
+
+            emit signalSendAttentionThank(danmaku);
+
+            triggerCmdEvent("SPECIAL_ATTENTION", danmaku.with(data)); // !这个是单独修改的
+        }
+        else
+        {
+            qWarning() << "未知的交互MsgType=" << msgType;
         }
 
         triggerCmdEvent(cmd, danmaku.with(data));
