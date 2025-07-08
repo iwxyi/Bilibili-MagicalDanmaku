@@ -9,11 +9,23 @@
 #error Regenerate this file with the current version of nanopb generator.
 #endif
 
+/* Enum definitions */
+typedef enum _InteractWordV2_MsgType {
+    InteractWordV2_MsgType_MSG_UNKNOWN = 0,
+    InteractWordV2_MsgType_MSG_ENTER_ROOM = 1,
+    InteractWordV2_MsgType_MSG_FOLLOW = 2,
+    InteractWordV2_MsgType_MSG_SHARE_ROOM = 3
+} InteractWordV2_MsgType;
+
 /* Struct definitions */
 typedef struct _InteractWordV2_FansMedal {
     uint64_t target_id;
     uint32_t medal_level;
     char medal_name[128];
+    uint32_t color;
+    uint32_t color_start;
+    uint32_t color_end;
+    uint32_t color_border;
     bool has_is_lighted;
     uint32_t is_lighted;
     bool has_guard_level;
@@ -26,9 +38,16 @@ typedef struct _InteractWordV2_RankInfo {
     uint32_t rank;
 } InteractWordV2_RankInfo;
 
+typedef struct _InteractWordV2_UserInfo_BaseInfo_OriginInfo {
+    char name[128];
+    char face[128];
+} InteractWordV2_UserInfo_BaseInfo_OriginInfo;
+
 typedef struct _InteractWordV2_UserInfo_BaseInfo {
     char uname[128];
     char face[128];
+    bool has_origin_info;
+    InteractWordV2_UserInfo_BaseInfo_OriginInfo origin_info;
     bool has_name_color_str;
     char name_color_str[128];
 } InteractWordV2_UserInfo_BaseInfo;
@@ -36,8 +55,15 @@ typedef struct _InteractWordV2_UserInfo_BaseInfo {
 typedef struct _InteractWordV2_UserInfo_MedalInfo {
     char medal_name[128];
     uint32_t medal_level;
+    uint32_t color_start;
+    uint32_t color_end;
+    uint32_t color_border;
+    uint32_t color;
+    uint32_t id;
+    uint32_t is_lighted;
     uint64_t ruid;
     uint32_t guard_level;
+    uint32_t score;
     char guard_icon[128];
     char v2_medal_color_start[128];
     char v2_medal_color_end[128];
@@ -70,13 +96,15 @@ typedef struct _InteractWordV2_UserInfo {
 typedef struct _InteractWordV2 {
     uint64_t uid;
     char uname[128];
-    uint32_t msg_type;
+    InteractWordV2_MsgType msg_type;
     uint32_t room_id;
     uint32_t timestamp;
+    uint64_t score;
     bool has_fans_medal;
     InteractWordV2_FansMedal fans_medal;
     bool has_rank_info;
     InteractWordV2_RankInfo rank_info;
+    uint64_t trigger_time;
     bool has_guard_level;
     uint32_t guard_level;
     bool has_uinfo;
@@ -88,21 +116,39 @@ typedef struct _InteractWordV2 {
 extern "C" {
 #endif
 
+/* Helper constants for enums */
+#define _InteractWordV2_MsgType_MIN InteractWordV2_MsgType_MSG_UNKNOWN
+#define _InteractWordV2_MsgType_MAX InteractWordV2_MsgType_MSG_SHARE_ROOM
+#define _InteractWordV2_MsgType_ARRAYSIZE ((InteractWordV2_MsgType)(InteractWordV2_MsgType_MSG_SHARE_ROOM+1))
+
+#define InteractWordV2_msg_type_ENUMTYPE InteractWordV2_MsgType
+
+
+
+
+
+
+
+
+
+
 /* Initializer values for message structs */
-#define InteractWordV2_init_default              {0, "", 0, 0, 0, false, InteractWordV2_FansMedal_init_default, false, InteractWordV2_RankInfo_init_default, false, 0, false, InteractWordV2_UserInfo_init_default}
-#define InteractWordV2_FansMedal_init_default    {0, 0, "", false, 0, false, 0, 0, 0}
+#define InteractWordV2_init_default              {0, "", _InteractWordV2_MsgType_MIN, 0, 0, 0, false, InteractWordV2_FansMedal_init_default, false, InteractWordV2_RankInfo_init_default, 0, false, 0, false, InteractWordV2_UserInfo_init_default}
+#define InteractWordV2_FansMedal_init_default    {0, 0, "", 0, 0, 0, 0, false, 0, false, 0, 0, 0}
 #define InteractWordV2_RankInfo_init_default     {0}
 #define InteractWordV2_UserInfo_init_default     {0, false, InteractWordV2_UserInfo_BaseInfo_init_default, false, InteractWordV2_UserInfo_MedalInfo_init_default, false, InteractWordV2_UserInfo_WealthInfo_init_default, false, InteractWordV2_UserInfo_GuardInfo_init_default}
-#define InteractWordV2_UserInfo_BaseInfo_init_default {"", "", false, ""}
-#define InteractWordV2_UserInfo_MedalInfo_init_default {"", 0, 0, 0, "", "", "", "", "", ""}
+#define InteractWordV2_UserInfo_BaseInfo_init_default {"", "", false, InteractWordV2_UserInfo_BaseInfo_OriginInfo_init_default, false, ""}
+#define InteractWordV2_UserInfo_BaseInfo_OriginInfo_init_default {"", ""}
+#define InteractWordV2_UserInfo_MedalInfo_init_default {"", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "", "", "", "", "", ""}
 #define InteractWordV2_UserInfo_WealthInfo_init_default {0}
 #define InteractWordV2_UserInfo_GuardInfo_init_default {0, ""}
-#define InteractWordV2_init_zero                 {0, "", 0, 0, 0, false, InteractWordV2_FansMedal_init_zero, false, InteractWordV2_RankInfo_init_zero, false, 0, false, InteractWordV2_UserInfo_init_zero}
-#define InteractWordV2_FansMedal_init_zero       {0, 0, "", false, 0, false, 0, 0, 0}
+#define InteractWordV2_init_zero                 {0, "", _InteractWordV2_MsgType_MIN, 0, 0, 0, false, InteractWordV2_FansMedal_init_zero, false, InteractWordV2_RankInfo_init_zero, 0, false, 0, false, InteractWordV2_UserInfo_init_zero}
+#define InteractWordV2_FansMedal_init_zero       {0, 0, "", 0, 0, 0, 0, false, 0, false, 0, 0, 0}
 #define InteractWordV2_RankInfo_init_zero        {0}
 #define InteractWordV2_UserInfo_init_zero        {0, false, InteractWordV2_UserInfo_BaseInfo_init_zero, false, InteractWordV2_UserInfo_MedalInfo_init_zero, false, InteractWordV2_UserInfo_WealthInfo_init_zero, false, InteractWordV2_UserInfo_GuardInfo_init_zero}
-#define InteractWordV2_UserInfo_BaseInfo_init_zero {"", "", false, ""}
-#define InteractWordV2_UserInfo_MedalInfo_init_zero {"", 0, 0, 0, "", "", "", "", "", ""}
+#define InteractWordV2_UserInfo_BaseInfo_init_zero {"", "", false, InteractWordV2_UserInfo_BaseInfo_OriginInfo_init_zero, false, ""}
+#define InteractWordV2_UserInfo_BaseInfo_OriginInfo_init_zero {"", ""}
+#define InteractWordV2_UserInfo_MedalInfo_init_zero {"", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "", "", "", "", "", ""}
 #define InteractWordV2_UserInfo_WealthInfo_init_zero {0}
 #define InteractWordV2_UserInfo_GuardInfo_init_zero {0, ""}
 
@@ -110,18 +156,32 @@ extern "C" {
 #define InteractWordV2_FansMedal_target_id_tag   1
 #define InteractWordV2_FansMedal_medal_level_tag 2
 #define InteractWordV2_FansMedal_medal_name_tag  3
+#define InteractWordV2_FansMedal_color_tag       4
+#define InteractWordV2_FansMedal_color_start_tag 5
+#define InteractWordV2_FansMedal_color_end_tag   6
+#define InteractWordV2_FansMedal_color_border_tag 7
 #define InteractWordV2_FansMedal_is_lighted_tag  8
 #define InteractWordV2_FansMedal_guard_level_tag 9
 #define InteractWordV2_FansMedal_room_id_tag     12
 #define InteractWordV2_FansMedal_score_tag       13
 #define InteractWordV2_RankInfo_rank_tag         1
+#define InteractWordV2_UserInfo_BaseInfo_OriginInfo_name_tag 1
+#define InteractWordV2_UserInfo_BaseInfo_OriginInfo_face_tag 2
 #define InteractWordV2_UserInfo_BaseInfo_uname_tag 1
 #define InteractWordV2_UserInfo_BaseInfo_face_tag 2
+#define InteractWordV2_UserInfo_BaseInfo_origin_info_tag 6
 #define InteractWordV2_UserInfo_BaseInfo_name_color_str_tag 8
 #define InteractWordV2_UserInfo_MedalInfo_medal_name_tag 1
 #define InteractWordV2_UserInfo_MedalInfo_medal_level_tag 2
+#define InteractWordV2_UserInfo_MedalInfo_color_start_tag 3
+#define InteractWordV2_UserInfo_MedalInfo_color_end_tag 4
+#define InteractWordV2_UserInfo_MedalInfo_color_border_tag 5
+#define InteractWordV2_UserInfo_MedalInfo_color_tag 6
+#define InteractWordV2_UserInfo_MedalInfo_id_tag 7
+#define InteractWordV2_UserInfo_MedalInfo_is_lighted_tag 9
 #define InteractWordV2_UserInfo_MedalInfo_ruid_tag 10
 #define InteractWordV2_UserInfo_MedalInfo_guard_level_tag 11
+#define InteractWordV2_UserInfo_MedalInfo_score_tag 12
 #define InteractWordV2_UserInfo_MedalInfo_guard_icon_tag 13
 #define InteractWordV2_UserInfo_MedalInfo_v2_medal_color_start_tag 15
 #define InteractWordV2_UserInfo_MedalInfo_v2_medal_color_end_tag 16
@@ -141,8 +201,10 @@ extern "C" {
 #define InteractWordV2_msg_type_tag              5
 #define InteractWordV2_room_id_tag               6
 #define InteractWordV2_timestamp_tag             7
+#define InteractWordV2_score_tag                 8
 #define InteractWordV2_fans_medal_tag            9
 #define InteractWordV2_rank_info_tag             12
+#define InteractWordV2_trigger_time_tag          15
 #define InteractWordV2_guard_level_tag           16
 #define InteractWordV2_uinfo_tag                 22
 
@@ -150,11 +212,13 @@ extern "C" {
 #define InteractWordV2_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, UINT64,   uid,               1) \
 X(a, STATIC,   SINGULAR, STRING,   uname,             2) \
-X(a, STATIC,   SINGULAR, UINT32,   msg_type,          5) \
+X(a, STATIC,   SINGULAR, UENUM,    msg_type,          5) \
 X(a, STATIC,   SINGULAR, UINT32,   room_id,           6) \
 X(a, STATIC,   SINGULAR, UINT32,   timestamp,         7) \
+X(a, STATIC,   SINGULAR, UINT64,   score,             8) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  fans_medal,        9) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  rank_info,        12) \
+X(a, STATIC,   SINGULAR, UINT64,   trigger_time,     15) \
 X(a, STATIC,   OPTIONAL, UINT32,   guard_level,      16) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  uinfo,            22)
 #define InteractWordV2_CALLBACK NULL
@@ -167,6 +231,10 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  uinfo,            22)
 X(a, STATIC,   SINGULAR, UINT64,   target_id,         1) \
 X(a, STATIC,   SINGULAR, UINT32,   medal_level,       2) \
 X(a, STATIC,   SINGULAR, STRING,   medal_name,        3) \
+X(a, STATIC,   SINGULAR, UINT32,   color,             4) \
+X(a, STATIC,   SINGULAR, UINT32,   color_start,       5) \
+X(a, STATIC,   SINGULAR, UINT32,   color_end,         6) \
+X(a, STATIC,   SINGULAR, UINT32,   color_border,      7) \
 X(a, STATIC,   OPTIONAL, UINT32,   is_lighted,        8) \
 X(a, STATIC,   OPTIONAL, UINT32,   guard_level,       9) \
 X(a, STATIC,   SINGULAR, UINT32,   room_id,          12) \
@@ -195,15 +263,30 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  guard,             6)
 #define InteractWordV2_UserInfo_BaseInfo_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, STRING,   uname,             1) \
 X(a, STATIC,   SINGULAR, STRING,   face,              2) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  origin_info,       6) \
 X(a, STATIC,   OPTIONAL, STRING,   name_color_str,    8)
 #define InteractWordV2_UserInfo_BaseInfo_CALLBACK NULL
 #define InteractWordV2_UserInfo_BaseInfo_DEFAULT NULL
+#define InteractWordV2_UserInfo_BaseInfo_origin_info_MSGTYPE InteractWordV2_UserInfo_BaseInfo_OriginInfo
+
+#define InteractWordV2_UserInfo_BaseInfo_OriginInfo_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, STRING,   name,              1) \
+X(a, STATIC,   SINGULAR, STRING,   face,              2)
+#define InteractWordV2_UserInfo_BaseInfo_OriginInfo_CALLBACK NULL
+#define InteractWordV2_UserInfo_BaseInfo_OriginInfo_DEFAULT NULL
 
 #define InteractWordV2_UserInfo_MedalInfo_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, STRING,   medal_name,        1) \
 X(a, STATIC,   SINGULAR, UINT32,   medal_level,       2) \
+X(a, STATIC,   SINGULAR, UINT32,   color_start,       3) \
+X(a, STATIC,   SINGULAR, UINT32,   color_end,         4) \
+X(a, STATIC,   SINGULAR, UINT32,   color_border,      5) \
+X(a, STATIC,   SINGULAR, UINT32,   color,             6) \
+X(a, STATIC,   SINGULAR, UINT32,   id,                7) \
+X(a, STATIC,   SINGULAR, UINT32,   is_lighted,        9) \
 X(a, STATIC,   SINGULAR, UINT64,   ruid,             10) \
 X(a, STATIC,   SINGULAR, UINT32,   guard_level,      11) \
+X(a, STATIC,   SINGULAR, UINT32,   score,            12) \
 X(a, STATIC,   SINGULAR, STRING,   guard_icon,       13) \
 X(a, STATIC,   SINGULAR, STRING,   v2_medal_color_start,  15) \
 X(a, STATIC,   SINGULAR, STRING,   v2_medal_color_end,  16) \
@@ -229,6 +312,7 @@ extern const pb_msgdesc_t InteractWordV2_FansMedal_msg;
 extern const pb_msgdesc_t InteractWordV2_RankInfo_msg;
 extern const pb_msgdesc_t InteractWordV2_UserInfo_msg;
 extern const pb_msgdesc_t InteractWordV2_UserInfo_BaseInfo_msg;
+extern const pb_msgdesc_t InteractWordV2_UserInfo_BaseInfo_OriginInfo_msg;
 extern const pb_msgdesc_t InteractWordV2_UserInfo_MedalInfo_msg;
 extern const pb_msgdesc_t InteractWordV2_UserInfo_WealthInfo_msg;
 extern const pb_msgdesc_t InteractWordV2_UserInfo_GuardInfo_msg;
@@ -239,20 +323,22 @@ extern const pb_msgdesc_t InteractWordV2_UserInfo_GuardInfo_msg;
 #define InteractWordV2_RankInfo_fields &InteractWordV2_RankInfo_msg
 #define InteractWordV2_UserInfo_fields &InteractWordV2_UserInfo_msg
 #define InteractWordV2_UserInfo_BaseInfo_fields &InteractWordV2_UserInfo_BaseInfo_msg
+#define InteractWordV2_UserInfo_BaseInfo_OriginInfo_fields &InteractWordV2_UserInfo_BaseInfo_OriginInfo_msg
 #define InteractWordV2_UserInfo_MedalInfo_fields &InteractWordV2_UserInfo_MedalInfo_msg
 #define InteractWordV2_UserInfo_WealthInfo_fields &InteractWordV2_UserInfo_WealthInfo_msg
 #define InteractWordV2_UserInfo_GuardInfo_fields &InteractWordV2_UserInfo_GuardInfo_msg
 
 /* Maximum encoded size of messages (where known) */
 #define INTERACT_WORD_V2_PB_H_MAX_SIZE           InteractWordV2_size
-#define InteractWordV2_FansMedal_size            171
+#define InteractWordV2_FansMedal_size            195
 #define InteractWordV2_RankInfo_size             6
-#define InteractWordV2_UserInfo_BaseInfo_size    390
+#define InteractWordV2_UserInfo_BaseInfo_OriginInfo_size 260
+#define InteractWordV2_UserInfo_BaseInfo_size    653
 #define InteractWordV2_UserInfo_GuardInfo_size   136
-#define InteractWordV2_UserInfo_MedalInfo_size   937
+#define InteractWordV2_UserInfo_MedalInfo_size   979
 #define InteractWordV2_UserInfo_WealthInfo_size  6
-#define InteractWordV2_UserInfo_size             1491
-#define InteractWordV2_size                      1843
+#define InteractWordV2_UserInfo_size             1796
+#define InteractWordV2_size                      2190
 
 #ifdef __cplusplus
 } /* extern "C" */

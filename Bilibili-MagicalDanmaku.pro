@@ -274,6 +274,7 @@ HEADERS += \
     services/live_services/bili_liveopenservice.h \
     services/live_services/bili_liveservice.h \
     services/live_services/bili_nanopb/interact_word_v2.pb.h \
+    services/live_services/bili_nanopb/nanopbutil.h \
     services/live_services/liveroomservice.h \
     services/live_services/livestatisticservice.h \
     services/sql_service/sqlservice.h \
