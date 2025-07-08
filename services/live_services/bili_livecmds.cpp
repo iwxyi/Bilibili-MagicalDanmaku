@@ -1834,7 +1834,6 @@ void BiliLiveService::handleMessage(QJsonObject json)
         danmaku.setUser(baseInfo.uname, snum(iw2.uid), baseInfo.face, baseInfo.name_color_str);
         danmaku.setMedal(snum(medalInfo.ruid), medalInfo.medal_name, medalInfo.medal_level, medalInfo.v2_medal_color_text);
         danmaku.setGuardLevel(guardInfo.level, guardInfo.expired_str); //过期时间示例：2025-07-15 23:59:59
-        qDebug() << "大航海：" << guardInfo.level << guardInfo.expired_str;
 
         if (msgType == 1) // 欢迎
         {
