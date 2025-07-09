@@ -124,7 +124,7 @@ SOURCES += \
     services/live_services/bilibili/bili_liveopen_cmds.cpp \
     services/live_services/bilibili/bili_liveopenservice.cpp \
     services/live_services/bilibili/bili_liveservice.cpp \
-    services/live_services/bili_nanopb/interact_word_v2.pb.c \
+    services/live_services/bilibili/protobuf/interact_word_v2.pb.c \
     services/live_services/douyin/douyin_liveservice.cpp \
     services/live_services/base/liveservicebase.cpp \
     services/live_services/base/livestatisticservice.cpp \
@@ -278,7 +278,7 @@ HEADERS += \
     services/language_service/wrapper/settingswrapperstd.h \
     services/live_services/bilibili/bili_liveopenservice.h \
     services/live_services/bilibili/bili_liveservice.h \
-    services/live_services/bili_nanopb/interact_word_v2.pb.h \
+    services/live_services/bilibili/protobuf/interact_word_v2.pb.h \
     services/live_services/douyin/douyin_liveservice.h \
     services/live_services/base/liveservicebase.h \
     services/live_services/base/livestatisticservice.h \

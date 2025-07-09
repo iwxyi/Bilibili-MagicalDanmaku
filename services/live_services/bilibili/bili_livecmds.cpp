@@ -1,7 +1,7 @@
 #include "bili_liveservice.h"
 #include "utils/bili_api_util.h"
 #include "coderunner.h"
-#include "bili_nanopb/interact_word_v2.pb.h"
+#include "protobuf/interact_word_v2.pb.h"
 #include "nanopb/pb_decode.h"
 
 /**
