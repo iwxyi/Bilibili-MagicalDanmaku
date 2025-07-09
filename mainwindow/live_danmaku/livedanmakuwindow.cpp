@@ -819,6 +819,12 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_WELCOME || msgType == MSG_WELCOME_GUARD)
     {
+        // 舰长
+        if (danmaku.isAdmin())
+            text += "[房] ";
+        if (danmaku.isGuard())
+            text += "[" + danmaku.getGuardName() + "] ";
+
         // 粉丝牌
         QString medalColorStr = isBlankColor(danmaku.getMedalColor())
                 ? QVariant(this->msgColor).toString()
@@ -834,32 +840,20 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
                     .arg(danmaku.getMedalLevel());
         }
 
-        // 人名
-        if (danmaku.isAdmin() || danmaku.isGuard())
-        {
-            if (danmaku.isAdmin())
-                text += "[房] ";
-            if (danmaku.isGuard())
-                text += danmaku.getGuardName() + " ";
-            text += QString("%1 进入直播间")
-                    .arg(nameText);
-        }
+        // 昵称
+        text += nameText + " ";
+        if (danmaku.getNumber() > 0) // 不包括这一次的
+            text += simpleMode
+                    ? QString("进入 %1次").arg(danmaku.getNumber())
+                    : QString("进入 <font color='gray'>%1次</font>").arg(danmaku.getNumber());
+        else if (!danmaku.getSpreadDesc().isEmpty())
+            text += simpleMode
+                    ? "进入"
+                    : "<font color='gray'>进入</font>";
         else
-        {
-            text += nameText + " ";
-            if (danmaku.getNumber() > 0) // 不包括这一次的
-                text += simpleMode
-                        ? QString("进入 %1次").arg(danmaku.getNumber())
-                        : QString("进入 <font color='gray'>%1次</font>").arg(danmaku.getNumber());
-            else if (!danmaku.getSpreadDesc().isEmpty())
-                text += simpleMode
-                        ? "进入"
-                        : "<font color='gray'>进入</font>";
-            else
-                text += simpleMode
-                        ? "进入直播间"
-                        : "<font color='gray'>进入直播间</font>";
-        }
+            text += simpleMode
+                    ? "进入直播间"
+                    : "<font color='gray'>进入直播间</font>";
 
         // 推广
         if (!danmaku.getSpreadDesc().isEmpty())

@@ -1,5 +1,6 @@
 #include "picturebrowser.h"
 #include "ui_picturebrowser.h"
+#include <QPainterPath>
 
 PictureBrowser::PictureBrowser(QSettings *settings, QWidget *parent) :
     QMainWindow(parent),

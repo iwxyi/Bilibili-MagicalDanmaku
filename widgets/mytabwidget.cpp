@@ -1,6 +1,7 @@
 #include <QPropertyAnimation>
 #include <QPainter>
 #include <QDebug>
+#include <QPainterPath>
 #include "mytabwidget.h"
 
 QT_BEGIN_NAMESPACE

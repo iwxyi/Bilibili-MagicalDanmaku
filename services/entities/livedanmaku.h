@@ -207,6 +207,8 @@ public:
         danmaku.uidentity = object.value("uidentity").toInt();
         danmaku.iphone = object.value("iphone").toInt();
         danmaku.guard = object.value("guard_level").toInt();
+        if (danmaku.isGuard())
+            danmaku.guard_expired = QDateTime::fromString("yyyy-MM-dd HH:mm:ss", object.value("guard_expired").toString());
         danmaku.prev_timestamp = static_cast<qint64>(object.value("prev_timestamp").toDouble());
         danmaku.first = object.value("first").toInt();
         danmaku.special = object.value("special").toInt();
@@ -310,6 +312,12 @@ public:
             object.insert("medal_level", medal_level);
             object.insert("medal_color", medal_color);
             object.insert("medal_up", medal_up);
+        }
+        if (guard > 0)
+        {
+            object.insert("guard_level", guard);
+            if (guard_expired.isValid())
+                object.insert("guard_expired", guard_expired.toString("yyyy-MM-dd HH:mm:ss"));
         }
         if (opposite)
             object.insert("opposite", opposite);
@@ -459,9 +467,23 @@ public:
         this->msgType = MSG_SHARE;
     }
 
+    void setMsgType(MessageType type)
+    {
+        this->msgType = type;
+    }
+
     void setNickname(const QString& name)
     {
         this->nickname = name;
+    }
+
+    void setUser(QString name, UIDT uid, QString face, QString unameColor = "", QString textColor = "")
+    {
+        this->nickname = name;
+        this->uid = uid;
+        this->faceUrl = face;
+        this->uname_color = unameColor;
+        this->text_color = textColor;
     }
 
     void setMedal(QString roomId, QString name, int level, QString color, QString up = "")
@@ -473,9 +495,13 @@ public:
         this->medal_up = up;
     }
 
-    void setGuardLevel(int level)
+    void setGuardLevel(int level, QString exp = "")
     {
         this->guard = level;
+        if (exp.isEmpty())
+            this->guard_expired = QDateTime();
+        else
+            this->guard_expired = QDateTime::fromString("yyyy-MM-dd HH:mm:ss", exp);
     }
 
     void setUserInfo(int admin, int vip, int svip, int uidentity, int iphone, int guard)
@@ -734,6 +760,11 @@ public:
         return "";
     }
 
+    QDateTime getGuardExpiredTime() const
+    {
+        return guard_expired;
+    }
+
     int getGiftId() const
     {
         return giftId;
@@ -891,7 +922,7 @@ public:
 
     bool isGuard() const
     {
-        return guard;
+        return guard > 0;
     }
 
     int getFirst() const
@@ -1010,6 +1041,7 @@ protected:
     QDateTime timeline;
     int admin = 0; // 房管
     int guard = 0; // 舰长
+    QDateTime guard_expired;
     int vip = 0;
     int svip = 0;
     int uidentity = 0; // 正式会员

@@ -722,6 +722,8 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
 
         // 获取礼物
         getGiftList();
+    }, [=](QString s) {
+        gettingRoom = false;
     });
     emit signalConnectionStateTextChanged("获取房间信息...");
 }

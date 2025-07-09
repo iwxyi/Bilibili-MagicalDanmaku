@@ -1214,6 +1214,8 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     // 舰长
     else if (key == "%guard%" || key == "%guard_level%")
         return snum(danmaku.getGuard());
+    else if (key == "%guard_expired%" || key == "%guard_expired_time%")
+        return snum(danmaku.getGuardExpiredTime().toSecsSinceEpoch());
 
     // 舰长名称
     else if (key == "%guard_name%" || key == "%guard_type%")
@@ -1392,7 +1394,7 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return snum(QDate::currentDate().dayOfWeek());
     else if (key == "%time_day_year%")
         return snum(QDate::currentDate().dayOfYear());
-    else if (key == "%timestamp%")
+    else if (key == "%timestamp%" || key == "%timestamp10%")
         return snum(QDateTime::currentSecsSinceEpoch());
     else if (key == "%timestamp13%")
         return snum(QDateTime::currentMSecsSinceEpoch());

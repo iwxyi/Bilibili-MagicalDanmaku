@@ -10,8 +10,7 @@ CONFIG += c++17
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
-DEFINES += QT_DEPRECATED_WARNINGS QT_MESSAGELOGCONTEXT HAVE_CONFIG_H ENABLE_LUA
-DEFINES += ENABLE_TEXTTOSPEECH
+DEFINES += QT_DEPRECATED_WARNINGS QT_MESSAGELOGCONTEXT HAVE_CONFIG_H
 #DEFINES += ZUOQI_ENTRANCE
 
 RC_FILE += resources/resource.rc
@@ -28,7 +27,10 @@ CONFIG += resources_big
 # DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 win32{
-    DEFINES += ENABLE_SHORTCUT ENABLE_TRAY
+    DEFINES += ENABLE_SHORTCUT ENABLE_TRAY ENABLE_TEXTTOSPEECH ENABLE_LUA
+}
+macx{
+    DEFINES += ENABLE_TEXTTOSPEECH ENABLE_LUA
 }
 DEFINES += ENABLE_HTTP_SERVER
 #unix:!macx{
@@ -104,7 +106,8 @@ INCLUDEPATH += \
     third_party/mfaudioendpointcontrol_fixed/ \
     third_party/m3u8_downloader/ \
     third_party/brotli/include/ \
-    third_party/cron/
+    third_party/cron/ \
+    third_party/nanopb/
 
 SOURCES += \
     global/usersetting.cpp \
@@ -121,6 +124,7 @@ SOURCES += \
     services/live_services/bilibili/bili_liveopen_cmds.cpp \
     services/live_services/bilibili/bili_liveopenservice.cpp \
     services/live_services/bilibili/bili_liveservice.cpp \
+    services/live_services/bili_nanopb/interact_word_v2.pb.c \
     services/live_services/douyin/douyin_liveservice.cpp \
     services/live_services/base/liveservicebase.cpp \
     services/live_services/base/livestatisticservice.cpp \
@@ -189,6 +193,9 @@ SOURCES += \
     third_party/linear_check_box/anicheckbox.cpp \
     third_party/linear_check_box/checkbox1.cpp \
     third_party/m3u8_downloader/m3u8downloader.cpp \
+    third_party/nanopb/pb_common.c \
+    third_party/nanopb/pb_decode.c \
+    third_party/nanopb/pb_encode.c \
     third_party/notification/tipbox.cpp \
     third_party/notification/tipcard.cpp \
     third_party/qss_editor/qsseditdialog.cpp \
@@ -271,6 +278,7 @@ HEADERS += \
     services/language_service/wrapper/settingswrapperstd.h \
     services/live_services/bilibili/bili_liveopenservice.h \
     services/live_services/bilibili/bili_liveservice.h \
+    services/live_services/bili_nanopb/interact_word_v2.pb.h \
     services/live_services/douyin/douyin_liveservice.h \
     services/live_services/base/liveservicebase.h \
     services/live_services/base/livestatisticservice.h \
@@ -377,6 +385,10 @@ HEADERS += \
     third_party/linear_check_box/anicheckbox.h \
     third_party/linear_check_box/checkbox1.h \
     third_party/m3u8_downloader/m3u8downloader.h \
+    third_party/nanopb/pb.h \
+    third_party/nanopb/pb_common.h \
+    third_party/nanopb/pb_decode.h \
+    third_party/nanopb/pb_encode.h \
     third_party/notification/notificationentry.h \
     third_party/notification/tipbox.h \
     third_party/notification/tipcard.h \

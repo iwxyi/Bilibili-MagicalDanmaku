@@ -15,6 +15,7 @@
 #include <QBitmap>
 #include <QtMath>
 #include <QSvgRenderer>
+#include <QPainterPath>
 
 #define PI 3.1415926
 #define GOLDEN_RATIO 0.618
