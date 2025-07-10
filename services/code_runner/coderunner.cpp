@@ -1192,7 +1192,7 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return danmaku.getSpreadDesc();
 
     // 粉丝牌房间
-    else if (key == "%anchor_roomid%" || key == "%medal_roomid%" || key == "%anchor_room_id%" || key == "%medal_room_id%")
+    else if (key == "%anchor_roomid%" || key == "%medal_roomid%" || key == "%anchor_room_id%" || key == "%medal_room_id%" || key == "%medal_id%" || key == "%medal_rid%")
         return danmaku.getAnchorRoomid();
 
     // 粉丝牌名字
@@ -1206,6 +1206,9 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     // 粉丝牌主播
     else if (key == "%medal_up%")
         return danmaku.getMedalUp();
+    // 粉丝牌主播
+    else if (key == "%medal_uid%")
+        return danmaku.getMedalUid();
 
     // 房管
     else if (key == "%admin%")
@@ -1442,7 +1445,7 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     // 房间属性
     else if (key == "%living%")
         return snum(ac->liveStatus);
-    else if (key == "%room_id%")
+    else if (key == "%room_id%" || key == "%rid%")
         return ac->roomId;
     else if (key == "%room_name%" || key == "%room_title%")
         return toSingleLine(ac->roomTitle);

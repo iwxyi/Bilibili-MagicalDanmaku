@@ -1832,7 +1832,8 @@ void BiliLiveService::handleMessage(QJsonObject json)
         danmaku.setTime(QDateTime::fromSecsSinceEpoch(timestamp));
         danmaku.setFromRoomId(ac->roomId);
         danmaku.setUser(baseInfo.uname, snum(iw2.uid), baseInfo.face, baseInfo.name_color_str);
-        danmaku.setMedal(snum(medalInfo.ruid), medalInfo.medal_name, medalInfo.medal_level, medalInfo.v2_medal_color_text);
+        danmaku.setMedal(snum(fansMedal.room_id), medalInfo.medal_name, medalInfo.medal_level, medalInfo.v2_medal_color_text, "", snum(medalInfo.ruid));
+
         danmaku.setGuardLevel(guardInfo.level, guardInfo.expired_str); //过期时间示例：2025-07-15 23:59:59
 
         if (msgType == 1) // 欢迎

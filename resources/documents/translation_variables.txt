@@ -37,6 +37,7 @@ URL编码的弹幕消息=url_text
 粉丝勋章名称=medal_name
 粉丝勋章等级=medal_level
 粉丝勋章主播昵称=medal_up
+粉丝勋章主播ID=medal_uid
 新关注=new_attention
 上船次数=guard_buy_count
 大乱斗中=pking
