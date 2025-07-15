@@ -286,6 +286,7 @@ HEADERS += \
     services/live_services/base/liveservicebase.h \
     services/live_services/base/livestatisticservice.h \
     services/live_services/base/api_type.h \
+    services/live_services/douyin/douyinackgenerator.h \
     services/live_services/douyin/douyinsignaturehelper.h \
     services/live_services/douyin/protobuf/douyin.pb.h \
     services/live_services/douyin/silentwebenginepage.h \

@@ -5,6 +5,7 @@
 #include "nanopb/pb_decode.h"
 #include "protobuf/douyin.pb.h"
 #include "douyin_api_util.h"
+#include "douyinackgenerator.h"
 
 DouyinLiveService::DouyinLiveService(QObject *parent) : LiveServiceBase(parent)
 {
@@ -370,20 +371,82 @@ bool payload_decode_callback(pb_istream_t *stream, const pb_field_t *field, void
     return pb_read(stream, (pb_byte_t*)buf->data, buf->size);
 }
 
+struct MessageListContext {
+    // 你可以在这里存放你需要的结果，比如QList、vector等
+    // 这里只做演示，实际可根据需要扩展
+    QObject* service; // 传递this指针，方便调用成员函数
+};
+
+bool headersList_callback(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    HeaderListContext* ctx = static_cast<HeaderListContext*>(*arg);
+    douyin_HeadersList header = douyin_HeadersList_init_zero;
+    if (!pb_decode(stream, douyin_HeadersList_fields, &header)) {
+        qWarning() << "decode HeadersList failed";
+        return false;
+    }
+    QString key = QString::fromUtf8(header.key);
+    QString value = QString::fromUtf8(header.value);
+    // qDebug() << "frame.header：" << key << value;
+    ctx->headers.append(qMakePair(key, value));
+    return true;
+}
+
+bool messagesList_callback(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    MessageListContext* ctx = static_cast<MessageListContext*>(*arg);
+
+    // 1. 解码一条Message
+    douyin_Message msg = douyin_Message_init_zero;
+
+    // 1.1 设置payload回调，收集payload内容
+    struct {
+        uint8_t data[81920];
+        size_t size;
+        size_t max_size;
+    } payloadBuf = { {0}, 0, sizeof(payloadBuf.data) };
+
+    auto payload_callback = [](pb_istream_t *stream, const pb_field_t *, void **arg) -> bool {
+        auto* buf = static_cast<decltype(payloadBuf)*>(*arg);
+        if (stream->bytes_left > buf->max_size) return false;
+        buf->size = stream->bytes_left;
+        return pb_read(stream, buf->data, buf->size);
+    };
+    msg.payload.funcs.decode = payload_callback;
+    msg.payload.arg = &payloadBuf;
+
+    if (!pb_decode(stream, douyin_Message_fields, &msg)) {
+        qWarning() << "decode Message failed";
+        return false;
+    }
+
+    // 2. 处理method字段，判断类型
+    QString method = QString::fromUtf8(msg.method);
+    qInfo() << "【收到消息】 method:" << method << "msgType:" << msg.msgType;
+
+    // 3. 解析payload为具体消息体
+    QByteArray payloadArr(reinterpret_cast<const char*>(payloadBuf.data), payloadBuf.size);
+
+    static_cast<DouyinLiveService*>(ctx->service)->processMessage(method, payloadArr);
+
+    return true; // 继续处理下一个Message
+}
+
 void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
 {
     // --- 步骤 1: 解析外层的 PushFrame ---
 
     // 1.1 创建一个足够大的缓冲区来存放 payload
-    uint8_t payload_buffer_data[8192]; // 8KB，如果不够可以再加大
+    uint8_t payload_buffer_data[81920]; // 8KB，如果不够可以再加大
     PayloadBuffer payload_buf = { payload_buffer_data, 0, sizeof(payload_buffer_data) };
     
     // 1.2 初始化 PushFrame 结构体，并设置 payload 的回调
     douyin_PushFrame pushFrame = douyin_PushFrame_init_zero;
     pushFrame.payload.funcs.decode = &payload_decode_callback;
     pushFrame.payload.arg = &payload_buf;
-    // headersList 也是 callback，如果需要解析，也要设置回调，这里暂时忽略
-    pushFrame.headersList.arg = nullptr;
+    HeaderListContext headerCtx;
+    pushFrame.headersList.funcs.decode = headersList_callback;
+    pushFrame.headersList.arg = &headerCtx;
 
     // 1.3 创建输入流
     pb_istream_t stream = pb_istream_from_buffer(
@@ -405,10 +468,10 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
     // payloadEncoding：payload的编码方式，例如 "pb"
     // payloadType：payload的类型，例如 "msg"
     qint64 seqId = pushFrame.seqId;
+    qint64 logId = pushFrame.logId;
     QString payloadEncoding = QString::fromUtf8(pushFrame.payloadEncoding);
     QString payloadType = QString::fromUtf8(pushFrame.payloadType);
     qDebug() << "PushFrame decoded:" << seqId << payloadEncoding << payloadType;
-
 
     // --- 步骤 2: 解压并解析内层的 Response ---
     
@@ -421,7 +484,6 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
     // 2.2 解压 gzip 数据
     QByteArray compressedPayload(reinterpret_cast<const char*>(payload_buf.data), payload_buf.size);
     QByteArray decompressedPayload = DouyinApiUtil::decompressGzip(compressedPayload);
-
     if (decompressedPayload.isEmpty()) {
         qWarning() << "Gzip decompression failed.";
         return;
@@ -429,8 +491,12 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
 
     // 2.3 创建 Response 结构体和输入流
     douyin_Response response = douyin_Response_init_zero;
-    // 注意：Response 内部也有 callback 字段 (messagesList)，也需要设置回调！
-    // 暂时我们先不解析 messagesList，所以可以忽略
+    // 设置messagesList回调
+    MessageListContext ctx;
+    ctx.service = this; // 你可以传递this指针，方便在回调里emit信号等
+    response.messagesList.funcs.decode = messagesList_callback;
+    response.messagesList.arg = &ctx;
+    response.routeParams.arg = nullptr;
     response.messagesList.arg = nullptr; 
     response.routeParams.arg = nullptr;
 
@@ -445,10 +511,89 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
         return;
     }
 
-    qDebug() << "Response decoded. Cursor:" << response.cursor << "Need Ack:" << response.needAck;
+    QString cursor = response.cursor;
+    QString internalExt = response.internalExt;
+    bool needAck = response.needAck;
+    qDebug() << "Response decoded. Cursor:" << cursor << ", internalExt:" << internalExt << ", needAck:" << needAck;
     
     // --- 步骤 3: 进一步处理 Response 里的具体消息 ---
-    // 你需要为 messagesList 设置回调来逐个处理 Message
-    // 这里我们先跳过，因为那又是另一个回调
-    // for (size_t i = 0; i < response.messagesList_count; ++i) { ... }
+    // 为 messagesList 设置回调来逐个处理 Message，在回调函数里面处理
+
+    // --- 步骤 4: 处理返回情况
+    if (needAck)
+    {
+        DouyinAckGenerator dag;
+        dag.sendAck(this->liveSocket, internalExt, logId);
+    }
+
+    if (payloadType == "msg") // 消息
+    {
+        // 每个都会跳转到回调函数 messagesList_callback
+    }
+    else if (payloadType == "ack")
+    {
+
+    }
+    else if (payloadType == "hb")
+    {
+
+    }
+    else if (payloadType == "close") // 关闭连接
+    {
+        qInfo() << "关闭连接，payloadType=close";
+    }
+
+}
+
+void DouyinLiveService::processMessage(const QString &method, const QByteArray &payload)
+{
+    const pb_byte_t *data = reinterpret_cast<const uint8_t *>(payload.data());
+    auto size = payload.size();
+
+    if (method == "WebcastChatMessage")
+    {
+        douyin_ChatMessage chat = douyin_ChatMessage_init_zero;
+        pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
+        if (pb_decode(&payload_stream, douyin_ChatMessage_fields, &chat))
+        {
+            QString uname = chat.has_user ? QString::fromUtf8(chat.user.nickName) : "";
+            QString content = QString::fromUtf8(chat.content);
+            qInfo() << "[弹幕]" << uname << ":" << content;
+            // 你可以emit信号、存到列表等
+        }
+    }
+    else if (method == "WebcastGiftMessage")
+    {
+        douyin_GiftMessage gift = douyin_GiftMessage_init_zero;
+        pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
+        if (pb_decode(&payload_stream, douyin_GiftMessage_fields, &gift))
+        {
+            QString uname = gift.has_user ? QString::fromUtf8(gift.user.nickName) : "";
+            qInfo() << "[送礼]" << uname << "送出礼物" << gift.giftId << "数量" << gift.comboCount;
+        }
+    }
+    else if (method == "WebcastMemberMessage")
+    {
+        douyin_MemberMessage member = douyin_MemberMessage_init_zero;
+        pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
+        if (pb_decode(&payload_stream, douyin_MemberMessage_fields, &member))
+        {
+            QString uname = member.has_user ? QString::fromUtf8(member.user.nickName) : "";
+            qInfo() << "[进房]" << uname << "进入直播间";
+        }
+    }
+    else if (method == "WebcastLikeMessage")
+    {
+        douyin_LikeMessage like = douyin_LikeMessage_init_zero;
+        pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
+        if (pb_decode(&payload_stream, douyin_LikeMessage_fields, &like))
+        {
+            QString uname = like.has_user ? QString::fromUtf8(like.user.nickName) : "";
+            qInfo() << "[点赞]" << uname << "点赞" << like.count;
+        }
+    }
+    else
+    {
+        qInfo() << "[未知消息]" << method << "payload size:" << size;
+    }
 }

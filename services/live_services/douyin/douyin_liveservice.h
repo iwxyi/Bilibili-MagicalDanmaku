@@ -11,6 +11,10 @@ enum DouyinLiveStatus
     END = 4
 };
 
+struct HeaderListContext {
+    QVector<QPair<QString, QString>> headers;
+};
+
 class DouyinLiveService : public LiveServiceBase
 {
     Q_OBJECT
@@ -32,6 +36,7 @@ protected:
 
 public slots:
     void onBinaryMessageReceived(const QByteArray &message);
+    void processMessage(const QString &method, const QByteArray &payload);
 };
 
 #endif // DOUYIN_LIVESERVICE_H
