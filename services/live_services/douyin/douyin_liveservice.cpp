@@ -2,6 +2,9 @@
 #include "fileutil.h"
 #include "stringutil.h"
 #include "douyinsignaturehelper.h"
+#include "nanopb/pb_decode.h"
+#include "protobuf/douyin.pb.h"
+#include "douyin_api_util.h"
 
 DouyinLiveService::DouyinLiveService(QObject *parent) : LiveServiceBase(parent)
 {
@@ -21,7 +24,8 @@ void DouyinLiveService::initWS()
         qDebug() << "收到消息：" << message;
     });
     connect(liveSocket, &QWebSocket::binaryMessageReceived, this, [=](QByteArray message){
-        qDebug() << "收到二进制消息：" << message;
+        // qDebug() << "收到二进制消息：" << message;
+        onBinaryMessageReceived(message);
     });
     connect(liveSocket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
         SOCKET_DEB << "stateChanged" << state;
@@ -341,4 +345,110 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
     request.setRawHeader("Origin", "https://live.douyin.com");
     
     liveSocket->open(request);
+}
+
+// 放到 onBinaryMessageReceived 函数外面，或者类的私有成员/静态函数位置
+struct PayloadBuffer {
+    uint8_t *data;
+    size_t size;
+    size_t max_size;
+};
+
+// 回调函数，用于解码变长bytes字段
+bool payload_decode_callback(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    PayloadBuffer *buf = (PayloadBuffer*)(*arg);
+    
+    // 检查缓冲区是否足够大
+    if (stream->bytes_left > buf->max_size) {
+        // 如果数据太大，可以选择返回错误或者截断
+        qWarning() << "Payload data is too large for buffer!" << stream->bytes_left << ">" << buf->max_size;
+        return false; // 返回false表示解码失败
+    }
+    
+    buf->size = stream->bytes_left;
+    return pb_read(stream, (pb_byte_t*)buf->data, buf->size);
+}
+
+void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
+{
+    // --- 步骤 1: 解析外层的 PushFrame ---
+
+    // 1.1 创建一个足够大的缓冲区来存放 payload
+    uint8_t payload_buffer_data[8192]; // 8KB，如果不够可以再加大
+    PayloadBuffer payload_buf = { payload_buffer_data, 0, sizeof(payload_buffer_data) };
+    
+    // 1.2 初始化 PushFrame 结构体，并设置 payload 的回调
+    douyin_PushFrame pushFrame = douyin_PushFrame_init_zero;
+    pushFrame.payload.funcs.decode = &payload_decode_callback;
+    pushFrame.payload.arg = &payload_buf;
+    // headersList 也是 callback，如果需要解析，也要设置回调，这里暂时忽略
+    pushFrame.headersList.arg = nullptr;
+
+    // 1.3 创建输入流
+    pb_istream_t stream = pb_istream_from_buffer(
+        reinterpret_cast<const uint8_t*>(message.constData()), 
+        message.size()
+    );
+
+    // 1.4 解码 PushFrame
+    if (!pb_decode(&stream, douyin_PushFrame_fields, &pushFrame)) {
+        qWarning() << "Decoding PushFrame failed:" << PB_GET_ERROR(&stream);
+        return;
+    }
+
+    // pushFrame说明：
+    // seqId：消息序列号，用于标识消息的顺序，从1开始递增
+    // logId：日志ID，用于标识消息的唯一性，19位数字
+    // service：服务ID，用于标识消息所属的服务，例如 8888
+    // method：方法ID，用于标识消息的类型，例如 8
+    // payloadEncoding：payload的编码方式，例如 "pb"
+    // payloadType：payload的类型，例如 "msg"
+    qint64 seqId = pushFrame.seqId;
+    QString payloadEncoding = QString::fromUtf8(pushFrame.payloadEncoding);
+    QString payloadType = QString::fromUtf8(pushFrame.payloadType);
+    qDebug() << "PushFrame decoded:" << seqId << payloadEncoding << payloadType;
+
+
+    // --- 步骤 2: 解压并解析内层的 Response ---
+    
+    // 2.1 检查 payload 是否为 gzip 压缩
+    if (payloadEncoding != "gzip" && payloadEncoding != "pb") {
+        qWarning() << "Unsupported payload encoding:" << payloadEncoding;
+        return;
+    }
+
+    // 2.2 解压 gzip 数据
+    QByteArray compressedPayload(reinterpret_cast<const char*>(payload_buf.data), payload_buf.size);
+    QByteArray decompressedPayload = DouyinApiUtil::decompressGzip(compressedPayload);
+
+    if (decompressedPayload.isEmpty()) {
+        qWarning() << "Gzip decompression failed.";
+        return;
+    }
+
+    // 2.3 创建 Response 结构体和输入流
+    douyin_Response response = douyin_Response_init_zero;
+    // 注意：Response 内部也有 callback 字段 (messagesList)，也需要设置回调！
+    // 暂时我们先不解析 messagesList，所以可以忽略
+    response.messagesList.arg = nullptr; 
+    response.routeParams.arg = nullptr;
+
+    pb_istream_t response_stream = pb_istream_from_buffer(
+        reinterpret_cast<const uint8_t*>(decompressedPayload.constData()),
+        decompressedPayload.size()
+    );
+
+    // 2.4 解码 Response
+    if (!pb_decode(&response_stream, douyin_Response_fields, &response)) {
+        qWarning() << "Decoding Response failed:" << PB_GET_ERROR(&response_stream);
+        return;
+    }
+
+    qDebug() << "Response decoded. Cursor:" << response.cursor << "Need Ack:" << response.needAck;
+    
+    // --- 步骤 3: 进一步处理 Response 里的具体消息 ---
+    // 你需要为 messagesList 设置回调来逐个处理 Message
+    // 这里我们先跳过，因为那又是另一个回调
+    // for (size_t i = 0; i < response.messagesList_count; ++i) { ... }
 }

@@ -59,6 +59,7 @@ contains(DEFINES, ENABLE_TEXTTOSPEECH) {
 # 调用库
 # LIBS += -lDbgHelp
 
+LIBS += -lz
 
 INCLUDEPATH += \
     global/ \
@@ -129,6 +130,7 @@ SOURCES += \
     services/live_services/base/liveservicebase.cpp \
     services/live_services/base/livestatisticservice.cpp \
     services/live_services/douyin/douyinsignaturehelper.cpp \
+    services/live_services/douyin/protobuf/douyin.pb.c \
     services/sql_service/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     services/voice_service/voiceservice.cpp \
@@ -279,11 +281,13 @@ HEADERS += \
     services/live_services/bilibili/bili_liveopenservice.h \
     services/live_services/bilibili/bili_liveservice.h \
     services/live_services/bilibili/protobuf/interact_word_v2.pb.h \
+    services/live_services/douyin/douyin_api_util.h \
     services/live_services/douyin/douyin_liveservice.h \
     services/live_services/base/liveservicebase.h \
     services/live_services/base/livestatisticservice.h \
     services/live_services/base/api_type.h \
     services/live_services/douyin/douyinsignaturehelper.h \
+    services/live_services/douyin/protobuf/douyin.pb.h \
     services/live_services/douyin/silentwebenginepage.h \
     services/sql_service/sqlservice.h \
     order_player/importsongsdialog.h \

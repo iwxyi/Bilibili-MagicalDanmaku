@@ -1793,85 +1793,93 @@ void BiliLiveService::handleMessage(QJsonObject json)
     else if (cmd == "INTERACT_WORD_V2")
     {
         MyJson data = json.value("data").toObject();
+        LiveDanmaku danmaku;
+        danmaku.with(data);
+
         int dmscore = data.i("dmscore");
         QString pb_base64 = data.s("pb"); // 这是base64编码
         QByteArray pb = QByteArray::fromBase64(pb_base64.toUtf8());
-        // 开始解析PB
-        // 1. 获取原始数据指针和长度
-        const uint8_t* buffer = reinterpret_cast<const uint8_t*>(pb.constData());
-        size_t size = pb.size();
-
-        // 2. 初始化消息结构体（清空原有数据）
-        InteractWordV2 iw2 = InteractWordV2_init_zero;
-
-        // 3. 创建输入流
-        pb_istream_t stream = pb_istream_from_buffer(buffer, size);
-
-        // 4. 解析数据
-        if (!pb_decode(&stream, InteractWordV2_fields, &iw2)) {
-            qDebug() << "Decoding failed:" << PB_GET_ERROR(&stream);
-            return;
-        }
-
-        qint64 uid = iw2.uid;
-        QString uname = iw2.uname;
-        qint64 timestamp = iw2.timestamp;
-        int msgType = iw2.msg_type; // 1是进入
-        qint64 roomId = iw2.room_id;
-        int guardLevel = iw2.guard_level;
-        qInfo() << "用户进入：" << uname << uid << msgType << roomId << guardLevel << timestamp;
-
-        auto fansMedal = iw2.fans_medal;
-        auto rankInfo = iw2.rank_info;
-        auto userInfo = iw2.uinfo;
-        auto baseInfo = userInfo.base;
-        auto medalInfo = userInfo.medal_info;
-        auto wealthInfo = userInfo.wealth;
-        auto guardInfo = userInfo.guard;
-        LiveDanmaku danmaku;
-        danmaku.setTime(QDateTime::fromSecsSinceEpoch(timestamp));
-        danmaku.setFromRoomId(ac->roomId);
-        danmaku.setUser(baseInfo.uname, snum(iw2.uid), baseInfo.face, baseInfo.name_color_str);
-        danmaku.setMedal(snum(medalInfo.ruid), medalInfo.medal_name, medalInfo.medal_level, medalInfo.v2_medal_color_text);
-        danmaku.setGuardLevel(guardInfo.level, guardInfo.expired_str); //过期时间示例：2025-07-15 23:59:59
-
-        if (msgType == 1) // 欢迎
+        if (!pb.isEmpty())
         {
-            danmaku.setMsgType(MSG_WELCOME);
-            receiveUserCome(danmaku);
-        }
-        else if (msgType == 2) // 关注
-        {
-            danmaku.transToAttention(timestamp);
-            appendNewLiveDanmaku(danmaku);
+            // 开始解析PB
+            // 1. 获取原始数据指针和长度
+            const uint8_t* buffer = reinterpret_cast<const uint8_t*>(pb.constData());
+            size_t size = pb.size();
 
-            emit signalSendAttentionThank(danmaku);
+            // 2. 初始化消息结构体（清空原有数据）
+            InteractWordV2 iw2 = InteractWordV2_init_zero;
 
-            triggerCmdEvent("ATTENTION", danmaku.with(data)); // !这个是单独修改的
-        }
-        else if (msgType == 3) // 分享
-        {
-            danmaku.transToShare();
-            localNotify(uname + "分享了直播间", snum(uid));
+            // 3. 创建输入流
+            pb_istream_t stream = pb_istream_from_buffer(buffer, size);
 
-            triggerCmdEvent("SHARE", danmaku.with(data));
-        }
-        else if (msgType == 4) // 特别关注
-        {
-            danmaku.transToAttention(timestamp);
-            danmaku.setSpecial(1);
-            appendNewLiveDanmaku(danmaku);
+            // 4. 解析数据
+            if (!pb_decode(&stream, InteractWordV2_fields, &iw2)) {
+                qWarning() << "Decoding failed:" << PB_GET_ERROR(&stream);
+                return;
+            }
 
-            emit signalSendAttentionThank(danmaku);
+            qint64 uid = iw2.uid;
+            QString uname = iw2.uname;
+            qint64 timestamp = iw2.timestamp;
+            int msgType = iw2.msg_type; // 1是进入
+            qint64 roomId = iw2.room_id;
+            int guardLevel = iw2.guard_level;
+            qInfo() << "用户进入：" << uname << uid << msgType << roomId << guardLevel << timestamp;
 
-            triggerCmdEvent("SPECIAL_ATTENTION", danmaku.with(data)); // !这个是单独修改的
+            auto fansMedal = iw2.fans_medal;
+            auto rankInfo = iw2.rank_info;
+            auto userInfo = iw2.uinfo;
+            auto baseInfo = userInfo.base;
+            auto medalInfo = userInfo.medal_info;
+            auto wealthInfo = userInfo.wealth;
+            auto guardInfo = userInfo.guard;
+            danmaku.setTime(QDateTime::fromSecsSinceEpoch(timestamp));
+            danmaku.setFromRoomId(ac->roomId);
+            danmaku.setUser(baseInfo.uname, snum(iw2.uid), baseInfo.face, baseInfo.name_color_str);
+            danmaku.setMedal(snum(medalInfo.ruid), medalInfo.medal_name, medalInfo.medal_level, medalInfo.v2_medal_color_text);
+            danmaku.setGuardLevel(guardInfo.level, guardInfo.expired_str); //过期时间示例：2025-07-15 23:59:59
+
+            if (msgType == 1) // 欢迎
+            {
+                danmaku.setMsgType(MSG_WELCOME);
+                receiveUserCome(danmaku);
+            }
+            else if (msgType == 2) // 关注
+            {
+                danmaku.transToAttention(timestamp);
+                appendNewLiveDanmaku(danmaku);
+
+                emit signalSendAttentionThank(danmaku);
+
+                triggerCmdEvent("ATTENTION", danmaku); // !这个是单独修改的
+            }
+            else if (msgType == 3) // 分享
+            {
+                danmaku.transToShare();
+                localNotify(uname + "分享了直播间", snum(uid));
+
+                triggerCmdEvent("SHARE", danmaku);
+            }
+            else if (msgType == 4) // 特别关注
+            {
+                danmaku.transToAttention(timestamp);
+                danmaku.setSpecial(1);
+                appendNewLiveDanmaku(danmaku);
+
+                emit signalSendAttentionThank(danmaku);
+
+                triggerCmdEvent("SPECIAL_ATTENTION", danmaku); // !这个是单独修改的
+            }
+            else
+            {
+                qWarning() << "未知的交互MsgType=" << msgType;
+            }
         }
         else
         {
-            qWarning() << "未知的交互MsgType=" << msgType;
+            qWarning() << cmd << "pb为空";
         }
-
-        triggerCmdEvent(cmd, danmaku.with(data));
+        triggerCmdEvent(cmd, danmaku);
     }
     else if (cmd == "ROOM_BLOCK_MSG") // 被禁言
     {

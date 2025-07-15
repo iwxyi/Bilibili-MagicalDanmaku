@@ -159,29 +159,7 @@ public:
     }
 
     /**
-     * （用不了）直接报解压失败
-     */
-    static QByteArray brotliDecompress(const QByteArray& compressedData)
-    {
-        size_t compressedSize = compressedData.size();
-        const uint8_t* compressedBuffer = reinterpret_cast<const uint8_t*>(compressedData.constData());
-
-        size_t decompressedSize = 2 * compressedSize; // 估计解压后的大小
-        uint8_t* decompressedBuffer = new uint8_t[decompressedSize];
-
-        int result = BrotliDecoderDecompress(compressedSize, compressedBuffer, &decompressedSize, decompressedBuffer);
-        if (result != BROTLI_DECODER_RESULT_SUCCESS) {
-            qCritical() << "Brotli解压失败" << result;
-            delete[] decompressedBuffer;
-            return QByteArray(); // 解压失败
-        }
-
-        QByteArray decompressedData = QByteArray(reinterpret_cast<char*>(decompressedBuffer), decompressedSize);
-        return decompressedData;
-    }
-
-    /**
-     * 貌似能用的解压
+     * zlib解压
      */
     static QByteArray decompressData(const char* inputData, size_t inputSize) {
         const size_t outputBufferSize = 4096; // 设置输出缓冲区大小

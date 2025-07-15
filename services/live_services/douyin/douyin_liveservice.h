@@ -13,6 +13,7 @@ enum DouyinLiveStatus
 
 class DouyinLiveService : public LiveServiceBase
 {
+    Q_OBJECT
 public:
     DouyinLiveService(QObject* parent = nullptr);
 
@@ -28,6 +29,9 @@ protected:
     QString getSignature(QString roomId, QString uniqueId);
     QByteArray imFetch(QString roomId, QString uniqueId);
     void imPush(QString cursor, QString internalExt);
+
+public slots:
+    void onBinaryMessageReceived(const QByteArray &message);
 };
 
 #endif // DOUYIN_LIVESERVICE_H
