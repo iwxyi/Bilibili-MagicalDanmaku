@@ -204,6 +204,10 @@ public:
     virtual bool isLiving() const;
     /// 是否在直播，或者可能要开播
     virtual bool isLivingOrMayLiving();
+    /// 获取直播状态，不同平台的状态值不同
+    virtual int getLiveStatus() const;
+    /// 获取直播状态的字符串
+    virtual QString getLiveStatusStr() const;
     /// 获取并更新直播间封面
     virtual void getRoomCover(const QString& url) {}
     /// 获取主播信息
@@ -377,6 +381,7 @@ protected:
     QPixmap upFace; // 主播头像原图
     QMap<ApiType, QString> apiUrls;
     QString roomRankDesc;
+    int liveStatus = -1; // 直播状态
 
     // 我的信息
     QPixmap robotFace; // 自己的原图

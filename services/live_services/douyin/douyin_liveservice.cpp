@@ -12,6 +12,30 @@ DouyinLiveService::DouyinLiveService(QObject *parent) : LiveServiceBase(parent)
     initWS();
 }
 
+QString DouyinLiveService::getLiveStatusStr(int status) const
+{
+    if (status == -1)
+    {
+        status = this->liveStatus;
+    }
+
+    switch (status)
+    {
+    case 0:
+        return "未开播";
+    case 1:
+        return "准备中";
+    case 2:
+        return "直播中";
+    case 3:
+        return "暂停中";
+    case 4:
+        return "已下播";
+    default:
+        return "未知状态" + snum(status);
+    }
+}
+
 void DouyinLiveService::initWS()
 {
     liveSocket = new QWebSocket();
@@ -27,26 +51,6 @@ void DouyinLiveService::initWS()
     connect(liveSocket, &QWebSocket::binaryMessageReceived, this, [=](QByteArray message){
         // qDebug() << "收到二进制消息：" << message;
         onBinaryMessageReceived(message);
-    });
-    connect(liveSocket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
-        SOCKET_DEB << "stateChanged" << state;
-        QString str = "未知";
-        if (state == QAbstractSocket::UnconnectedState)
-            str = "未连接";
-        else if (state == QAbstractSocket::ConnectingState)
-            str = "连接中";
-        else if (state == QAbstractSocket::ConnectedState)
-            str = "已连接";
-        else if (state == QAbstractSocket::BoundState)
-            str = "已绑定";
-        else if (state == QAbstractSocket::ClosingState)
-            str = "断开中";
-        else if (state == QAbstractSocket::ListeningState)
-            str = "监听中";
-        qDebug() << "[socket.state]" << str;
-    });
-    connect(liveSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, [=](QAbstractSocket::SocketError error){
-        qWarning() << "连接错误：" << error;
     });
 }
 
@@ -138,7 +142,8 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         MyJson room = roomInfo.o("room");
         ac->roomTitle = room.s("title");
         DouyinLiveStatus roomStatus = (DouyinLiveStatus)room.i("status");
-        qInfo() << "直播间信息：" << ac->roomTitle << ac->roomId << roomStatus;
+        this->liveStatus = (int)roomStatus;
+        qInfo() << "直播间信息：" << ac->roomTitle << ac->roomId << getLiveStatusStr();
         
         MyJson anchor = roomInfo.o("anchor");
         QJsonArray avatarThumb = anchor.o("avatar_thumb").a("url_list");
@@ -167,6 +172,7 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         emit signalRoomIdChanged(ac->roomId);
         emit signalUpUidChanged(ac->upUid);
         emit signalRoomInfoChanged();
+        emit signalLiveStatusChanged(getLiveStatusStr());
 
         getDanmuInfo();
     });
@@ -422,7 +428,8 @@ bool messagesList_callback(pb_istream_t *stream, const pb_field_t *field, void *
 
     // 2. 处理method字段，判断类型
     QString method = QString::fromUtf8(msg.method);
-    qInfo() << "【收到消息】 method:" << method << "msgType:" << msg.msgType;
+    if (msg.msgType != 0)
+        qWarning() << "【收到msgType!=0消息】 method:" << method << "msgType:" << msg.msgType;
 
     // 3. 解析payload为具体消息体
     QByteArray payloadArr(reinterpret_cast<const char*>(payloadBuf.data), payloadBuf.size);
@@ -491,14 +498,21 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
 
     // 2.3 创建 Response 结构体和输入流
     douyin_Response response = douyin_Response_init_zero;
-    // 设置messagesList回调
-    MessageListContext ctx;
-    ctx.service = this; // 你可以传递this指针，方便在回调里emit信号等
-    response.messagesList.funcs.decode = messagesList_callback;
-    response.messagesList.arg = &ctx;
-    response.routeParams.arg = nullptr;
-    response.messagesList.arg = nullptr; 
-    response.routeParams.arg = nullptr;
+    if (isLiving()) // !不在直播状态下解析数据会崩溃，原因未知
+    {
+        // 设置messagesList回调
+        MessageListContext ctx;
+        ctx.service = this; // 你可以传递this指针，方便在回调里emit信号等
+        response.messagesList.funcs.decode = messagesList_callback;
+        response.messagesList.arg = &ctx;
+        response.routeParams.arg = nullptr;
+        response.messagesList.arg = nullptr;
+        response.routeParams.arg = nullptr;
+    }
+    else
+    {
+        qDebug() << "(非直播状态，不解析protobuf数据)";
+    }
 
     pb_istream_t response_stream = pb_istream_from_buffer(
         reinterpret_cast<const uint8_t*>(decompressedPayload.constData()),
@@ -514,7 +528,7 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
     QString cursor = response.cursor;
     QString internalExt = response.internalExt;
     bool needAck = response.needAck;
-    qDebug() << "Response decoded. Cursor:" << cursor << ", internalExt:" << internalExt << ", needAck:" << needAck;
+    qDebug() << "Response decoded. needAck:" << needAck;
     
     // --- 步骤 3: 进一步处理 Response 里的具体消息 ---
     // 为 messagesList 设置回调来逐个处理 Message，在回调函数里面处理
@@ -542,7 +556,6 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
     {
         qInfo() << "关闭连接，payloadType=close";
     }
-
 }
 
 void DouyinLiveService::processMessage(const QString &method, const QByteArray &payload)
@@ -596,4 +609,38 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
     {
         qInfo() << "[未知消息]" << method << "payload size:" << size;
     }
+
+/* 常见消息类型：
+WebcastLikeMessage: 直播间点赞消息
+WebcastMemberMessage: 直播间成员消息
+WebcastChatMessage: 直播间聊天消息
+WebcastGiftMessage: 直播间礼物消息
+WebcastSocialMessage: 直播间关注消息
+WebcastRoomUserSeqMessage: 直播间用户序列消息
+WebcastUpdateFanTicketMessage: 直播间粉丝票更新消息
+WebcastCommonTextMessage: 直播间文本消息
+WebcastMatchAgainstScoreMessage: 直播间对战积分消息
+WebcastEcomFansClubMessage: 直播间电商粉丝团消息
+WebcastRoomStatsMessage: 直播间统计消息
+WebcastLiveShoppingMessage: 直播间购物消息
+WebcastLiveEcomGeneralMessage: 直播间电商通用消息
+WebcastRoomStreamAdaptationMessage: 直播间流适配消息
+WebcastRanklistHourEntranceMessage: 直播间小时榜入口消息
+WebcastProductChangeMessage: 直播间商品变更消息
+WebcastNotifyEffectMessage: 直播间通知效果消息
+WebcastLightGiftMessage: 直播间轻礼物消息
+WebcastProfitInteractionScoreMessage: 直播间互动分数消息
+WebcastRoomRankMessage: 直播间排行榜消息
+WebcastFansclubMessage: 直播间粉丝团消息
+WebcastHotRoomMessage: 直播间热门房间消息
+WebcastInRoomBannerMessage: 直播间内横幅消息
+WebcastScreenChatMessage: 直播间全局聊天消息
+WebcastRoomDataSyncMessage: 直播间数据同步消息
+WebcastLinkerContributeMessage: 直播间连麦贡献消息
+WebcastEmojiChatMessage: 直播间表情聊天消息
+WebcastLinkMicMethod: 处理直播间连麦消息(Mic)
+WebcastLinkMessage: 直播间连麦消息
+WebcastBattleTeamTaskMessage: 直播间战队任务消息
+WebcastHotChatMessage: 直播间热聊消息
+*/
 }

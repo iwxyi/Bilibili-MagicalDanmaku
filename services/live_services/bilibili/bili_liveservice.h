@@ -40,6 +40,8 @@ public:
     void startConnectIdentityCode(const QString &code) override;
 
     /// 直播间接口
+    bool isLiving() const override;
+    QString getLiveStatusStr() const override;
     void getRoomCover(const QString &url) override;
     void getUpInfo(const QString &uid) override;
     void updateExistGuards(int page = 0) override;

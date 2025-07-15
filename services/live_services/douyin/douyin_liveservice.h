@@ -21,6 +21,8 @@ class DouyinLiveService : public LiveServiceBase
 public:
     DouyinLiveService(QObject* parent = nullptr);
 
+    QString getLiveStatusStr(int status = -1) const;
+
 private:
     void initWS();
 

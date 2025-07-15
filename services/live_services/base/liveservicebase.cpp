@@ -35,6 +35,30 @@ void LiveServiceBase::init()
     });
 
     initTimeTasks();
+
+    // WebSocket
+    liveSocket = new QWebSocket();
+
+    connect(liveSocket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
+        QString str = "未知";
+        if (state == QAbstractSocket::UnconnectedState)
+            str = "未连接";
+        else if (state == QAbstractSocket::ConnectingState)
+            str = "连接中";
+        else if (state == QAbstractSocket::ConnectedState)
+            str = "已连接";
+        else if (state == QAbstractSocket::BoundState)
+            str = "已绑定";
+        else if (state == QAbstractSocket::ClosingState)
+            str = "断开中";
+        else if (state == QAbstractSocket::ListeningState)
+            str = "监听中";
+        emit signalConnectionStateTextChanged(str);
+    });
+
+    connect(liveSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, [=](QAbstractSocket::SocketError error){
+        qWarning() << "连接错误：" << error;
+    });
 }
 
 void LiveServiceBase::initTimeTasks()
@@ -288,7 +312,7 @@ void LiveServiceBase::setSqlService(SqlService *service)
 
 bool LiveServiceBase::isLiving() const
 {
-    return ac->liveStatus == 1;
+    return liveStatus == 1;
 }
 
 bool LiveServiceBase::isLivingOrMayLiving()
@@ -370,6 +394,16 @@ bool LiveServiceBase::isLivingOrMayLiving()
         }
     }
     return true;
+}
+
+int LiveServiceBase::getLiveStatus() const
+{
+    return liveStatus;
+}
+
+QString LiveServiceBase::getLiveStatusStr() const
+{
+    return "";
 }
 
 void LiveServiceBase::sendExpireGift()

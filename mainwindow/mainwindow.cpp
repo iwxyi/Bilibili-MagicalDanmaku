@@ -1037,7 +1037,6 @@ void MainWindow::initLiveService()
                 && QDateTime::currentMSecsSinceEpoch() - liveService->liveTimestamp > 60000) // 起码是上次下播10秒钟后
             cr->sendAutoMsg(text, LiveDanmaku());
         ui->liveStatusButton->setText("已开播");
-        ac->liveStatus = 1;
         if (ui->timerConnectServerCheck->isChecked() && liveService->connectServerTimer->isActive())
             liveService->connectServerTimer->stop();
         slotStartWork(); // 每个房间第一次开始工作
@@ -1059,7 +1058,6 @@ void MainWindow::initLiveService()
                 && QDateTime::currentMSecsSinceEpoch() - liveService->liveTimestamp > 600000) // 起码是十分钟后再播报，万一只是尝试开播呢
             cr->sendAutoMsg(text, LiveDanmaku());
         ui->liveStatusButton->setText("已下播");
-        ac->liveStatus = 0;
 
         // 重新定时连接
         if (ui->timerConnectServerCheck->isChecked() && !liveService->connectServerTimer->isActive())
@@ -2726,24 +2724,12 @@ void MainWindow::slotRoomInfoChanged()
     ui->watchedLabel->setText(ac->watchedShow);
 
     // 设置直播状态
-    if (ac->liveStatus == 0)
+    if (liveService->isLiving())
     {
-        ui->liveStatusButton->setText("未开播");
         if (us->timerConnectServer && !liveService->connectServerTimer->isActive())
             liveService->connectServerTimer->start();
     }
-    else if (ac->liveStatus == 1)
-    {
-        ui->liveStatusButton->setText("已开播");
-    }
-    else if (ac->liveStatus == 2)
-    {
-        ui->liveStatusButton->setText("轮播中");
-    }
-    else
-    {
-        ui->liveStatusButton->setText("未知状态" + snum(ac->liveStatus));
-    }
+    ui->liveStatusButton->setText(liveService->getLiveStatusStr());
 
     // 大乱斗信息
     ui->battleRankNameLabel->setText(ac->battleRankName);
@@ -3289,7 +3275,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty())
             cr->sendAutoMsg(text, LiveDanmaku());
         ui->liveStatusButton->setText("已开播");
-        ac->liveStatus = 1;
+        liveService->liveStatus = 1;
         if (ui->timerConnectServerCheck->isChecked() && liveService->connectServerTimer->isActive())
             liveService->connectServerTimer->stop();
         slotStartWork(); // 每个房间第一次开始工作
@@ -3813,7 +3799,7 @@ void MainWindow::on_roomIdEdit_editingFinished()
     // 关闭旧的
     if (liveService->liveSocket)
     {
-        ac->liveStatus = 0;
+        liveService->liveStatus = -1;
         if (liveService->liveSocket->state() != QAbstractSocket::UnconnectedState)
             liveService->liveSocket->abort();
     }
@@ -10154,7 +10140,7 @@ void MainWindow::on_showLiveDanmakuWindowButton_clicked()
 
 void MainWindow::on_liveStatusButton_clicked()
 {
-    if (!ac->liveStatus)
+    if (!liveService->isLiving())
         return ;
     on_actionShow_Live_Video_triggered();
 }

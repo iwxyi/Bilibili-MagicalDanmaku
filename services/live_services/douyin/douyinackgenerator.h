@@ -65,7 +65,7 @@ public:
     void sendAck(QWebSocket *ws, const QString &internalExt, qint64 logId)
     {
         QByteArray frame = encodeAckPushFrame(internalExt, logId);
-        qDebug() << "返回ack：" << frame;
+        // qDebug() << "返回ack：" << frame;
         ws->sendBinaryMessage(frame);
     }
 };

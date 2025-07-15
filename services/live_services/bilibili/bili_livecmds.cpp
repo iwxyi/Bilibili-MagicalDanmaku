@@ -763,12 +763,14 @@ void BiliLiveService::handleMessage(QJsonObject json)
     qInfo() << s8(">消息命令ZCOM：") << cmd;
     if (cmd == "LIVE") // 开播？
     {
+        liveStatus = 1;
         emit signalLiveStarted();
 
         triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "PREPARING") // 下播
     {
+        liveStatus = 0;
         emit signalLiveStopped();
 
         releaseLiveData(true);

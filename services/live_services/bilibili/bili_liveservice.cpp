@@ -60,7 +60,6 @@ void BiliLiveService::releaseLiveData(bool prepare)
 
 void BiliLiveService::initWS()
 {
-    liveSocket = new QWebSocket();
     connect(liveSocket, &QWebSocket::connected, this, [=]{
         SOCKET_DEB << "socket connected";
         emit signalStatusChanged("WS状态：已连接");
@@ -96,7 +95,7 @@ void BiliLiveService::initWS()
         if (isLiving() || !us->timerConnectServer)
         {
             localNotify("[连接断开，重连...]");
-            ac->liveStatus = false;
+            liveStatus = false;
             rt->isReconnect = true;
 
             // 尝试5秒钟后重连
@@ -136,28 +135,7 @@ void BiliLiveService::initWS()
         qInfo() << "textMessageReceived";
     });
 
-    connect(liveSocket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
-        SOCKET_DEB << "stateChanged" << state;
-        QString str = "未知";
-        if (state == QAbstractSocket::UnconnectedState)
-            str = "未连接";
-        else if (state == QAbstractSocket::ConnectingState)
-            str = "连接中";
-        else if (state == QAbstractSocket::ConnectedState)
-            str = "已连接";
-        else if (state == QAbstractSocket::BoundState)
-            str = "已绑定";
-        else if (state == QAbstractSocket::ClosingState)
-            str = "断开中";
-        else if (state == QAbstractSocket::ListeningState)
-            str = "监听中";
-        emit signalConnectionStateTextChanged(str);
-    });
-
-    connect(liveSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, [=](QAbstractSocket::SocketError error){
-        qWarning() << "连接错误：" << error;
-    });
-
+    // 定时心跳
     heartTimer = new QTimer(this);
     heartTimer->setInterval(30000);
     connect(heartTimer, &QTimer::timeout, this, [=]{
@@ -567,7 +545,7 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         ac->roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样，但防止是短ID
         ac->shortId = QString::number(roomInfo.value("short_id").toInt());
         ac->upUid = QString::number(static_cast<qint64>(roomInfo.value("uid").toDouble()));
-        ac->liveStatus = roomInfo.value("live_status").toInt();
+        liveStatus = roomInfo.value("live_status").toInt();
         int pkStatus = roomInfo.value("pk_status").toInt();
         ac->roomTitle = roomInfo.value("title").toString();
         ac->upName = anchorInfo.value("base_info").toObject().value("uname").toString();
@@ -1033,6 +1011,26 @@ void BiliLiveService::startConnectIdentityCode(const QString &code)
         // 通过房间号连接
         emit signalRoomIdChanged(snum(roomId));
     }); */
+}
+
+bool BiliLiveService::isLiving() const
+{
+    return liveStatus == 1;
+}
+
+QString BiliLiveService::getLiveStatusStr() const
+{
+    switch (liveStatus)
+    {
+    case 0:
+        return "未开播";
+    case 1:
+        return "直播中";
+    case 2:
+        return "轮播中";
+    default:
+        return "未知状态" + snum(liveStatus);
+    }
 }
 
 void BiliLiveService::getRoomCover(const QString &url)
