@@ -172,12 +172,16 @@ public:
         danmaku.vip = object.value("vip").toInt();
         danmaku.svip = object.value("svip").toInt();
         danmaku.level = object.value("level").toInt();
-        QJsonArray medal = object.value("medal").toArray();
+        QJsonArray medal = object.value("medal").toArray(); // 会被后面覆盖
         if (medal.size() >= 3)
         {
             danmaku.medal_level = medal[0].toInt();
             danmaku.medal_up = medal[1].toString();
             danmaku.medal_name = medal[2].toString();
+            if (medal.size() >= 4)
+            {
+                danmaku.medal_uid = medal[3].toString();
+            }
         }
         danmaku.giftId = object.value("gift_id").toInt();
         danmaku.giftName = object.value("gift_name").toString();
@@ -198,6 +202,7 @@ public:
         danmaku.medal_level = object.value("medal_level").toInt();
         danmaku.medal_color = object.value("medal_color").toString();
         danmaku.medal_up = object.value("medal_up").toString();
+        danmaku.medal_uid = object.value("medal_uid").toString();
         danmaku.no_reply = object.value("no_reply").toBool();
         danmaku.opposite = object.value("opposite").toBool();
         danmaku.to_view = object.value("to_view").toBool();
@@ -207,6 +212,8 @@ public:
         danmaku.uidentity = object.value("uidentity").toInt();
         danmaku.iphone = object.value("iphone").toInt();
         danmaku.guard = object.value("guard_level").toInt();
+        if (danmaku.isGuard())
+            danmaku.guard_expired = QDateTime::fromString("yyyy-MM-dd HH:mm:ss", object.value("guard_expired").toString());
         danmaku.prev_timestamp = static_cast<qint64>(object.value("prev_timestamp").toDouble());
         danmaku.first = object.value("first").toInt();
         danmaku.special = object.value("special").toInt();
@@ -310,6 +317,14 @@ public:
             object.insert("medal_level", medal_level);
             object.insert("medal_color", medal_color);
             object.insert("medal_up", medal_up);
+            if (!medal_uid.isEmpty())
+                object.insert("medal_uid", medal_uid);
+        }
+        if (guard > 0)
+        {
+            object.insert("guard_level", guard);
+            if (guard_expired.isValid())
+                object.insert("guard_expired", guard_expired.toString("yyyy-MM-dd HH:mm:ss"));
         }
         if (opposite)
             object.insert("opposite", opposite);
@@ -459,23 +474,42 @@ public:
         this->msgType = MSG_SHARE;
     }
 
+    void setMsgType(MessageType type)
+    {
+        this->msgType = type;
+    }
+
     void setNickname(const QString& name)
     {
         this->nickname = name;
     }
 
-    void setMedal(QString roomId, QString name, int level, QString color, QString up = "")
+    void setUser(QString name, UIDT uid, QString face, QString unameColor = "", QString textColor = "")
+    {
+        this->nickname = name;
+        this->uid = uid;
+        this->faceUrl = face;
+        this->uname_color = unameColor;
+        this->text_color = textColor;
+    }
+
+    void setMedal(QString roomId, QString name, int level, QString color, QString up = "", QString uid = "")
     {
         this->anchor_roomid = roomId;
         this->medal_name = name;
         this->medal_level = level;
         this->medal_color = color;
         this->medal_up = up;
+        this->medal_uid = uid;
     }
 
-    void setGuardLevel(int level)
+    void setGuardLevel(int level, QString exp = "")
     {
         this->guard = level;
+        if (exp.isEmpty())
+            this->guard_expired = QDateTime();
+        else
+            this->guard_expired = QDateTime::fromString("yyyy-MM-dd HH:mm:ss", exp);
     }
 
     void setUserInfo(int admin, int vip, int svip, int uidentity, int iphone, int guard)
@@ -734,6 +768,11 @@ public:
         return "";
     }
 
+    QDateTime getGuardExpiredTime() const
+    {
+        return guard_expired;
+    }
+
     int getGiftId() const
     {
         return giftId;
@@ -844,6 +883,11 @@ public:
         return medal_up;
     }
 
+    QString getMedalUid() const
+    {
+        return medal_uid;
+    }
+
     QString getMedalColor() const
     {
         return medal_color;
@@ -891,7 +935,7 @@ public:
 
     bool isGuard() const
     {
-        return guard;
+        return guard > 0;
     }
 
     int getFirst() const
@@ -1010,6 +1054,7 @@ protected:
     QDateTime timeline;
     int admin = 0; // 房管
     int guard = 0; // 舰长
+    QDateTime guard_expired;
     int vip = 0;
     int svip = 0;
     int uidentity = 0; // 正式会员
@@ -1022,6 +1067,7 @@ protected:
     int medal_level = 0;
     QString medal_name;
     QString medal_up;
+    QString medal_uid;
     QString medal_color;
 
     int level = 0;

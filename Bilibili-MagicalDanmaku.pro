@@ -103,7 +103,8 @@ INCLUDEPATH += \
     third_party/mfaudioendpointcontrol_fixed/ \
     third_party/m3u8_downloader/ \
     third_party/brotli/include/ \
-    third_party/cron/
+    third_party/cron/ \
+    third_party/nanopb/
 
 SOURCES += \
     global/usersetting.cpp \
@@ -120,6 +121,7 @@ SOURCES += \
     services/live_services/bili_liveopen_cmds.cpp \
     services/live_services/bili_liveopenservice.cpp \
     services/live_services/bili_liveservice.cpp \
+    services/live_services/bili_nanopb/interact_word_v2.pb.c \
     services/live_services/liveroomservice.cpp \
     services/live_services/livestatisticservice.cpp \
     services/sql_service/sqlservice.cpp \
@@ -186,6 +188,9 @@ SOURCES += \
     third_party/linear_check_box/anicheckbox.cpp \
     third_party/linear_check_box/checkbox1.cpp \
     third_party/m3u8_downloader/m3u8downloader.cpp \
+    third_party/nanopb/pb_common.c \
+    third_party/nanopb/pb_decode.c \
+    third_party/nanopb/pb_encode.c \
     third_party/notification/tipbox.cpp \
     third_party/notification/tipcard.cpp \
     third_party/qss_editor/qsseditdialog.cpp \
@@ -268,6 +273,8 @@ HEADERS += \
     services/language_service/wrapper/settingswrapperstd.h \
     services/live_services/bili_liveopenservice.h \
     services/live_services/bili_liveservice.h \
+    services/live_services/bili_nanopb/interact_word_v2.pb.h \
+    services/live_services/bili_nanopb/nanopbutil.h \
     services/live_services/liveroomservice.h \
     services/live_services/livestatisticservice.h \
     services/sql_service/sqlservice.h \
@@ -370,6 +377,10 @@ HEADERS += \
     third_party/linear_check_box/anicheckbox.h \
     third_party/linear_check_box/checkbox1.h \
     third_party/m3u8_downloader/m3u8downloader.h \
+    third_party/nanopb/pb.h \
+    third_party/nanopb/pb_common.h \
+    third_party/nanopb/pb_decode.h \
+    third_party/nanopb/pb_encode.h \
     third_party/notification/notificationentry.h \
     third_party/notification/tipbox.h \
     third_party/notification/tipcard.h \
