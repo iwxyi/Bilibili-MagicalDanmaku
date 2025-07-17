@@ -12,14 +12,14 @@ DouyinLiveService::DouyinLiveService(QObject *parent) : LiveServiceBase(parent)
     initWS();
 }
 
-QString DouyinLiveService::getLiveStatusStr(int status) const
+bool DouyinLiveService::isLiving() const
 {
-    if (status == -1)
-    {
-        status = this->liveStatus;
-    }
+    return liveStatus == 2;
+}
 
-    switch (status)
+QString DouyinLiveService::getLiveStatusStr() const
+{
+    switch (liveStatus)
     {
     case 0:
         return "未开播";
@@ -32,13 +32,12 @@ QString DouyinLiveService::getLiveStatusStr(int status) const
     case 4:
         return "已下播";
     default:
-        return "未知状态" + snum(status);
+        return "未知状态" + snum(liveStatus);
     }
 }
 
 void DouyinLiveService::initWS()
 {
-    liveSocket = new QWebSocket();
     connect(liveSocket, &QWebSocket::connected, this, [=](){
         qInfo() << "连接成功";
     });
@@ -383,6 +382,7 @@ struct MessageListContext {
     QObject* service; // 传递this指针，方便调用成员函数
 };
 
+/// 解析 headersList 回调
 bool headersList_callback(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     HeaderListContext* ctx = static_cast<HeaderListContext*>(*arg);
@@ -398,6 +398,7 @@ bool headersList_callback(pb_istream_t *stream, const pb_field_t *field, void **
     return true;
 }
 
+/// 解析 messagesList 回调
 bool messagesList_callback(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     MessageListContext* ctx = static_cast<MessageListContext*>(*arg);
@@ -434,6 +435,11 @@ bool messagesList_callback(pb_istream_t *stream, const pb_field_t *field, void *
     // 3. 解析payload为具体消息体
     QByteArray payloadArr(reinterpret_cast<const char*>(payloadBuf.data), payloadBuf.size);
 
+    if (!ctx)
+    {
+        qWarning() << "PB解析失败，无法获取**arg";
+        return true;
+    }
     static_cast<DouyinLiveService*>(ctx->service)->processMessage(method, payloadArr);
 
     return true; // 继续处理下一个Message
@@ -498,21 +504,12 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
 
     // 2.3 创建 Response 结构体和输入流
     douyin_Response response = douyin_Response_init_zero;
-    if (isLiving()) // !不在直播状态下解析数据会崩溃，原因未知
-    {
-        // 设置messagesList回调
-        MessageListContext ctx;
-        ctx.service = this; // 你可以传递this指针，方便在回调里emit信号等
-        response.messagesList.funcs.decode = messagesList_callback;
-        response.messagesList.arg = &ctx;
-        response.routeParams.arg = nullptr;
-        response.messagesList.arg = nullptr;
-        response.routeParams.arg = nullptr;
-    }
-    else
-    {
-        qDebug() << "(非直播状态，不解析protobuf数据)";
-    }
+    // 设置messagesList回调
+    MessageListContext ctx;
+    ctx.service = this; // 你可以传递this指针，方便在回调里emit信号等
+    response.messagesList.funcs.decode = messagesList_callback;
+    response.messagesList.arg = &ctx;
+    response.routeParams.arg = nullptr;
 
     pb_istream_t response_stream = pb_istream_from_buffer(
         reinterpret_cast<const uint8_t*>(decompressedPayload.constData()),
@@ -569,10 +566,13 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
         if (pb_decode(&payload_stream, douyin_ChatMessage_fields, &chat))
         {
+            douyin_User user = chat.user;
             QString uname = chat.has_user ? QString::fromUtf8(chat.user.nickName) : "";
             QString content = QString::fromUtf8(chat.content);
             qInfo() << "[弹幕]" << uname << ":" << content;
-            // 你可以emit信号、存到列表等
+            LiveDanmaku danmaku(uname, content, snum(user.id), user.Level, QDateTime::currentDateTime(), "", "");
+            danmaku.setFromRoomId(ac->roomId);
+            receiveDanmaku(danmaku);
         }
     }
     else if (method == "WebcastGiftMessage")
@@ -591,8 +591,13 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
         if (pb_decode(&payload_stream, douyin_MemberMessage_fields, &member))
         {
+            douyin_User user = member.user;
             QString uname = member.has_user ? QString::fromUtf8(member.user.nickName) : "";
             qInfo() << "[进房]" << uname << "进入直播间";
+
+            LiveDanmaku danmaku(uname, snum(user.id), QDateTime::currentDateTime(), false, "", "", "");
+            danmaku.setFromRoomId(ac->roomId);
+            receiveUserCome(danmaku);
         }
     }
     else if (method == "WebcastLikeMessage")

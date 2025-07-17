@@ -21,7 +21,8 @@ class DouyinLiveService : public LiveServiceBase
 public:
     DouyinLiveService(QObject* parent = nullptr);
 
-    QString getLiveStatusStr(int status = -1) const;
+    bool isLiving() const override;
+    QString getLiveStatusStr() const override;
 
 private:
     void initWS();
