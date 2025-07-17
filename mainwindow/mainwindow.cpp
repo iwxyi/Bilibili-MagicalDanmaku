@@ -1330,6 +1330,12 @@ void MainWindow::initLiveService()
 
 }
 
+/// 根据不同的平台调整对应的控件
+void MainWindow::adjustWidgetsByPlatform()
+{
+
+}
+
 /// 读取 settings 中的变量，并进行一系列初始化操作
 /// 可能会读取多次，并且随用户命令重复读取
 /// 所以里面的所有变量都要做好重复初始化的准备

@@ -1117,52 +1117,6 @@ void BiliLiveService::handleMessage(QJsonObject json)
 
         // 触发事件
         receiveGift(danmaku.with(json));
-
-        // 进行统计
-        if (coinType == "silver")
-        {
-            qint64 userSilver = us->danmakuCounts->value("silver/" + uid).toLongLong();
-            userSilver += totalCoin;
-            us->danmakuCounts->setValue("silver/"+uid, userSilver);
-
-            dailyGiftSilver += totalCoin;
-            if (dailySettings)
-                dailySettings->setValue("gift_silver", dailyGiftSilver);
-            currentLiveGiftSilver += totalCoin;
-            if (currentLiveSettings)
-                currentLiveSettings->setValue("gift_silver", currentLiveGiftSilver);
-        }
-        if (coinType == "gold")
-        {
-            qint64 userGold = us->danmakuCounts->value("gold/" + uid).toLongLong();
-            userGold += totalCoin;
-            us->danmakuCounts->setValue("gold/"+uid, userGold);
-
-            dailyGiftGold += totalCoin;
-            if (dailySettings)
-                dailySettings->setValue("gift_gold", dailyGiftGold);
-            currentLiveGiftGold += totalCoin;
-            if (currentLiveSettings)
-                currentLiveSettings->setValue("gift_gold", currentLiveGiftGold);
-
-            // 正在PK，保存弹幕历史
-            // 因为最后的大乱斗最佳助攻只提供名字，所以这里需要保存 uname->uid 的映射
-            // 方便起见，直接全部保存下来了
-            pkGifts.append(danmaku);
-
-            // 添加礼物记录
-            appendLiveGift(danmaku);
-
-            // 正在偷塔阶段
-            if (pkEnding && uid == ac->cookieUid) // 机器人账号
-            {
-//                pkVoting -= totalCoin;
-//                if (pkVoting < 0) // 自己用其他设备送了更大的礼物
-//                {
-//                    pkVoting = 0;
-//                }
-            }
-        }
     }
     else if (cmd == "COMBO_SEND") // 连击礼物
     {

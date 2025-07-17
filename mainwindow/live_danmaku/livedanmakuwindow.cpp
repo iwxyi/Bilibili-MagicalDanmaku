@@ -1353,7 +1353,8 @@ void LiveDanmakuWindow::showMenu()
 
     menu->addAction(actionUserInfo);
     menu->addAction(actionCopyUid);
-    menu->addAction(actionReplyUser);
+    if (rt->livePlatform == Bilibili)
+        menu->addAction(actionReplyUser);
     if (danmaku.getGiftId())
         menu->addAction(actionCopyGiftId);
     menu->addAction(actionMedal);

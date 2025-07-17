@@ -24,7 +24,8 @@ public:
 
     // 连接的直播间信息
     QString roomId;          // 房间长ID
-    QString shortId;         // 房间短号（有些没有，也没什么用）
+    QString shortId;         // B站房间短号（有些没有，也没什么用）
+    QString roomRid;         // 抖音房间RID，用于获取直播间信息
     QString roomTitle;       // 房间标题
     QString areaId;          // 例：21（整型，为了方便用字符串）
     QString areaName;        // 例：视频唱见

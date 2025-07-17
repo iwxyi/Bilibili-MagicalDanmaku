@@ -139,7 +139,7 @@ qDebug() << json;
 
         // 直播间信息
         MyJson roomInfo = state.o("roomStore").o("roomInfo");
-        ac->roomId = roomInfo.s("roomId"); // 和入口的roomid不是同一个，而且很长
+        ac->roomRid = roomInfo.s("roomId"); // 和入口的roomid不是同一个，而且很长
         MyJson room = roomInfo.o("room");
         ac->roomTitle = room.s("title");
         QJsonArray adminUserIds = room.a("admin_user_ids"); // UID列表
@@ -149,7 +149,7 @@ qDebug() << json;
         QString roomCover = roomCoverList.size() ? roomCoverList.first().toString() : "";
         int likeCount = room.i("like_count"); // 点赞数
         ac->watchedShow = room.o("room_view_stats").s("display_short");
-        qInfo() << "直播间信息：" << ac->roomTitle << ac->roomId << getLiveStatusStr() << roomCover;
+        qInfo() << "直播间信息：" << ac->roomTitle << ac->roomId << "(" + ac->roomRid + ")" << getLiveStatusStr();
 
         // 分区信息
         MyJson partitionRoadMap = roomInfo.o("partition_road_map"); // 可能为空
@@ -212,11 +212,11 @@ void DouyinLiveService::autoAddCookie(QList<QNetworkCookie> cookies)
 void DouyinLiveService::getDanmuInfo()
 {
     qInfo() << "获取连接信息";
-    // QByteArray ba = imFetch(ac->roomId, ac->cookieUid);
+    // QByteArray ba = imFetch(ac->roomRid, ac->cookieUid);
     qint64 timestamp10 = QDateTime::currentSecsSinceEpoch();
     QString cursor = QString("r-7497180536918546638_d-1_u-1_fh-7497179772733760010_t-%1").arg(timestamp10);
     QString internalExt = QString("internal_src:dim|wss_push_room_id:%2|wss_push_did:%3|first_req_ms:%1|fetch_time:%1|seq:1|wss_info:0-%1-0-0|wrds_v:7497180515443673855")
-                                .arg(timestamp10).arg(ac->roomId).arg(ac->cookieUid);
+                                .arg(timestamp10).arg(ac->roomRid).arg(ac->cookieUid);
     imPush(cursor, internalExt);
 }
 
@@ -294,7 +294,7 @@ QByteArray DouyinLiveService::imFetch(QString roomId, QString uniqueId)
 
 void DouyinLiveService::imPush(QString cursor, QString internalExt)
 {
-    QString roomId = ac->roomId;
+    QString roomId = ac->roomRid;
     QString uniqueId = ac->cookieUid;
     QString serverUrl = "wss://webcast5-ws-web-lf.douyin.com/webcast/im/push/v2/";
     // QString signature = getSignature(roomId, uniqueId);
@@ -499,7 +499,7 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
     qint64 logId = pushFrame.logId;
     QString payloadEncoding = QString::fromUtf8(pushFrame.payloadEncoding);
     QString payloadType = QString::fromUtf8(pushFrame.payloadType);
-    qDebug() << "PushFrame decoded:" << seqId << payloadEncoding << payloadType;
+    // qDebug() << "PushFrame decoded:" << seqId << payloadEncoding << payloadType;
 
     // --- 步骤 2: 解压并解析内层的 Response ---
     
@@ -540,7 +540,7 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
     QString cursor = response.cursor;
     QString internalExt = response.internalExt;
     bool needAck = response.needAck;
-    qDebug() << "Response decoded. needAck:" << needAck;
+    // qDebug() << "Response decoded. needAck:" << needAck;
     
     // --- 步骤 3: 进一步处理 Response 里的具体消息 ---
     // 为 messagesList 设置回调来逐个处理 Message，在回调函数里面处理
@@ -579,51 +579,63 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
     {
         douyin_ChatMessage chat = douyin_ChatMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
-        if (pb_decode(&payload_stream, douyin_ChatMessage_fields, &chat))
-        {
-            douyin_User user = chat.user;
-            QString uname = chat.has_user ? QString::fromUtf8(chat.user.nickName) : "";
-            QString content = QString::fromUtf8(chat.content);
-            qInfo() << "[弹幕]" << uname << ":" << content;
-            LiveDanmaku danmaku(uname, content, snum(user.id), user.Level, QDateTime::currentDateTime(), "", "");
-            danmaku.setFromRoomId(ac->roomId);
-            receiveDanmaku(danmaku);
-        }
+        if (!pb_decode(&payload_stream, douyin_ChatMessage_fields, &chat))
+            return showError(method, "解析错误");
+        douyin_User user = chat.user;
+        QString uname = chat.has_user ? QString::fromUtf8(chat.user.nickName) : "";
+        QString content = QString::fromUtf8(chat.content);
+        qInfo() << "[弹幕]" << uname << ":" << content;
+        LiveDanmaku danmaku(uname, content, snum(user.id), user.Level, QDateTime::currentDateTime(), "", "");
+        danmaku.setFromRoomId(ac->roomId);
+        receiveDanmaku(danmaku);
     }
     else if (method == "WebcastGiftMessage")
     {
         douyin_GiftMessage gift = douyin_GiftMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
-        if (pb_decode(&payload_stream, douyin_GiftMessage_fields, &gift))
-        {
-            QString uname = gift.has_user ? QString::fromUtf8(gift.user.nickName) : "";
-            qInfo() << "[送礼]" << uname << "送出礼物" << gift.giftId << "数量" << gift.comboCount;
-        }
+        if (!pb_decode(&payload_stream, douyin_GiftMessage_fields, &gift))
+            return showError(method, "解析错误");
+        int giftId = gift.giftId;
+        int comboCount = gift.comboCount;
+        int totalCount = gift.totalCount;
+        douyin_GiftStruct giftStruct = gift.gift;
+        QString giftName = giftStruct.name;
+        int singlePrice = giftStruct.diamondCount; // 单价，抖币。有些礼物单价为0
+        int totalPrice = singlePrice * totalCount; // 总价，抖币
+        douyin_User user = gift.user;
+        QString uname = user.nickName;
+        QString uid = snum(user.id);
+        qInfo() << "[送礼]" << uname << "送出礼物" << giftId << giftName << "x" << totalCount << "总价" << totalPrice;
+
+        LiveDanmaku danmaku(uname, giftId, giftName, totalCount, uid, QDateTime::currentDateTime(), "", totalPrice);
+        danmaku.setFromRoomId(ac->roomId);
+        receiveGift(danmaku);
+        appendLiveGift(danmaku);
     }
     else if (method == "WebcastMemberMessage")
     {
         douyin_MemberMessage member = douyin_MemberMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
-        if (pb_decode(&payload_stream, douyin_MemberMessage_fields, &member))
-        {
-            douyin_User user = member.user;
-            QString uname = member.has_user ? QString::fromUtf8(member.user.nickName) : "";
-            qInfo() << "[进房]" << uname << "进入直播间";
+        if (!pb_decode(&payload_stream, douyin_MemberMessage_fields, &member))
+            return showError(method, "解析错误");
+        douyin_User user = member.user;
+        QString uname = member.has_user ? QString::fromUtf8(member.user.nickName) : "";
+        // 如果是匿名的，user.id统一为“111111”，secUid为空，shortId为0
+        qInfo() << "[进房]" << uname << "进入直播间" << user.id;
 
-            LiveDanmaku danmaku(uname, snum(user.id), QDateTime::currentDateTime(), false, "", "", "");
-            danmaku.setFromRoomId(ac->roomId);
-            receiveUserCome(danmaku);
-        }
+        LiveDanmaku danmaku(uname, snum(user.id), QDateTime::currentDateTime(), false, "", "", "");
+        danmaku.setFromRoomId(ac->roomId);
+        receiveUserCome(danmaku);
     }
     else if (method == "WebcastLikeMessage")
     {
         douyin_LikeMessage like = douyin_LikeMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
-        if (pb_decode(&payload_stream, douyin_LikeMessage_fields, &like))
-        {
-            QString uname = like.has_user ? QString::fromUtf8(like.user.nickName) : "";
-            qInfo() << "[点赞]" << uname << "点赞" << like.count;
-        }
+        if (!pb_decode(&payload_stream, douyin_LikeMessage_fields, &like))
+            return showError(method, "解析错误");
+        QString uname = like.has_user ? QString::fromUtf8(like.user.nickName) : "";
+        qInfo() << "[点赞]" << uname << "点赞" << like.count << like.total;
+        emit signalLikeChanged(like.total);
     }
     else
     {
