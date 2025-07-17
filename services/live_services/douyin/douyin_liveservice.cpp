@@ -133,24 +133,24 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
             }
             qWarning() << "无法解析弹幕信息，url=" << url;
         }
-
-        // 解析数据
+qDebug() << json;
+        /// 解析数据
         MyJson state = json.o("state");
+
+        // 直播间信息
         MyJson roomInfo = state.o("roomStore").o("roomInfo");
         ac->roomId = roomInfo.s("roomId"); // 和入口的roomid不是同一个，而且很长
         MyJson room = roomInfo.o("room");
         ac->roomTitle = room.s("title");
+        QJsonArray adminUserIds = room.a("admin_user_ids"); // UID列表
         DouyinLiveStatus roomStatus = (DouyinLiveStatus)room.i("status");
         this->liveStatus = (int)roomStatus;
-        qInfo() << "直播间信息：" << ac->roomTitle << ac->roomId << getLiveStatusStr();
-        
-        MyJson anchor = roomInfo.o("anchor");
-        QJsonArray avatarThumb = anchor.o("avatar_thumb").a("url_list");
-        QString avatar = avatarThumb.size() ? avatarThumb.first().toString() : "";
-        ac->upName = anchor.s("nickname");
-        qInfo() << "主播信息：" << ac->upName;
+        QJsonArray roomCoverList = room.o("cover").a("url_list");
+        QString roomCover = roomCoverList.size() ? roomCoverList.first().toString() : "";
+        qInfo() << "直播间信息：" << ac->roomTitle << ac->roomId << getLiveStatusStr() << roomCover;
 
-        MyJson partitionRoadMap = roomInfo.o("partition_road_map");
+        // 分区信息
+        MyJson partitionRoadMap = roomInfo.o("partition_road_map"); // 可能为空
         MyJson partition = partitionRoadMap.o("partition");
         ac->parentAreaId = partition.s("id_str");
         ac->parentAreaName = partition.s("title");
@@ -160,10 +160,20 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         ac->areaName = partition.s("title");
         qInfo() << "分区信息：" << ac->parentAreaName + "/" + ac->areaName;
 
+        // 主播信息
+        MyJson anchor = roomInfo.o("anchor");
+        ac->upUid = anchor.s("id_str");
+        ac->secUid = anchor.s("sec_uid");
+        QJsonArray avatarThumb = anchor.o("avatar_thumb").a("url_list");
+        QString avatar = avatarThumb.size() ? avatarThumb.first().toString() : "";
+        ac->upName = anchor.s("nickname");
+        qInfo() << "主播信息：" << ac->upName;
+
+        // 自己的信息
         MyJson userStore = state.o("userStore");
         MyJson odin = userStore.o("odin");
-        QString userId = odin.s("user_id");
-        QString userUniqueId = odin.s("user_unique_id");
+        QString userId = odin.s("user_id"); // 抖音内部的主键ID，不可变
+        QString userUniqueId = odin.s("user_unique_id"); // 这个才是抖音号，可自定义
         int userType = odin.i("user_type"); // 匿名是12
         ac->cookieUid = userUniqueId;
         qInfo() << "用户信息：用户唯一ID" << userUniqueId;
@@ -174,6 +184,8 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         emit signalLiveStatusChanged(getLiveStatusStr());
 
         getDanmuInfo();
+        getRoomCover(roomCover);
+        getUpCover(avatar);
     });
 }
 

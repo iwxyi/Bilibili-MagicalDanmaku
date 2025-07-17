@@ -209,9 +209,11 @@ public:
     /// 获取直播状态的字符串
     virtual QString getLiveStatusStr() const;
     /// 获取并更新直播间封面
-    virtual void getRoomCover(const QString& url) {}
+    virtual void getRoomCover(const QString& url);
     /// 获取主播信息
     virtual void getUpInfo(const QString &uid) {}
+    /// 获取主播头像
+    virtual void getUpCover(const QString& url);
     /// 更新当前舰长
     virtual void updateExistGuards(int page = 0) override {}
     /// 获取舰长数量

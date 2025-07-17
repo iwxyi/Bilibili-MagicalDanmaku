@@ -406,6 +406,25 @@ QString LiveServiceBase::getLiveStatusStr() const
     return "";
 }
 
+void LiveServiceBase::getRoomCover(const QString &url)
+{
+    get(url, [=](QNetworkReply* reply){
+        QPixmap pixmap;
+        pixmap.loadFromData(reply->readAll());
+        emit signalRoomCoverChanged(pixmap);
+    });
+}
+
+void LiveServiceBase::getUpCover(const QString &url)
+{
+    get(url, [=](QNetworkReply* reply){
+        QPixmap pixmap;
+        pixmap.loadFromData(reply->readAll());
+        upFace = pixmap;
+        emit signalUpFaceChanged(pixmap);
+    });
+}
+
 void LiveServiceBase::sendExpireGift()
 {
     getBagList(24 * 3600 * 2); // 默认赠送两天内过期的

@@ -1033,15 +1033,6 @@ QString BiliLiveService::getLiveStatusStr() const
     }
 }
 
-void BiliLiveService::getRoomCover(const QString &url)
-{
-    get(url, [=](QNetworkReply* reply){
-        QPixmap pixmap;
-        pixmap.loadFromData(reply->readAll());
-        emit signalRoomCoverChanged(pixmap);
-    });
-}
-
 void BiliLiveService::getUpInfo(const QString &uid)
 {
     QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + uid + "&platform=web&token=&web_location=1550101");
@@ -1065,12 +1056,7 @@ void BiliLiveService::getUpInfo(const QString &uid)
 
         // 开始下载头像
         QString faceUrl = data.value("face").toString();
-        get(faceUrl, [=](QNetworkReply* reply){
-            QPixmap pixmap;
-            pixmap.loadFromData(reply->readAll());
-            upFace = pixmap;
-            emit signalUpFaceChanged(pixmap);
-        });
+        getUpCover(faceUrl);
     });
 }
 
