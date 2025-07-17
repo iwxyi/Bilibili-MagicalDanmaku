@@ -1444,7 +1444,11 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 房间属性
     else if (key == "%living%")
-        return snum(liveService->liveStatus);
+        return liveService->isLiving() ? "1" : "0";
+    else if (key == "%live_status%" || key == "%live_status_code%")
+        return snum(liveService->getLiveStatus());
+    else if (key == "%live_status_str%")
+        return liveService->getLiveStatusStr();
     else if (key == "%room_id%" || key == "%rid%")
         return ac->roomId;
     else if (key == "%room_name%" || key == "%room_title%")
