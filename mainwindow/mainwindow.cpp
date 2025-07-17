@@ -1118,7 +1118,15 @@ void MainWindow::initLiveService()
     });
 
     connect(liveService, &LiveServiceBase::signalLikeChanged, this, [=](int count) {
-        ui->popularityTextLabel->setToolTip("点赞数量：" + snum(count));
+        if (rt->livePlatform == Douyin)
+        {
+            ui->popularityLabel->setText(snum(count));
+            ui->popularityTextLabel->setText("点赞");
+        }
+        else
+        {
+            ui->popularityTextLabel->setToolTip("点赞数量：" + snum(count));
+        }
     });
 
     /// 信号传递

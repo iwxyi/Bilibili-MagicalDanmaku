@@ -147,6 +147,8 @@ qDebug() << json;
         this->liveStatus = (int)roomStatus;
         QJsonArray roomCoverList = room.o("cover").a("url_list");
         QString roomCover = roomCoverList.size() ? roomCoverList.first().toString() : "";
+        int likeCount = room.i("like_count"); // 点赞数
+        ac->watchedShow = room.o("room_view_stats").s("display_short");
         qInfo() << "直播间信息：" << ac->roomTitle << ac->roomId << getLiveStatusStr() << roomCover;
 
         // 分区信息
@@ -182,6 +184,7 @@ qDebug() << json;
         emit signalUpUidChanged(ac->upUid);
         emit signalRoomInfoChanged();
         emit signalLiveStatusChanged(getLiveStatusStr());
+        emit signalLikeChanged(likeCount);
 
         getDanmuInfo();
         getRoomCover(roomCover);
