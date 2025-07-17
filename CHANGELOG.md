@@ -1,3 +1,21 @@
+### v5.4.2 [优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.4.1)
+
+- 优化自动获取弹幕长度上限的接口（会触发进入直播间）
+
+
+
+
+
+### v5.4.1 [修复用户欢迎失效](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.4.1)
+
+- 修复部分直播间用户欢迎失效
+- 新增弹幕姬支持用户进入的舰长等级显示
+- 新增欢迎消息支持粉丝牌对应的主播ID：`%medal_uid%`
+
+
+
+
+
 ### v5.4 [Cron 定时事件、过滤器支持在线AI、Python虚拟环境](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.4)
 
 - 新增粉丝档案的观众消费能力分析

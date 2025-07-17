@@ -369,46 +369,7 @@ void BiliLiveService::getRobotInfo()
         return ;
 
     // 获取弹幕字数
-    url = "https://api.vc.bilibili.com/user_ex/v1/user/detail?uid=" + ac->cookieUid + "&user[]=role&user[]=level&room[]=live_status&room[]=room_link&feed[]=fans_count&feed[]=feed_count&feed[]=is_followed&feed[]=is_following&platform=pc";
-    get(url, [=](MyJson json) {
-        /*{
-            "code": 0,
-            "msg": "success",
-            "message": "success",
-            "data": {
-                "user": {
-                    "role": 2,
-                    "user_level": 19,
-                    "master_level": 5,
-                    "next_master_level": 6,
-                    "need_master_score": 704,
-                    "master_rank": 100010,
-                    "verify": 0
-                },
-                "feed": {
-                    "fans_count": 7084,
-                    "feed_count": 41,
-                    "is_followed": 0,
-                    "is_following": 0
-                },
-                "room": {
-                    "live_status": 0,
-                    "room_id": 11584296,
-                    "short_room_id": 0,
-                    "title": "用户20285041的直播间",
-                    "cover": "",
-                    "keyframe": "",
-                    "online": 0,
-                    "room_link": "http://live.bilibili.com/11584296?src=draw"
-                },
-                "uid": "20285041"
-            }
-        }*/
-        MyJson data = json.data();
-        ac->cookieULevel = data.o("user").i("user_level");
-        if (us->adjustDanmakuLongest)
-            adjustDanmakuLongest();
-    });
+    adjustDanmakuLongest();
 }
 
 void BiliLiveService::getBuVID()
@@ -972,7 +933,7 @@ void BiliLiveService::getRoomUserInfo()
     if (ac->browserCookie.isEmpty())
         return ;
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser?room_id=" + ac->roomId;
-    get(url, [=](QJsonObject json){
+    get(url, [=](MyJson json){
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("获取房间本用户信息返回结果不为0：") << json.value("message").toString();
@@ -980,11 +941,14 @@ void BiliLiveService::getRoomUserInfo()
         }
 
         // 获取用户在这个房间信息
-        QJsonObject info = json.value("data").toObject().value("info").toObject();
-        ac->cookieUid = snum(static_cast<qint64>(info.value("uid").toDouble()));
-        ac->cookieUname = info.value("uname").toString();
-        QString uface = info.value("uface").toString(); // 头像地址
-        qInfo() << "当前cookie用户：" << ac->cookieUid << ac->cookieUname;
+        MyJson data = json.data();
+
+        // 获取弹幕长度
+        MyJson property = data.o("property");
+        MyJson danmu = property.o("danmu");
+        ac->danmuLongest = danmu.i("length");
+        qInfo() << "弹幕长度：" << ac->danmuLongest;
+        emit signalDanmakuLongestChanged(ac->danmuLongest);
     });
 }
 
@@ -4699,7 +4663,7 @@ void BiliLiveService::refreshBlockList()
 
 void BiliLiveService::adjustDanmakuLongest()
 {
-    int longest = 20;
+    /* int longest = 20;
 
     // UL等级：20级30字
     if (ac->cookieULevel >= 20)
@@ -4710,7 +4674,9 @@ void BiliLiveService::adjustDanmakuLongest()
         longest = qMax(longest, 40);
 
     ac->danmuLongest = longest;
-    emit signalDanmakuLongestChanged(longest);
+    emit signalDanmakuLongestChanged(longest); */
+
+    getRoomUserInfo();
 }
 
 /**

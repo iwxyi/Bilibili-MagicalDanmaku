@@ -172,12 +172,16 @@ public:
         danmaku.vip = object.value("vip").toInt();
         danmaku.svip = object.value("svip").toInt();
         danmaku.level = object.value("level").toInt();
-        QJsonArray medal = object.value("medal").toArray();
+        QJsonArray medal = object.value("medal").toArray(); // 会被后面覆盖
         if (medal.size() >= 3)
         {
             danmaku.medal_level = medal[0].toInt();
             danmaku.medal_up = medal[1].toString();
             danmaku.medal_name = medal[2].toString();
+            if (medal.size() >= 4)
+            {
+                danmaku.medal_uid = medal[3].toString();
+            }
         }
         danmaku.giftId = object.value("gift_id").toInt();
         danmaku.giftName = object.value("gift_name").toString();
@@ -198,6 +202,7 @@ public:
         danmaku.medal_level = object.value("medal_level").toInt();
         danmaku.medal_color = object.value("medal_color").toString();
         danmaku.medal_up = object.value("medal_up").toString();
+        danmaku.medal_uid = object.value("medal_uid").toString();
         danmaku.no_reply = object.value("no_reply").toBool();
         danmaku.opposite = object.value("opposite").toBool();
         danmaku.to_view = object.value("to_view").toBool();
@@ -312,6 +317,8 @@ public:
             object.insert("medal_level", medal_level);
             object.insert("medal_color", medal_color);
             object.insert("medal_up", medal_up);
+            if (!medal_uid.isEmpty())
+                object.insert("medal_uid", medal_uid);
         }
         if (guard > 0)
         {
@@ -486,13 +493,14 @@ public:
         this->text_color = textColor;
     }
 
-    void setMedal(QString roomId, QString name, int level, QString color, QString up = "")
+    void setMedal(QString roomId, QString name, int level, QString color, QString up = "", QString uid = "")
     {
         this->anchor_roomid = roomId;
         this->medal_name = name;
         this->medal_level = level;
         this->medal_color = color;
         this->medal_up = up;
+        this->medal_uid = uid;
     }
 
     void setGuardLevel(int level, QString exp = "")
@@ -875,6 +883,11 @@ public:
         return medal_up;
     }
 
+    QString getMedalUid() const
+    {
+        return medal_uid;
+    }
+
     QString getMedalColor() const
     {
         return medal_color;
@@ -1054,6 +1067,7 @@ protected:
     int medal_level = 0;
     QString medal_name;
     QString medal_up;
+    QString medal_uid;
     QString medal_color;
 
     int level = 0;
