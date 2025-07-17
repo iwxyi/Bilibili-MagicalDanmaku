@@ -1,3 +1,11 @@
+### v5.4.2 [优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.4.1)
+
+- 优化自动获取弹幕长度上限的接口（会触发进入直播间）
+
+
+
+
+
 ### v5.4.1 [修复用户欢迎失效](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.4.1)
 
 - 修复部分直播间用户欢迎失效
