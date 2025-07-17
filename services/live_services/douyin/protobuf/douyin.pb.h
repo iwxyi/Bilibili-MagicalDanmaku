@@ -409,20 +409,6 @@ typedef struct _douyin_ChatMessage {
     douyin_Image backgroundImageV2;
     bool has_publicAreaCommon;
     douyin_PublicAreaCommon publicAreaCommon;
-    bool has_giftImage;
-    douyin_Image giftImage;
-    uint64_t agreeMsgId;
-    uint32_t priorityLevel;
-    bool has_landscapeAreaCommon;
-    douyin_LandscapeAreaCommon landscapeAreaCommon;
-    uint64_t eventTime;
-    bool sendReview;
-    bool fromIntercom;
-    bool intercomHideUserCard;
-    char chatBy[128];
-    uint32_t individualChatPriority;
-    bool has_rtfContent;
-    douyin_Text rtfContent;
 } douyin_ChatMessage;
 
 typedef struct _douyin_RoomUserSeqMessage {
@@ -714,7 +700,7 @@ extern "C" {
 #define douyin_Response_init_default             {{{NULL}, NULL}, "", 0, 0, "", 0, {{NULL}, NULL}, 0, 0, "", "", 0}
 #define douyin_Response_RouteParamsEntry_init_default {{{NULL}, NULL}, {{NULL}, NULL}}
 #define douyin_Message_init_default              {"", {{NULL}, NULL}, 0, 0, 0, 0, 0, ""}
-#define douyin_ChatMessage_init_default          {false, douyin_Common_init_default, false, douyin_User_init_default, "", 0, false, douyin_Image_init_default, "", false, douyin_Image_init_default, false, douyin_PublicAreaCommon_init_default, false, douyin_Image_init_default, 0, 0, false, douyin_LandscapeAreaCommon_init_default, 0, 0, 0, 0, "", 0, false, douyin_Text_init_default}
+#define douyin_ChatMessage_init_default          {false, douyin_Common_init_default, false, douyin_User_init_default, "", 0, false, douyin_Image_init_default, "", false, douyin_Image_init_default, false, douyin_PublicAreaCommon_init_default}
 #define douyin_LandscapeAreaCommon_init_default  {0, 0, 0, {{NULL}, NULL}, {{NULL}, NULL}}
 #define douyin_RoomUserSeqMessage_init_default   {false, douyin_Common_init_default, {{NULL}, NULL}, 0, "", {{NULL}, NULL}, 0, 0, "", "", "", "", "", ""}
 #define douyin_CommonTextMessage_init_default    {false, douyin_Common_init_default, false, douyin_User_init_default, ""}
@@ -763,7 +749,7 @@ extern "C" {
 #define douyin_Response_init_zero                {{{NULL}, NULL}, "", 0, 0, "", 0, {{NULL}, NULL}, 0, 0, "", "", 0}
 #define douyin_Response_RouteParamsEntry_init_zero {{{NULL}, NULL}, {{NULL}, NULL}}
 #define douyin_Message_init_zero                 {"", {{NULL}, NULL}, 0, 0, 0, 0, 0, ""}
-#define douyin_ChatMessage_init_zero             {false, douyin_Common_init_zero, false, douyin_User_init_zero, "", 0, false, douyin_Image_init_zero, "", false, douyin_Image_init_zero, false, douyin_PublicAreaCommon_init_zero, false, douyin_Image_init_zero, 0, 0, false, douyin_LandscapeAreaCommon_init_zero, 0, 0, 0, 0, "", 0, false, douyin_Text_init_zero}
+#define douyin_ChatMessage_init_zero             {false, douyin_Common_init_zero, false, douyin_User_init_zero, "", 0, false, douyin_Image_init_zero, "", false, douyin_Image_init_zero, false, douyin_PublicAreaCommon_init_zero}
 #define douyin_LandscapeAreaCommon_init_zero     {0, 0, 0, {{NULL}, NULL}, {{NULL}, NULL}}
 #define douyin_RoomUserSeqMessage_init_zero      {false, douyin_Common_init_zero, {{NULL}, NULL}, 0, "", {{NULL}, NULL}, 0, 0, "", "", "", "", "", ""}
 #define douyin_CommonTextMessage_init_zero       {false, douyin_Common_init_zero, false, douyin_User_init_zero, ""}
@@ -1060,17 +1046,6 @@ extern "C" {
 #define douyin_ChatMessage_fullScreenTextColor_tag 6
 #define douyin_ChatMessage_backgroundImageV2_tag 7
 #define douyin_ChatMessage_publicAreaCommon_tag  8
-#define douyin_ChatMessage_giftImage_tag         9
-#define douyin_ChatMessage_agreeMsgId_tag        11
-#define douyin_ChatMessage_priorityLevel_tag     12
-#define douyin_ChatMessage_landscapeAreaCommon_tag 13
-#define douyin_ChatMessage_eventTime_tag         15
-#define douyin_ChatMessage_sendReview_tag        16
-#define douyin_ChatMessage_fromIntercom_tag      17
-#define douyin_ChatMessage_intercomHideUserCard_tag 18
-#define douyin_ChatMessage_chatBy_tag            20
-#define douyin_ChatMessage_individualChatPriority_tag 21
-#define douyin_ChatMessage_rtfContent_tag        22
 #define douyin_RoomUserSeqMessage_common_tag     1
 #define douyin_RoomUserSeqMessage_ranksList_tag  2
 #define douyin_RoomUserSeqMessage_total_tag      3
@@ -1260,18 +1235,7 @@ X(a, STATIC,   SINGULAR, BOOL,     visibleToSender,   4) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  backgroundImage,   5) \
 X(a, STATIC,   SINGULAR, STRING,   fullScreenTextColor,   6) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  backgroundImageV2,   7) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  publicAreaCommon,   8) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  giftImage,         9) \
-X(a, STATIC,   SINGULAR, UINT64,   agreeMsgId,       11) \
-X(a, STATIC,   SINGULAR, UINT32,   priorityLevel,    12) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  landscapeAreaCommon,  13) \
-X(a, STATIC,   SINGULAR, UINT64,   eventTime,        15) \
-X(a, STATIC,   SINGULAR, BOOL,     sendReview,       16) \
-X(a, STATIC,   SINGULAR, BOOL,     fromIntercom,     17) \
-X(a, STATIC,   SINGULAR, BOOL,     intercomHideUserCard,  18) \
-X(a, STATIC,   SINGULAR, STRING,   chatBy,           20) \
-X(a, STATIC,   SINGULAR, UINT32,   individualChatPriority,  21) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  rtfContent,       22)
+X(a, STATIC,   OPTIONAL, MESSAGE,  publicAreaCommon,   8)
 #define douyin_ChatMessage_CALLBACK NULL
 #define douyin_ChatMessage_DEFAULT NULL
 #define douyin_ChatMessage_common_MSGTYPE douyin_Common
@@ -1279,9 +1243,6 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  rtfContent,       22)
 #define douyin_ChatMessage_backgroundImage_MSGTYPE douyin_Image
 #define douyin_ChatMessage_backgroundImageV2_MSGTYPE douyin_Image
 #define douyin_ChatMessage_publicAreaCommon_MSGTYPE douyin_PublicAreaCommon
-#define douyin_ChatMessage_giftImage_MSGTYPE douyin_Image
-#define douyin_ChatMessage_landscapeAreaCommon_MSGTYPE douyin_LandscapeAreaCommon
-#define douyin_ChatMessage_rtfContent_MSGTYPE douyin_Text
 
 #define douyin_LandscapeAreaCommon_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, BOOL,     showHead,          1) \

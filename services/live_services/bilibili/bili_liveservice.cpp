@@ -617,6 +617,8 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         emit signalUpUidChanged(ac->upUid);
         emit signalRoomInfoChanged();
 
+        triggerCmdEvent("GET_ROOM_INFO", LiveDanmaku().with(json));
+
         // 判断房间，未开播则暂停连接，等待开播
         if (!isLivingOrMayLiving())
         {

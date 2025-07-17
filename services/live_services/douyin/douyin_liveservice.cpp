@@ -133,7 +133,7 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
             }
             qWarning() << "无法解析弹幕信息，url=" << url;
         }
-qDebug() << json;
+
         /// 解析数据
         MyJson state = json.o("state");
 
@@ -189,6 +189,8 @@ qDebug() << json;
         getDanmuInfo();
         getRoomCover(roomCover);
         getUpCover(avatar);
+
+        triggerCmdEvent("GET_ROOM_INFO", LiveDanmaku().with(json));
     });
 }
 
@@ -346,7 +348,7 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
         paramsStr += params[i] + "=" + urlDecode(params[i + 1]) + "&";
     }
     paramsStr.chop(1);
-    
+
     QString backupUrl = serverUrl;
     backupUrl.replace("lq", "lf");
 
@@ -364,7 +366,7 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
     request.setHeader(QNetworkRequest::UserAgentHeader, "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36");
     request.setRawHeader("Referer", "https://live.douyin.com/");
     request.setRawHeader("Origin", "https://live.douyin.com");
-    
+
     liveSocket->open(request);
 }
 
@@ -379,14 +381,14 @@ struct PayloadBuffer {
 bool payload_decode_callback(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     PayloadBuffer *buf = (PayloadBuffer*)(*arg);
-    
+
     // 检查缓冲区是否足够大
     if (stream->bytes_left > buf->max_size) {
         // 如果数据太大，可以选择返回错误或者截断
         qWarning() << "Payload data is too large for buffer!" << stream->bytes_left << ">" << buf->max_size;
         return false; // 返回false表示解码失败
     }
-    
+
     buf->size = stream->bytes_left;
     return pb_read(stream, (pb_byte_t*)buf->data, buf->size);
 }
@@ -467,7 +469,7 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
     // 1.1 创建一个足够大的缓冲区来存放 payload
     uint8_t payload_buffer_data[81920]; // 8KB，如果不够可以再加大
     PayloadBuffer payload_buf = { payload_buffer_data, 0, sizeof(payload_buffer_data) };
-    
+
     // 1.2 初始化 PushFrame 结构体，并设置 payload 的回调
     douyin_PushFrame pushFrame = douyin_PushFrame_init_zero;
     pushFrame.payload.funcs.decode = &payload_decode_callback;
@@ -478,7 +480,7 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
 
     // 1.3 创建输入流
     pb_istream_t stream = pb_istream_from_buffer(
-        reinterpret_cast<const uint8_t*>(message.constData()), 
+        reinterpret_cast<const uint8_t*>(message.constData()),
         message.size()
     );
 
@@ -502,7 +504,7 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
     // qDebug() << "PushFrame decoded:" << seqId << payloadEncoding << payloadType;
 
     // --- 步骤 2: 解压并解析内层的 Response ---
-    
+
     // 2.1 检查 payload 是否为 gzip 压缩
     if (payloadEncoding != "gzip" && payloadEncoding != "pb") {
         qWarning() << "Unsupported payload encoding:" << payloadEncoding;
@@ -541,7 +543,7 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
     QString internalExt = response.internalExt;
     bool needAck = response.needAck;
     // qDebug() << "Response decoded. needAck:" << needAck;
-    
+
     // --- 步骤 3: 进一步处理 Response 里的具体消息 ---
     // 为 messagesList 设置回调来逐个处理 Message，在回调函数里面处理
 
@@ -580,7 +582,10 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         douyin_ChatMessage chat = douyin_ChatMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
         if (!pb_decode(&payload_stream, douyin_ChatMessage_fields, &chat))
+        {
+            qWarning() << PB_GET_ERROR(&payload_stream);
             return showError(method, "解析错误");
+        }
         douyin_User user = chat.user;
         QString uname = chat.has_user ? QString::fromUtf8(chat.user.nickName) : "";
         QString content = QString::fromUtf8(chat.content);
@@ -594,7 +599,10 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         douyin_GiftMessage gift = douyin_GiftMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
         if (!pb_decode(&payload_stream, douyin_GiftMessage_fields, &gift))
+        {
+            qWarning() << PB_GET_ERROR(&payload_stream);
             return showError(method, "解析错误");
+        }
         int giftId = gift.giftId;
         int comboCount = gift.comboCount;
         int totalCount = gift.totalCount;
@@ -617,7 +625,10 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         douyin_MemberMessage member = douyin_MemberMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
         if (!pb_decode(&payload_stream, douyin_MemberMessage_fields, &member))
+        {
+            qWarning() << PB_GET_ERROR(&payload_stream);
             return showError(method, "解析错误");
+        }
         douyin_User user = member.user;
         QString uname = member.has_user ? QString::fromUtf8(member.user.nickName) : "";
         // 如果是匿名的，user.id统一为“111111”，secUid为空，shortId为0
@@ -632,7 +643,10 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         douyin_LikeMessage like = douyin_LikeMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
         if (!pb_decode(&payload_stream, douyin_LikeMessage_fields, &like))
+        {
+            qWarning() << PB_GET_ERROR(&payload_stream);
             return showError(method, "解析错误");
+        }
         QString uname = like.has_user ? QString::fromUtf8(like.user.nickName) : "";
         qInfo() << "[点赞]" << uname << "点赞" << like.count << like.total;
         emit signalLikeChanged(like.total);
