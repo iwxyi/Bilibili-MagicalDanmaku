@@ -192,6 +192,7 @@ public:
     virtual void getAccountInfo(const UIDT& uid, NetJsonFunc func) {}
     /// 获取机器人账号信息
     virtual void getRobotInfo() {}
+    virtual void downloadRobotCover(const QString& url);
     /// 获取直播间信息
     virtual void getRoomInfo(bool reconnect, int reconnectCount = 0) = 0;
     /// 获取直播间Host信息

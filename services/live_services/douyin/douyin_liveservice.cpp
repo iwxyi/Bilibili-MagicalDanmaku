@@ -129,7 +129,9 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
             }
             qWarning() << "无法解析弹幕信息，url=" << url;
         }
-
+#ifdef QT_DEBUG
+        writeTextFile(rt->dataPath + "dy_live_room_info.json", json.toBa());
+#endif
         /// 解析数据
         MyJson state = json.o("state");
 
@@ -169,13 +171,44 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
 
         // 自己的信息
         MyJson userStore = state.o("userStore");
-        MyJson odin = userStore.o("odin");
-        QString userId = odin.s("user_id"); // 抖音内部的主键ID，不可变
-        QString userUniqueId = odin.s("user_unique_id"); // 这个才是抖音号，可自定义
-        int userType = odin.i("user_type"); // 匿名是12
-        ac->cookieUid = userUniqueId;
-        qInfo() << "用户信息：用户ID" << userId << userUniqueId << " userType:" << userType;
+        MyJson headerUserInfo = userStore.o("headerUserInfo");
+        bool isLogin = headerUserInfo.i("is_login");
+        if (!isLogin)
+            qWarning() << "未登录，无法获取用户信息";
+        MyJson userInfo = headerUserInfo.o("info");
+        if (!userInfo.isEmpty())
+        {
+            QString nickname = userInfo.s("nickname");
+            QString uid = userInfo.s("uid"); // 抖音内部的主键ID，不可变
+            QString shortId = userInfo.s("shortId");
+            QString secUid = userInfo.s("secUid");
+            QString uniqueId = userInfo.s("uniqueId"); // 自己输入的唯一ID，不和其他人重复，但可更改
+            qint64 roomId = userInfo.l("roomId"); // 直播间？没有的话为0和str空
+            QString avatarUrl = userInfo.s("avatarUrl");
+            int awemeCount = userInfo.i("awemeCount"); // 作品数量
+            int favoritingCount = userInfo.i("favoritingCount"); // 我的喜欢
+            int followStatus = userInfo.i("followStatus"); // 关注状态，0未关注，1已关注，2互相关注
+            int followerCount = userInfo.i("followerCount"); // 粉丝数
+            int followingCount = userInfo.i("followingCount"); // 关注数
+            QString desc = userInfo.s("desc"); // 签名
+            QJsonArray descExtra = userInfo.a("descExtra"); // 如果desc有@的话，这是@对象的列表，没必要解析
 
+            ac->cookieUid = uid;
+            ac->cookieSecUid = secUid;
+            ac->cookieUname = nickname;
+            qInfo() << "机器人账号：" << nickname << uid;
+            downloadRobotCover(avatarUrl);
+        }
+        else
+        {
+            MyJson odin = userStore.o("odin"); // 总是存在
+            QString userId = odin.s("user_id"); // 抖音内部的主键ID，不可变
+            QString userUniqueId = odin.s("user_unique_id"); // 这个才是抖音号，可自定义
+            int userType = odin.i("user_type"); // 匿名是12
+            ac->cookieUid = userUniqueId;
+            qInfo() << "未登录用户信息：用户ID" << userId << userUniqueId << " userType:" << userType;
+        }
+        
         // 获取主播与机器人账号的信息
         getRobotInfo();
         getUpInfo();
@@ -412,11 +445,12 @@ void DouyinLiveService::getAccountInfo(const QString &uid, NetJsonFunc func)
 
 }
 
+/// 获取机器人信息
+/// 没有必要，要获取的都在直播间信息里了
 void DouyinLiveService::getRobotInfo()
 {
-    getAccountInfo(ac->cookieUid, [=](MyJson data) {
-
-    });
+    // getAccountInfo(ac->cookieUid, [=](MyJson data) { });
+    emit signalRobotAccountChanged();
 }
 
 void DouyinLiveService::getUpInfo()

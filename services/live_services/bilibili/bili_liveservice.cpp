@@ -343,30 +343,7 @@ void BiliLiveService::getRobotInfo()
     getAccountInfo(ac->cookieUid, [=](QJsonObject data){
         // 开始下载头像
         QString face = data.value("face").toString();
-        get(face, [=](QNetworkReply* reply){
-            QByteArray jpegData = reply->readAll();
-            QPixmap pixmap;
-            pixmap.loadFromData(jpegData);
-            if (pixmap.isNull())
-            {
-                showError("获取账号头像出错");
-                return ;
-            }
-
-            // 设置成圆角
-            int side = qMin(pixmap.width(), pixmap.height());
-            QPixmap p(side, side);
-            p.fill(Qt::transparent);
-            QPainter painter(&p);
-            painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
-            QPainterPath path;
-            path.addEllipse(0, 0, side, side);
-            painter.setClipPath(path);
-            painter.drawPixmap(0, 0, side, side, pixmap);
-
-            // 设置到Robot头像
-            emit signalRobotHeadChanged(p);
-        });
+        downloadRobotCover(face);
     });
 
     // 检查是否需要用户信息

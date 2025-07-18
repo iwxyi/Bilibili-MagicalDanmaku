@@ -412,10 +412,46 @@ QString LiveServiceBase::getLiveStatusStr() const
 
 void LiveServiceBase::downloadRoomCover(const QString &url)
 {
+    if (url.isEmpty())
+    {
+        // 设置为默认封面
+        QPixmap pixmap(":/bg/bg");
+        emit signalRoomCoverChanged(pixmap);
+        return;
+    }
+
     get(url, [=](QNetworkReply* reply){
         QPixmap pixmap;
         pixmap.loadFromData(reply->readAll());
         emit signalRoomCoverChanged(pixmap);
+    });
+}
+
+void LiveServiceBase::downloadRobotCover(const QString &url)
+{
+    get(url, [=](QNetworkReply* reply){
+        QByteArray jpegData = reply->readAll();
+        QPixmap pixmap;
+        pixmap.loadFromData(jpegData);
+        if (pixmap.isNull())
+        {
+            showError("获取账号头像出错");
+            return ;
+        }
+
+        // 设置成圆角
+        int side = qMin(pixmap.width(), pixmap.height());
+        QPixmap p(side, side);
+        p.fill(Qt::transparent);
+        QPainter painter(&p);
+        painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+        QPainterPath path;
+        path.addEllipse(0, 0, side, side);
+        painter.setClipPath(path);
+        painter.drawPixmap(0, 0, side, side, pixmap);
+
+        // 设置到Robot头像
+        emit signalRobotHeadChanged(p);
     });
 }
 

@@ -1758,17 +1758,9 @@ void BiliLiveService::handleMessage(QJsonObject json)
         if (!pb.isEmpty())
         {
             // 开始解析PB
-            // 1. 获取原始数据指针和长度
             const uint8_t* buffer = reinterpret_cast<const uint8_t*>(pb.constData());
-            size_t size = pb.size();
-
-            // 2. 初始化消息结构体（清空原有数据）
             InteractWordV2 iw2 = InteractWordV2_init_zero;
-
-            // 3. 创建输入流
-            pb_istream_t stream = pb_istream_from_buffer(buffer, size);
-
-            // 4. 解析数据
+            pb_istream_t stream = pb_istream_from_buffer(buffer, pb.size());
             if (!pb_decode(&stream, InteractWordV2_fields, &iw2)) {
                 qWarning() << "Decoding failed:" << PB_GET_ERROR(&stream);
                 return;
