@@ -68,6 +68,7 @@ signals:
     void signalNewGuardBuy(const LiveDanmaku& danmaku); // 有人上舰长
 
     void signalAutoAddCookie(QList<QNetworkCookie> cookies);
+    void signalNewAccountSetted(); // 用户各种当时登录成功
     void signalRobotAccountChanged();
     void signalSubAccountChanged(const QString& cookie, const SubAccount& subAccount);
     void signalRoomIdChanged(const QString &roomId); // 房间号改变，例如通过解析身份码导致的房间ID变更

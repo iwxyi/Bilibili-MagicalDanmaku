@@ -845,7 +845,7 @@ void MainWindow::initLiveService()
     
     /// 账号操作
     connect(liveService, &LiveServiceBase::signalRobotAccountChanged, this, [=]{
-        ui->robotNameButton->setText(ac->cookieUname);
+        ui->robotNameButton->setText(ac->cookieUname.isEmpty() ? "未登录" : ac->cookieUname);
         ui->robotNameButton->adjustMinimumSize();
         ui->robotInfoWidget->setMinimumWidth(ui->robotNameButton->width());
 #ifdef ZUOQI_ENTRANCE
@@ -891,6 +891,10 @@ void MainWindow::initLiveService()
         }
         qDebug() << "自动添加Cookie：" << ck;
         autoSetCookie(ck);
+    });
+
+    connect(liveService, &LiveServiceBase::signalNewAccountSetted, this, [=]() {
+        liveService->startConnect();
     });
 
     /// 变量到UI
@@ -4607,6 +4611,7 @@ void MainWindow::addCodeSnippets(const QJsonDocument &doc)
     adjustPageSize(PAGE_EXTENSION);
 }
 
+/// 用户手动更改了cookie
 void MainWindow::autoSetCookie(const QString &s)
 {
     us->setValue("danmaku/browserCookie", ac->browserCookie = s);
@@ -9970,8 +9975,34 @@ void MainWindow::on_actionQRCode_Login_triggered()
     QRCodeLoginDialog* dialog = new QRCodeLoginDialog(this);
     connect(dialog, &QRCodeLoginDialog::logined, this, [=](QString s){
         autoSetCookie(s);
+        emit liveService->signalNewAccountSetted();
     });
     dialog->exec();
+}
+
+void MainWindow::on_actionWebViewLogin_triggered()
+{
+    QString platformUrl;
+
+    switch (rt->livePlatform)
+    {
+    case Bilibili:
+        platformUrl = "https://live.bilibili.com";
+        break;
+    case Douyin:
+        platformUrl = "https://www.douyin.com";
+        break;
+    default:
+        return ;
+    }
+
+    QString newCookie = WebLoginUtil::getCookie(platformUrl, ac->browserCookie);
+    if (!newCookie.isEmpty())
+    {
+        qDebug() << "浏览器登录Cookie：" << newCookie;
+        autoSetCookie(newCookie);
+        emit liveService->signalNewAccountSetted();
+    }
 }
 
 void MainWindow::on_allowAdminControlCheck_clicked()
@@ -11736,29 +11767,3 @@ void MainWindow::on_platformButton_clicked()
     })->check(rt->livePlatform == Kuaishou)->disable();
     menu->exec();
 }
-
-
-void MainWindow::on_actionWebViewLogin_triggered()
-{
-    QString platformUrl;
-
-    switch (rt->livePlatform)
-    {
-    case Bilibili:
-        platformUrl = "https://live.bilibili.com";
-        break;
-    case Douyin:
-        platformUrl = "https://live.douyin.com";
-        break;
-    default:
-        return ;
-    }
-
-    QString newCookie = WebLoginUtil::getCookie(platformUrl, ac->browserCookie);
-    if (!newCookie.isEmpty())
-    {
-        qDebug() << "浏览器登录Cookie：" << newCookie;
-        autoSetCookie(newCookie);
-    }
-}
-

@@ -12,7 +12,7 @@ WebLoginDialog::WebLoginDialog(const QString &platformUrl, const QString &defaul
     : QDialog(parent), webView(new MyWebEngineView(this)), loginButton(new QPushButton(tr("我已登录"), this))
 {
     setWindowTitle(tr("平台账号登录"));
-    resize(800, 600);
+    resize(1400, 900);
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     tipLabel = new QLabel(tr("请在浏览器弹窗中登录，登录成功后点击我已登录按钮。"));
     mainLayout->addWidget(tipLabel);
@@ -22,6 +22,9 @@ WebLoginDialog::WebLoginDialog(const QString &platformUrl, const QString &defaul
     bottomLayout->addWidget(loginButton);
     mainLayout->addLayout(bottomLayout);
 
+    webView->page()->profile()->setHttpUserAgent(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    );
     webView->setUrl(QUrl(platformUrl));
     if (!defaultCookie.isEmpty()) {
         // 可选：设置初始cookie

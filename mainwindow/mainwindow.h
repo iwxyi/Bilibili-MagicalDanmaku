@@ -489,6 +489,8 @@ private slots:
 
     void on_actionQRCode_Login_triggered();
 
+    void on_actionWebViewLogin_triggered();
+
     void on_allowAdminControlCheck_clicked();
 
     void on_actionSponsor_triggered();
@@ -762,8 +764,6 @@ private slots:
     void on_proxyTestIPButton_clicked();
 
     void on_platformButton_clicked();
-
-    void on_actionWebViewLogin_triggered();
 
 private:
     void initView();
