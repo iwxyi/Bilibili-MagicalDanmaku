@@ -2001,7 +2001,8 @@ void MainWindow::readConfig2()
         sqlService.open();
 
     // 粉丝档案
-    ui->fansArchivesCheck->setChecked(us->fansArchives = us->value("us/fansArchives", false).toBool());
+    us->fansArchives = hasPermission() && us->value("us/fansArchives", true).toBool();
+    ui->fansArchivesCheck->setChecked(us->fansArchives);
     ui->fansArchivesByRoomCheck->setChecked(us->fansArchivesByRoom = us->value("us/fansArchivesByRoom", false).toBool());
     if (us->fansArchives)
         initFansArchivesService();

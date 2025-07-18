@@ -1888,8 +1888,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>972</width>
-             <height>1731</height>
+             <width>82</width>
+             <height>16</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -11407,6 +11407,7 @@ font-weight: 500;</string>
      <string>账号</string>
     </property>
     <addaction name="actionQRCode_Login"/>
+    <addaction name="actionWebViewLogin"/>
     <addaction name="actionSet_Cookie"/>
     <addaction name="actionSet_Danmaku_Data_Format"/>
     <addaction name="separator"/>
@@ -11864,6 +11865,15 @@ font-weight: 500;</string>
    </property>
    <property name="text">
     <string>查询数据库</string>
+   </property>
+  </action>
+  <action name="actionWebViewLogin">
+   <property name="icon">
+    <iconset resource="../resources/resource.qrc">
+     <normaloff>:/icons/local</normaloff>:/icons/local</iconset>
+   </property>
+   <property name="text">
+    <string>浏览器登录</string>
    </property>
   </action>
  </widget>
