@@ -11,10 +11,6 @@ enum DouyinLiveStatus
     END = 4
 };
 
-struct HeaderListContext {
-    QVector<QPair<QString, QString>> headers;
-};
-
 class DouyinLiveService : public LiveServiceBase
 {
     Q_OBJECT

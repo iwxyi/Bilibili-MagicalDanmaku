@@ -6150,7 +6150,14 @@ void MainWindow::updateOnlineRankGUI()
         UIDT uid = danmaku.getUid();
         if (!pl->userHeaders.contains(uid))
         {
-            QString url = danmaku.extraJson.value("face").toString();
+            QString url = danmaku.getFaceUrl();
+            if (rt->livePlatform == Bilibili)
+            {
+                if (url.isEmpty())
+                    url = danmaku.extraJson.value("face").toString(); // 哔哩哔哩
+            }
+            if (url.isEmpty())
+                continue;
             // qInfo() << "获取头像：" << uid << url;
             get(url, [=](QNetworkReply* reply){
                 if (pl->userHeaders.contains(uid)) // 可能是多线程冲突了
@@ -6238,6 +6245,12 @@ void MainWindow::updateOnlineRankGUI()
                 scoreLabel->setAlignment(Qt::AlignLeft);
             if (!miniHeight)
                 miniHeight = card->height();
+
+            // 抖音不显示分数
+            if (rt->livePlatform == Douyin)
+            {
+                scoreLabel->hide();
+            }
 
             // 创建item
             auto item = new QListWidgetItem();

@@ -126,6 +126,7 @@ SOURCES += \
     services/live_services/bilibili/bili_liveopenservice.cpp \
     services/live_services/bilibili/bili_liveservice.cpp \
     services/live_services/bilibili/protobuf/interact_word_v2.pb.c \
+    services/live_services/douyin/douyin_livecmds.cpp \
     services/live_services/douyin/douyin_liveservice.cpp \
     services/live_services/base/liveservicebase.cpp \
     services/live_services/base/livestatisticservice.cpp \
