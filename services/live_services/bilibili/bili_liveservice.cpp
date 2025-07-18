@@ -756,11 +756,6 @@ void BiliLiveService::startMsgLoop()
     QString host = hostServer.getLink();
     qInfo() << "连接服务器：" << host;
     SOCKET_DEB << "hostServer:" << host << "   hostIndex:" << (hostUseIndex-1);
-
-    // 设置安全套接字连接模式（不知道有啥用）
-    QSslConfiguration config = liveSocket->sslConfiguration();
-    config.setProtocol(QSsl::TlsV1_2OrLater);
-    liveSocket->setSslConfiguration(config);
     liveSocket->open(host);
 }
 

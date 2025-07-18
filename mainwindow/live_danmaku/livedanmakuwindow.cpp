@@ -1267,7 +1267,7 @@ void LiveDanmakuWindow::showMenu()
 
         if (danmaku.is(MSG_GIFT) || danmaku.is(MSG_GUARD_BUY))
         {
-            actionValue->setText(snum(danmaku.getTotalCoin()) + " " + (danmaku.isGoldCoin() ? "金瓜子" : "银瓜子"));
+            actionValue->setText(snum(danmaku.getTotalCoin()) + " " + danmaku.getCoinName());
             if (us->giftAlias.contains(danmaku.getGiftId()))
                 actionSetGiftName->setText("礼物别名：" + us->giftAlias.value(danmaku.getGiftId()));
         }
@@ -2661,6 +2661,9 @@ void LiveDanmakuWindow::showUserMsgHistory(UIDT uid, QString title)
     c = us->danmakuCounts->value("silver/"+uid).toLongLong();
     if (c)
         sums << snum(c)+" 银瓜子";
+    c = us->danmakuCounts->value("douyin_coin/"+uid).toLongLong();
+    if (c)
+        sums << snum(c)+" 抖币";
 
     QStringList sl;
     if (sums.size())

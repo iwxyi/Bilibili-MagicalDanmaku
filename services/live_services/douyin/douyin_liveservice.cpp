@@ -359,9 +359,6 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
     // 开始连接
     QString url = serverUrl + "?" + paramsStr;
     qInfo() << "开始连接：" << url;
-    QSslConfiguration config = liveSocket->sslConfiguration();
-    config.setProtocol(QSsl::TlsV1_2OrLater);
-    liveSocket->setSslConfiguration(config);
 
     // 需要带相同的Cookie，否则会Refuse。但是实测可以用其他账号的cookie
     QNetworkRequest request;
@@ -705,6 +702,9 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
             return showError(method, "解析错误");
         }
 
+        douyin_Common common = gift.common;
+        QString logId = common.logId;
+
         int giftId = gift.giftId;
         int comboCount = gift.comboCount;
         int totalCount = gift.totalCount;
@@ -720,6 +720,8 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
 
         LiveDanmaku danmaku(uname, giftId, giftName, totalCount, uid, QDateTime::currentDateTime(), "", totalPrice);
         danmaku.setFromRoomId(ac->roomId);
+        danmaku.setCoinType("douyin_coin");
+        danmaku.setLogId(logId);
         receiveGift(danmaku);
         appendLiveGift(danmaku);
     }
@@ -790,6 +792,36 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         emit signalPopularChanged(popularity);
         emit signalTotalComeUserChanged(totalUser);
         emit signalTotalPvChanged(totalPvForAnchor);
+    }
+    else if (method == "WebcastRoomStatsMessage")
+    {
+        douyin_RoomStatsMessage roomStats = douyin_RoomStatsMessage_init_zero;
+        pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
+        if (!pb_decode(&payload_stream, douyin_RoomStatsMessage_fields, &roomStats))
+        {
+            qWarning() << PB_GET_ERROR(&payload_stream);
+            return showError(method, "解析错误");
+        }
+        // 这个就是显示在线观众数量
+        QString display = roomStats.display_long;
+        int displayValue = roomStats.display_value;
+        int total = roomStats.total;
+        int displayType = roomStats.display_type;
+        qDebug() << "[人气] 显示:" << display << "值:" << displayValue << "总数:" << total << "类型:" << displayType;
+    }
+    else if (method == "WebcastBackupSEIMessage")
+    {}
+    else if (method == "WebcastRoomRankMessage")
+    {
+        douyin_RoomRankMessage roomRank = douyin_RoomRankMessage_init_zero;
+        pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
+        if (!pb_decode(&payload_stream, douyin_RoomRankMessage_fields, &roomRank))
+        {
+            qWarning() << PB_GET_ERROR(&payload_stream);
+            return showError(method, "解析错误");
+        }
+
+
     }
     else
     {

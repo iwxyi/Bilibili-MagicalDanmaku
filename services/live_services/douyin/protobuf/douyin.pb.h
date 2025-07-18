@@ -18,16 +18,16 @@ typedef enum _douyin_CommentTypeTag {
 /* Struct definitions */
 typedef struct _douyin_Response {
     pb_callback_t messagesList;
-    char cursor[128];
+    char cursor[256];
     uint64_t fetchInterval;
     uint64_t now;
-    char internalExt[128];
+    char internalExt[256];
     uint32_t fetchType;
     pb_callback_t routeParams;
     uint64_t heartbeatDuration;
     bool needAck;
-    char pushServer[128];
-    char liveCursor[128];
+    char pushServer[256];
+    char liveCursor[256];
     bool historyNoMore;
 } douyin_Response;
 
@@ -37,14 +37,14 @@ typedef struct _douyin_Response_RouteParamsEntry {
 } douyin_Response_RouteParamsEntry;
 
 typedef struct _douyin_Message {
-    char method[128];
+    char method[256];
     pb_callback_t payload;
     int64_t msgId;
     int32_t msgType;
     int64_t offset;
     bool needWrdsStore;
     int64_t wrdsVersion;
-    char wrdsSubKey[128];
+    char wrdsSubKey[256];
 } douyin_Message;
 
 typedef struct _douyin_LandscapeAreaCommon {
@@ -67,17 +67,17 @@ typedef struct _douyin_EffectConfig_ExtraMapEntry {
 } douyin_EffectConfig_ExtraMapEntry;
 
 typedef struct _douyin_TextPiecePatternRef {
-    char key[128];
-    char defaultPattern[128];
+    char key[256];
+    char defaultPattern[256];
 } douyin_TextPiecePatternRef;
 
 typedef struct _douyin_TextPieceHeart {
-    char color[128];
+    char color[256];
 } douyin_TextPieceHeart;
 
 typedef struct _douyin_PatternRef {
-    char key[128];
-    char defaultPattern[128];
+    char key[256];
+    char defaultPattern[256];
 } douyin_PatternRef;
 
 typedef struct _douyin_TextPieceGift {
@@ -87,7 +87,7 @@ typedef struct _douyin_TextPieceGift {
 } douyin_TextPieceGift;
 
 typedef struct _douyin_TextFormat {
-    char color[128];
+    char color[256];
     bool bold;
     bool italic;
     uint32_t weight;
@@ -98,8 +98,8 @@ typedef struct _douyin_TextFormat {
 } douyin_TextFormat;
 
 typedef struct _douyin_Text {
-    char key[128];
-    char defaultPatter[128];
+    char key[256];
+    char defaultPatter[256];
     bool has_defaultFormat;
     douyin_TextFormat defaultFormat;
     pb_callback_t piecesList;
@@ -122,9 +122,9 @@ typedef struct _douyin_FollowInfo {
     uint64_t followerCount;
     uint64_t followStatus;
     uint64_t pushStatus;
-    char remarkName[128];
-    char followerCountStr[128];
-    char followingCountStr[128];
+    char remarkName[256];
+    char followerCountStr[256];
+    char followingCountStr[256];
 } douyin_FollowInfo;
 
 typedef struct _douyin_NinePatchSetting {
@@ -132,20 +132,20 @@ typedef struct _douyin_NinePatchSetting {
 } douyin_NinePatchSetting;
 
 typedef struct _douyin_ImageContent {
-    char name[128];
-    char fontColor[128];
+    char name[256];
+    char fontColor[256];
     uint64_t level;
-    char alternativeText[128];
+    char alternativeText[256];
 } douyin_ImageContent;
 
 typedef struct _douyin_Image {
     pb_callback_t urlListList;
-    char uri[128];
+    char uri[256];
     uint64_t height;
     uint64_t width;
-    char avgColor[128];
+    char avgColor[256];
     uint32_t imageType;
-    char openWebUrl[128];
+    char openWebUrl[256];
     bool has_content;
     douyin_ImageContent content;
     bool isAnimated;
@@ -158,7 +158,7 @@ typedef struct _douyin_Image {
 typedef struct _douyin_GiftStruct {
     bool has_image;
     douyin_Image image;
-    char describe[128];
+    char describe[256];
     bool notify;
     uint64_t duration;
     uint64_t id;
@@ -172,9 +172,9 @@ typedef struct _douyin_GiftStruct {
     uint64_t primaryEffectId;
     bool has_giftLabelIcon;
     douyin_Image giftLabelIcon;
-    char name[128];
-    char region[128];
-    char manual[128];
+    char name[256];
+    char region[256];
+    char manual[256];
     bool forCustom;
     bool has_icon;
     douyin_Image icon;
@@ -196,8 +196,8 @@ typedef struct _douyin_TextEffectDetail {
     uint32_t shadowDx;
     uint32_t shadowDy;
     uint32_t shadowRadius;
-    char shadowColor[128];
-    char strokeColor[128];
+    char shadowColor[256];
+    char strokeColor[256];
     uint32_t strokeWidth;
 } douyin_TextEffectDetail;
 
@@ -242,7 +242,7 @@ typedef struct _douyin_EffectConfig {
     uint64_t mp4AnimAssetId;
     uint64_t priority;
     uint64_t maxWaitTime;
-    char dressId[128];
+    char dressId[256];
     uint64_t alignment;
     uint64_t alignmentOffset;
 } douyin_EffectConfig;
@@ -255,21 +255,21 @@ typedef struct _douyin_TextPieceImage {
 
 typedef struct _douyin_PicoDisplayInfo {
     uint64_t comboSumCount;
-    char emoji[128];
+    char emoji[256];
     bool has_emojiIcon;
     douyin_Image emojiIcon;
-    char emojiText[128];
+    char emojiText[256];
 } douyin_PicoDisplayInfo;
 
 typedef struct _douyin_Against {
-    char leftName[128];
+    char leftName[256];
     bool has_leftLogo;
     douyin_Image leftLogo;
-    char leftGoal[128];
-    char rightName[128];
+    char leftGoal[256];
+    char rightName[256];
     bool has_rightLogo;
     douyin_Image rightLogo;
-    char rightGoal[128];
+    char rightGoal[256];
     uint64_t timestamp;
     uint64_t version;
     uint64_t leftTeamId;
@@ -286,12 +286,12 @@ typedef struct _douyin_Against {
 typedef struct _douyin_User {
     uint64_t id;
     uint64_t shortId;
-    char nickName[128];
+    char nickName[256];
     uint32_t gender;
-    char Signature[128];
+    char Signature[256];
     uint32_t Level;
     uint64_t Birthday;
-    char Telephone[128];
+    char Telephone[256];
     bool has_AvatarThumb;
     douyin_Image AvatarThumb;
     bool has_AvatarMedium;
@@ -300,26 +300,26 @@ typedef struct _douyin_User {
     douyin_Image AvatarLarge;
     bool Verified;
     uint32_t Experience;
-    char city[128];
+    char city[256];
     int32_t Status;
     uint64_t CreateTime;
     uint64_t ModifyTime;
     uint32_t Secret;
-    char ShareQrcodeUri[128];
+    char ShareQrcodeUri[256];
     uint32_t IncomeSharePercent;
     pb_callback_t BadgeImageList;
     bool has_FollowInfo;
     douyin_FollowInfo FollowInfo;
-    char SpecialId[128];
+    char SpecialId[256];
     bool has_AvatarBorder;
     douyin_Image AvatarBorder;
     bool has_Medal;
     douyin_Image Medal;
     pb_callback_t RealTimeIconsList;
-    char displayId[128];
-    char secUid[128];
+    char displayId[256];
+    char secUid[256];
     uint64_t fanTicketCount;
-    char idStr[128];
+    char idStr[256];
     uint32_t ageRange;
 } douyin_User;
 
@@ -330,8 +330,8 @@ typedef struct _douyin_RoomUserSeqMessageContributor {
     uint64_t rank;
     uint64_t delta;
     bool isHidden;
-    char scoreDescription[128];
-    char exactlyScore[128];
+    char scoreDescription[256];
+    char exactlyScore[256];
 } douyin_RoomUserSeqMessageContributor;
 
 typedef struct _douyin_TextPieceUser {
@@ -344,7 +344,7 @@ typedef struct _douyin_TextPiece {
     bool type;
     bool has_format;
     douyin_TextFormat format;
-    char stringValue[128];
+    char stringValue[256];
     bool has_userValue;
     douyin_TextPieceUser userValue;
     bool has_giftValue;
@@ -362,7 +362,7 @@ typedef struct _douyin_EpisodeChatMessage {
     douyin_Message common;
     bool has_user;
     douyin_User user;
-    char content[128];
+    char content[256];
     bool visibleToSende;
     bool has_giftImage;
     douyin_Image giftImage;
@@ -371,19 +371,19 @@ typedef struct _douyin_EpisodeChatMessage {
 } douyin_EpisodeChatMessage;
 
 typedef struct _douyin_Common {
-    char method[128];
+    char method[256];
     uint64_t msgId;
     uint64_t roomId;
     uint64_t createTime;
     uint32_t monitor;
     bool isShowMsg;
-    char describe[128];
+    char describe[256];
     uint64_t foldType;
     uint64_t anchorFoldType;
     uint64_t priorityScore;
-    char logId[128];
-    char msgProcessFilterK[128];
-    char msgProcessFilterV[128];
+    char logId[256];
+    char msgProcessFilterK[256];
+    char msgProcessFilterV[256];
     bool has_user;
     douyin_User user;
     uint64_t anchorFoldTypeV2;
@@ -400,15 +400,26 @@ typedef struct _douyin_ChatMessage {
     douyin_Common common;
     bool has_user;
     douyin_User user;
-    char content[128];
+    char content[256];
     bool visibleToSender;
     bool has_backgroundImage;
     douyin_Image backgroundImage;
-    char fullScreenTextColor[128];
+    char fullScreenTextColor[256];
     bool has_backgroundImageV2;
     douyin_Image backgroundImageV2;
     bool has_publicAreaCommon;
     douyin_PublicAreaCommon publicAreaCommon;
+    uint64_t agreeMsgId;
+    uint32_t priorityLevel;
+    bool has_landscapeAreaCommon;
+    douyin_LandscapeAreaCommon landscapeAreaCommon;
+    uint64_t eventTime;
+    bool sendReview;
+    bool fromIntercom;
+    bool intercomHideUserCard;
+    uint32_t individualChatPriority;
+    bool has_rtfContent;
+    douyin_Text rtfContent;
 } douyin_ChatMessage;
 
 typedef struct _douyin_RoomUserSeqMessage {
@@ -416,16 +427,16 @@ typedef struct _douyin_RoomUserSeqMessage {
     douyin_Common common;
     pb_callback_t ranksList;
     int64_t total;
-    char popStr[128];
+    char popStr[256];
     pb_callback_t seatsList;
     int64_t popularity;
     int64_t totalUser;
-    char totalUserStr[128];
-    char totalStr[128];
-    char onlineUserForAnchor[128];
-    char totalPvForAnchor[128];
-    char upRightStatsStr[128];
-    char upRightStatsStrComplete[128];
+    char totalUserStr[256];
+    char totalStr[256];
+    char onlineUserForAnchor[256];
+    char totalPvForAnchor[256];
+    char upRightStatsStr[256];
+    char upRightStatsStrComplete[256];
 } douyin_RoomUserSeqMessage;
 
 typedef struct _douyin_CommonTextMessage {
@@ -433,13 +444,13 @@ typedef struct _douyin_CommonTextMessage {
     douyin_Common common;
     bool has_user;
     douyin_User user;
-    char scene[128];
+    char scene[256];
 } douyin_CommonTextMessage;
 
 typedef struct _douyin_UpdateFanTicketMessage {
     bool has_common;
     douyin_Common common;
-    char roomFanTicketCountText[128];
+    char roomFanTicketCountText[256];
     uint64_t roomFanTicketCount;
     bool forceUpdate;
 } douyin_UpdateFanTicketMessage;
@@ -466,7 +477,7 @@ typedef struct _douyin_GiftMessage {
     douyin_GiftIMPriority priority;
     bool has_gift;
     douyin_GiftStruct gift;
-    char logId[128];
+    char logId[256];
     uint64_t sendType;
     bool has_publicAreaCommon;
     douyin_PublicAreaCommon publicAreaCommon;
@@ -474,15 +485,15 @@ typedef struct _douyin_GiftMessage {
     douyin_Text trayDisplayText;
     uint64_t bannedDisplayEffects;
     bool displayForSelf;
-    char interactGiftInfo[128];
-    char diyItemInfo[128];
+    char interactGiftInfo[256];
+    char diyItemInfo[256];
     pb_callback_t minAssetSetList;
     uint64_t totalCount;
     uint32_t clientGiftSource;
     pb_callback_t toUserIdsList;
     uint64_t sendTime;
     uint64_t forceDisplayEffects;
-    char traceId[128];
+    char traceId[256];
     uint64_t effectDisplayTs;
 } douyin_GiftMessage;
 
@@ -500,11 +511,11 @@ typedef struct _douyin_MemberMessage {
     uint64_t topUserNo;
     uint64_t enterType;
     uint64_t action;
-    char actionDescription[128];
+    char actionDescription[256];
     uint64_t userId;
     bool has_effectConfig;
     douyin_EffectConfig effectConfig;
-    char popStr[128];
+    char popStr[256];
     bool has_enterEffectConfig;
     douyin_EffectConfig enterEffectConfig;
     bool has_backgroundImage;
@@ -527,13 +538,13 @@ typedef struct _douyin_LikeMessage {
     uint64_t color;
     bool has_user;
     douyin_User user;
-    char icon[128];
+    char icon[256];
     bool has_doubleLikeDetail;
     douyin_DoubleLikeDetail doubleLikeDetail;
     bool has_displayControlInfo;
     douyin_DisplayControlInfo displayControlInfo;
     uint64_t linkmicGuestUid;
-    char scene[128];
+    char scene[256];
     bool has_picoDisplayInfo;
     douyin_PicoDisplayInfo picoDisplayInfo;
 } douyin_LikeMessage;
@@ -545,7 +556,7 @@ typedef struct _douyin_SocialMessage {
     douyin_User user;
     uint64_t shareType;
     uint64_t action;
-    char shareTarget[128];
+    char shareTarget[256];
     uint64_t followCount;
     bool has_publicAreaCommon;
     douyin_PublicAreaCommon publicAreaCommon;
@@ -560,14 +571,49 @@ typedef struct _douyin_MatchAgainstScoreMessage {
     uint32_t displayStatus;
 } douyin_MatchAgainstScoreMessage;
 
+typedef struct _douyin_RoomStatsMessage {
+    bool has_common;
+    douyin_Common common;
+    char display_short[256];
+    char display_middle[256];
+    char display_long[256];
+    uint64_t display_value;
+    uint64_t display_version;
+    bool incremental;
+    bool is_hidden;
+    uint64_t total;
+    uint64_t display_type;
+} douyin_RoomStatsMessage;
+
+typedef struct _douyin_BackupSEIMessage {
+    bool has_common;
+    douyin_Common common;
+    char source[256];
+    char sei_data[256];
+    char stream_id[256];
+} douyin_BackupSEIMessage;
+
+typedef struct _douyin_RoomRankMessage {
+    bool has_common;
+    douyin_Common common;
+    pb_callback_t ranks;
+} douyin_RoomRankMessage;
+
+typedef struct _douyin_RoomRank {
+    bool has_user;
+    douyin_User user;
+    char score_str[256];
+    bool profile_hidden;
+} douyin_RoomRank;
+
 typedef struct _douyin_PushFrame {
     uint64_t seqId;
     uint64_t logId;
     uint64_t service;
     uint64_t method;
     pb_callback_t headersList;
-    char payloadEncoding[128];
-    char payloadType[128];
+    char payloadEncoding[256];
+    char payloadType[256];
     pb_callback_t payload;
 } douyin_PushFrame;
 
@@ -576,25 +622,25 @@ typedef struct _douyin_kk {
 } douyin_kk;
 
 typedef struct _douyin_SendMessageBody {
-    char conversationId[128];
+    char conversationId[256];
     uint32_t conversationType;
     uint64_t conversationShortId;
-    char content[128];
+    char content[256];
     pb_callback_t ext;
     uint32_t messageType;
-    char ticket[128];
-    char clientMessageId[128];
+    char ticket[256];
+    char clientMessageId[256];
 } douyin_SendMessageBody;
 
 typedef struct _douyin_ExtList {
-    char key[128];
-    char value[128];
+    char key[256];
+    char value[256];
 } douyin_ExtList;
 
 typedef struct _douyin_Rsp_F {
     uint64_t q1;
     uint64_t q3;
-    char q4[128];
+    char q4[256];
     uint64_t q5;
 } douyin_Rsp_F;
 
@@ -602,11 +648,11 @@ typedef struct _douyin_Rsp {
     int32_t a;
     int32_t b;
     int32_t c;
-    char d[128];
+    char d[256];
     int32_t e;
     bool has_f;
     douyin_Rsp_F f;
-    char g[128];
+    char g[256];
     uint64_t h;
     uint64_t i;
     uint64_t j;
@@ -615,24 +661,24 @@ typedef struct _douyin_Rsp {
 typedef struct _douyin_PreMessage {
     uint32_t cmd;
     uint32_t sequenceId;
-    char sdkVersion[128];
-    char token[128];
+    char sdkVersion[256];
+    char token[256];
     uint32_t refer;
     uint32_t inboxType;
-    char buildNumber[128];
+    char buildNumber[256];
     bool has_sendMessageBody;
     douyin_SendMessageBody sendMessageBody;
-    char aa[128];
-    char devicePlatform[128];
+    char aa[256];
+    char devicePlatform[256];
     pb_callback_t headers;
     uint32_t authType;
-    char biz[128];
-    char access[128];
+    char biz[256];
+    char access[256];
 } douyin_PreMessage;
 
 typedef struct _douyin_HeadersList {
-    char key[128];
-    char value[128];
+    char key[256];
+    char value[256];
 } douyin_HeadersList;
 
 
@@ -696,11 +742,15 @@ extern "C" {
 
 
 
+
+
+
+
 /* Initializer values for message structs */
 #define douyin_Response_init_default             {{{NULL}, NULL}, "", 0, 0, "", 0, {{NULL}, NULL}, 0, 0, "", "", 0}
 #define douyin_Response_RouteParamsEntry_init_default {{{NULL}, NULL}, {{NULL}, NULL}}
 #define douyin_Message_init_default              {"", {{NULL}, NULL}, 0, 0, 0, 0, 0, ""}
-#define douyin_ChatMessage_init_default          {false, douyin_Common_init_default, false, douyin_User_init_default, "", 0, false, douyin_Image_init_default, "", false, douyin_Image_init_default, false, douyin_PublicAreaCommon_init_default}
+#define douyin_ChatMessage_init_default          {false, douyin_Common_init_default, false, douyin_User_init_default, "", 0, false, douyin_Image_init_default, "", false, douyin_Image_init_default, false, douyin_PublicAreaCommon_init_default, 0, 0, false, douyin_LandscapeAreaCommon_init_default, 0, 0, 0, 0, 0, false, douyin_Text_init_default}
 #define douyin_LandscapeAreaCommon_init_default  {0, 0, 0, {{NULL}, NULL}, {{NULL}, NULL}}
 #define douyin_RoomUserSeqMessage_init_default   {false, douyin_Common_init_default, {{NULL}, NULL}, 0, "", {{NULL}, NULL}, 0, 0, "", "", "", "", "", ""}
 #define douyin_CommonTextMessage_init_default    {false, douyin_Common_init_default, false, douyin_User_init_default, ""}
@@ -738,6 +788,10 @@ extern "C" {
 #define douyin_Image_init_default                {{{NULL}, NULL}, "", 0, 0, "", 0, "", false, douyin_ImageContent_init_default, 0, false, douyin_NinePatchSetting_init_default, false, douyin_NinePatchSetting_init_default}
 #define douyin_NinePatchSetting_init_default     {{{NULL}, NULL}}
 #define douyin_ImageContent_init_default         {"", "", 0, ""}
+#define douyin_RoomStatsMessage_init_default     {false, douyin_Common_init_default, "", "", "", 0, 0, 0, 0, 0, 0}
+#define douyin_BackupSEIMessage_init_default     {false, douyin_Common_init_default, "", "", ""}
+#define douyin_RoomRankMessage_init_default      {false, douyin_Common_init_default, {{NULL}, NULL}}
+#define douyin_RoomRank_init_default             {false, douyin_User_init_default, "", 0}
 #define douyin_PushFrame_init_default            {0, 0, 0, 0, {{NULL}, NULL}, "", "", {{NULL}, NULL}}
 #define douyin_kk_init_default                   {0}
 #define douyin_SendMessageBody_init_default      {"", 0, 0, "", {{NULL}, NULL}, 0, "", ""}
@@ -749,7 +803,7 @@ extern "C" {
 #define douyin_Response_init_zero                {{{NULL}, NULL}, "", 0, 0, "", 0, {{NULL}, NULL}, 0, 0, "", "", 0}
 #define douyin_Response_RouteParamsEntry_init_zero {{{NULL}, NULL}, {{NULL}, NULL}}
 #define douyin_Message_init_zero                 {"", {{NULL}, NULL}, 0, 0, 0, 0, 0, ""}
-#define douyin_ChatMessage_init_zero             {false, douyin_Common_init_zero, false, douyin_User_init_zero, "", 0, false, douyin_Image_init_zero, "", false, douyin_Image_init_zero, false, douyin_PublicAreaCommon_init_zero}
+#define douyin_ChatMessage_init_zero             {false, douyin_Common_init_zero, false, douyin_User_init_zero, "", 0, false, douyin_Image_init_zero, "", false, douyin_Image_init_zero, false, douyin_PublicAreaCommon_init_zero, 0, 0, false, douyin_LandscapeAreaCommon_init_zero, 0, 0, 0, 0, 0, false, douyin_Text_init_zero}
 #define douyin_LandscapeAreaCommon_init_zero     {0, 0, 0, {{NULL}, NULL}, {{NULL}, NULL}}
 #define douyin_RoomUserSeqMessage_init_zero      {false, douyin_Common_init_zero, {{NULL}, NULL}, 0, "", {{NULL}, NULL}, 0, 0, "", "", "", "", "", ""}
 #define douyin_CommonTextMessage_init_zero       {false, douyin_Common_init_zero, false, douyin_User_init_zero, ""}
@@ -787,6 +841,10 @@ extern "C" {
 #define douyin_Image_init_zero                   {{{NULL}, NULL}, "", 0, 0, "", 0, "", false, douyin_ImageContent_init_zero, 0, false, douyin_NinePatchSetting_init_zero, false, douyin_NinePatchSetting_init_zero}
 #define douyin_NinePatchSetting_init_zero        {{{NULL}, NULL}}
 #define douyin_ImageContent_init_zero            {"", "", 0, ""}
+#define douyin_RoomStatsMessage_init_zero        {false, douyin_Common_init_zero, "", "", "", 0, 0, 0, 0, 0, 0}
+#define douyin_BackupSEIMessage_init_zero        {false, douyin_Common_init_zero, "", "", ""}
+#define douyin_RoomRankMessage_init_zero         {false, douyin_Common_init_zero, {{NULL}, NULL}}
+#define douyin_RoomRank_init_zero                {false, douyin_User_init_zero, "", 0}
 #define douyin_PushFrame_init_zero               {0, 0, 0, 0, {{NULL}, NULL}, "", "", {{NULL}, NULL}}
 #define douyin_kk_init_zero                      {0}
 #define douyin_SendMessageBody_init_zero         {"", 0, 0, "", {{NULL}, NULL}, 0, "", ""}
@@ -1046,6 +1104,15 @@ extern "C" {
 #define douyin_ChatMessage_fullScreenTextColor_tag 6
 #define douyin_ChatMessage_backgroundImageV2_tag 7
 #define douyin_ChatMessage_publicAreaCommon_tag  8
+#define douyin_ChatMessage_agreeMsgId_tag        11
+#define douyin_ChatMessage_priorityLevel_tag     12
+#define douyin_ChatMessage_landscapeAreaCommon_tag 13
+#define douyin_ChatMessage_eventTime_tag         15
+#define douyin_ChatMessage_sendReview_tag        16
+#define douyin_ChatMessage_fromIntercom_tag      17
+#define douyin_ChatMessage_intercomHideUserCard_tag 18
+#define douyin_ChatMessage_individualChatPriority_tag 21
+#define douyin_ChatMessage_rtfContent_tag        40
 #define douyin_RoomUserSeqMessage_common_tag     1
 #define douyin_RoomUserSeqMessage_ranksList_tag  2
 #define douyin_RoomUserSeqMessage_total_tag      3
@@ -1140,6 +1207,25 @@ extern "C" {
 #define douyin_MatchAgainstScoreMessage_against_tag 2
 #define douyin_MatchAgainstScoreMessage_matchStatus_tag 3
 #define douyin_MatchAgainstScoreMessage_displayStatus_tag 4
+#define douyin_RoomStatsMessage_common_tag       1
+#define douyin_RoomStatsMessage_display_short_tag 2
+#define douyin_RoomStatsMessage_display_middle_tag 3
+#define douyin_RoomStatsMessage_display_long_tag 4
+#define douyin_RoomStatsMessage_display_value_tag 5
+#define douyin_RoomStatsMessage_display_version_tag 6
+#define douyin_RoomStatsMessage_incremental_tag  7
+#define douyin_RoomStatsMessage_is_hidden_tag    8
+#define douyin_RoomStatsMessage_total_tag        9
+#define douyin_RoomStatsMessage_display_type_tag 10
+#define douyin_BackupSEIMessage_common_tag       1
+#define douyin_BackupSEIMessage_source_tag       3
+#define douyin_BackupSEIMessage_sei_data_tag     4
+#define douyin_BackupSEIMessage_stream_id_tag    5
+#define douyin_RoomRankMessage_common_tag        1
+#define douyin_RoomRankMessage_ranks_tag         2
+#define douyin_RoomRank_user_tag                 1
+#define douyin_RoomRank_score_str_tag            2
+#define douyin_RoomRank_profile_hidden_tag       3
 #define douyin_PushFrame_seqId_tag               1
 #define douyin_PushFrame_logId_tag               2
 #define douyin_PushFrame_service_tag             3
@@ -1235,7 +1321,16 @@ X(a, STATIC,   SINGULAR, BOOL,     visibleToSender,   4) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  backgroundImage,   5) \
 X(a, STATIC,   SINGULAR, STRING,   fullScreenTextColor,   6) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  backgroundImageV2,   7) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  publicAreaCommon,   8)
+X(a, STATIC,   OPTIONAL, MESSAGE,  publicAreaCommon,   8) \
+X(a, STATIC,   SINGULAR, UINT64,   agreeMsgId,       11) \
+X(a, STATIC,   SINGULAR, UINT32,   priorityLevel,    12) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  landscapeAreaCommon,  13) \
+X(a, STATIC,   SINGULAR, UINT64,   eventTime,        15) \
+X(a, STATIC,   SINGULAR, BOOL,     sendReview,       16) \
+X(a, STATIC,   SINGULAR, BOOL,     fromIntercom,     17) \
+X(a, STATIC,   SINGULAR, BOOL,     intercomHideUserCard,  18) \
+X(a, STATIC,   SINGULAR, UINT32,   individualChatPriority,  21) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  rtfContent,       40)
 #define douyin_ChatMessage_CALLBACK NULL
 #define douyin_ChatMessage_DEFAULT NULL
 #define douyin_ChatMessage_common_MSGTYPE douyin_Common
@@ -1243,6 +1338,8 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  publicAreaCommon,   8)
 #define douyin_ChatMessage_backgroundImage_MSGTYPE douyin_Image
 #define douyin_ChatMessage_backgroundImageV2_MSGTYPE douyin_Image
 #define douyin_ChatMessage_publicAreaCommon_MSGTYPE douyin_PublicAreaCommon
+#define douyin_ChatMessage_landscapeAreaCommon_MSGTYPE douyin_LandscapeAreaCommon
+#define douyin_ChatMessage_rtfContent_MSGTYPE douyin_Text
 
 #define douyin_LandscapeAreaCommon_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, BOOL,     showHead,          1) \
@@ -1784,6 +1881,46 @@ X(a, STATIC,   SINGULAR, STRING,   alternativeText,   4)
 #define douyin_ImageContent_CALLBACK NULL
 #define douyin_ImageContent_DEFAULT NULL
 
+#define douyin_RoomStatsMessage_FIELDLIST(X, a) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  common,            1) \
+X(a, STATIC,   SINGULAR, STRING,   display_short,     2) \
+X(a, STATIC,   SINGULAR, STRING,   display_middle,    3) \
+X(a, STATIC,   SINGULAR, STRING,   display_long,      4) \
+X(a, STATIC,   SINGULAR, UINT64,   display_value,     5) \
+X(a, STATIC,   SINGULAR, UINT64,   display_version,   6) \
+X(a, STATIC,   SINGULAR, BOOL,     incremental,       7) \
+X(a, STATIC,   SINGULAR, BOOL,     is_hidden,         8) \
+X(a, STATIC,   SINGULAR, UINT64,   total,             9) \
+X(a, STATIC,   SINGULAR, UINT64,   display_type,     10)
+#define douyin_RoomStatsMessage_CALLBACK NULL
+#define douyin_RoomStatsMessage_DEFAULT NULL
+#define douyin_RoomStatsMessage_common_MSGTYPE douyin_Common
+
+#define douyin_BackupSEIMessage_FIELDLIST(X, a) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  common,            1) \
+X(a, STATIC,   SINGULAR, STRING,   source,            3) \
+X(a, STATIC,   SINGULAR, STRING,   sei_data,          4) \
+X(a, STATIC,   SINGULAR, STRING,   stream_id,         5)
+#define douyin_BackupSEIMessage_CALLBACK NULL
+#define douyin_BackupSEIMessage_DEFAULT NULL
+#define douyin_BackupSEIMessage_common_MSGTYPE douyin_Common
+
+#define douyin_RoomRankMessage_FIELDLIST(X, a) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  common,            1) \
+X(a, CALLBACK, REPEATED, MESSAGE,  ranks,             2)
+#define douyin_RoomRankMessage_CALLBACK pb_default_field_callback
+#define douyin_RoomRankMessage_DEFAULT NULL
+#define douyin_RoomRankMessage_common_MSGTYPE douyin_Common
+#define douyin_RoomRankMessage_ranks_MSGTYPE douyin_RoomRank
+
+#define douyin_RoomRank_FIELDLIST(X, a) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  user,              1) \
+X(a, STATIC,   SINGULAR, STRING,   score_str,         2) \
+X(a, STATIC,   SINGULAR, BOOL,     profile_hidden,    3)
+#define douyin_RoomRank_CALLBACK NULL
+#define douyin_RoomRank_DEFAULT NULL
+#define douyin_RoomRank_user_MSGTYPE douyin_User
+
 #define douyin_PushFrame_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, UINT64,   seqId,             1) \
 X(a, STATIC,   SINGULAR, UINT64,   logId,             2) \
@@ -1911,6 +2048,10 @@ extern const pb_msgdesc_t douyin_FollowInfo_msg;
 extern const pb_msgdesc_t douyin_Image_msg;
 extern const pb_msgdesc_t douyin_NinePatchSetting_msg;
 extern const pb_msgdesc_t douyin_ImageContent_msg;
+extern const pb_msgdesc_t douyin_RoomStatsMessage_msg;
+extern const pb_msgdesc_t douyin_BackupSEIMessage_msg;
+extern const pb_msgdesc_t douyin_RoomRankMessage_msg;
+extern const pb_msgdesc_t douyin_RoomRank_msg;
 extern const pb_msgdesc_t douyin_PushFrame_msg;
 extern const pb_msgdesc_t douyin_kk_msg;
 extern const pb_msgdesc_t douyin_SendMessageBody_msg;
@@ -1962,6 +2103,10 @@ extern const pb_msgdesc_t douyin_HeadersList_msg;
 #define douyin_Image_fields &douyin_Image_msg
 #define douyin_NinePatchSetting_fields &douyin_NinePatchSetting_msg
 #define douyin_ImageContent_fields &douyin_ImageContent_msg
+#define douyin_RoomStatsMessage_fields &douyin_RoomStatsMessage_msg
+#define douyin_BackupSEIMessage_fields &douyin_BackupSEIMessage_msg
+#define douyin_RoomRankMessage_fields &douyin_RoomRankMessage_msg
+#define douyin_RoomRank_fields &douyin_RoomRank_msg
 #define douyin_PushFrame_fields &douyin_PushFrame_msg
 #define douyin_kk_fields &douyin_kk_msg
 #define douyin_SendMessageBody_fields &douyin_SendMessageBody_msg
@@ -2004,23 +2149,27 @@ extern const pb_msgdesc_t douyin_HeadersList_msg;
 /* douyin_User_size depends on runtime parameters */
 /* douyin_Image_size depends on runtime parameters */
 /* douyin_NinePatchSetting_size depends on runtime parameters */
+/* douyin_RoomStatsMessage_size depends on runtime parameters */
+/* douyin_BackupSEIMessage_size depends on runtime parameters */
+/* douyin_RoomRankMessage_size depends on runtime parameters */
+/* douyin_RoomRank_size depends on runtime parameters */
 /* douyin_PushFrame_size depends on runtime parameters */
 /* douyin_SendMessageBody_size depends on runtime parameters */
 /* douyin_PreMessage_size depends on runtime parameters */
 #define DOUYIN_DOUYIN_PB_H_MAX_SIZE              douyin_Rsp_size
 #define douyin_DisplayControlInfo_size           4
 #define douyin_DoubleLikeDetail_size             20
-#define douyin_ExtList_size                      260
-#define douyin_FollowInfo_size                   434
-#define douyin_HeadersList_size                  260
-#define douyin_ImageContent_size                 401
-#define douyin_PatternRef_size                   260
-#define douyin_Rsp_F_size                        163
-#define douyin_Rsp_size                          503
-#define douyin_TextFormat_size                   156
-#define douyin_TextPieceGift_size                274
-#define douyin_TextPieceHeart_size               130
-#define douyin_TextPiecePatternRef_size          260
+#define douyin_ExtList_size                      516
+#define douyin_FollowInfo_size                   818
+#define douyin_HeadersList_size                  516
+#define douyin_ImageContent_size                 785
+#define douyin_PatternRef_size                   516
+#define douyin_Rsp_F_size                        291
+#define douyin_Rsp_size                          887
+#define douyin_TextFormat_size                   284
+#define douyin_TextPieceGift_size                530
+#define douyin_TextPieceHeart_size               258
+#define douyin_TextPiecePatternRef_size          516
 #define douyin_kk_size                           6
 
 #ifdef __cplusplus

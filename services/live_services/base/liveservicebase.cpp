@@ -39,6 +39,10 @@ void LiveServiceBase::init()
     // WebSocket
     liveSocket = new QWebSocket();
 
+    QSslConfiguration config = liveSocket->sslConfiguration();
+    config.setProtocol(QSsl::TlsV1_2OrLater);
+    liveSocket->setSslConfiguration(config);
+
     connect(liveSocket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
         QString str = "未知";
         if (state == QAbstractSocket::UnconnectedState)
@@ -717,7 +721,8 @@ bool LiveServiceBase::mergeGiftCombo(const LiveDanmaku &danmaku)
             return false;
         if (dm.getMsgType() != MSG_GIFT
                 || dm.getUid() != uid
-                || dm.getGiftId() != giftId)
+                || dm.getGiftId() != giftId
+                || dm.getLogId() == danmaku.getLogId())
             continue;
 
         // 是这个没错了
@@ -728,7 +733,7 @@ bool LiveServiceBase::mergeGiftCombo(const LiveDanmaku &danmaku)
         return false;
 
     // 开始合并
-    qInfo() << "合并相同礼物至：" << merged->toString();
+    qInfo() << "合并相同礼物至：" << merged->getUid() << merged->getGiftId() << merged->toString();
     merged->addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getDiscountPrice(), danmaku.getTimeline());
 
     // 合并实时弹幕
@@ -844,16 +849,17 @@ void LiveServiceBase::receiveGift(LiveDanmaku &danmaku)
     }
     if (coinType == "gold" || rt->livePlatform != Bilibili)
     {
-        qint64 userGold = us->danmakuCounts->value("gold/" + uid).toLongLong();
+        QString coinType = danmaku.getCoinType();
+        qint64 userGold = us->danmakuCounts->value(coinType + "/" + uid).toLongLong();
         userGold += totalCoin;
-        us->danmakuCounts->setValue("gold/"+uid, userGold);
+        us->danmakuCounts->setValue(coinType + "/" + uid, userGold);
 
         dailyGiftGold += totalCoin;
         if (dailySettings)
-            dailySettings->setValue("gift_gold", dailyGiftGold);
+            dailySettings->setValue("gift_" + coinType, dailyGiftGold);
         currentLiveGiftGold += totalCoin;
         if (currentLiveSettings)
-            currentLiveSettings->setValue("gift_gold", currentLiveGiftGold);
+            currentLiveSettings->setValue("gift_" + coinType, currentLiveGiftGold);
 
         // 正在PK，保存弹幕历史
         // 因为最后的大乱斗最佳助攻只提供名字，所以这里需要保存 uname->uid 的映射

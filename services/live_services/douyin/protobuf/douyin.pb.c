@@ -72,7 +72,7 @@ PB_BIND(douyin_TextPieceImage, douyin_TextPieceImage, 2)
 PB_BIND(douyin_TextPiecePatternRef, douyin_TextPiecePatternRef, 2)
 
 
-PB_BIND(douyin_TextPieceHeart, douyin_TextPieceHeart, AUTO)
+PB_BIND(douyin_TextPieceHeart, douyin_TextPieceHeart, 2)
 
 
 PB_BIND(douyin_TextPieceGift, douyin_TextPieceGift, 2)
@@ -84,7 +84,7 @@ PB_BIND(douyin_PatternRef, douyin_PatternRef, 2)
 PB_BIND(douyin_TextPieceUser, douyin_TextPieceUser, 4)
 
 
-PB_BIND(douyin_TextFormat, douyin_TextFormat, AUTO)
+PB_BIND(douyin_TextFormat, douyin_TextFormat, 2)
 
 
 PB_BIND(douyin_LikeMessage, douyin_LikeMessage, 4)
@@ -129,6 +129,18 @@ PB_BIND(douyin_NinePatchSetting, douyin_NinePatchSetting, AUTO)
 PB_BIND(douyin_ImageContent, douyin_ImageContent, 2)
 
 
+PB_BIND(douyin_RoomStatsMessage, douyin_RoomStatsMessage, 4)
+
+
+PB_BIND(douyin_BackupSEIMessage, douyin_BackupSEIMessage, 4)
+
+
+PB_BIND(douyin_RoomRankMessage, douyin_RoomRankMessage, 4)
+
+
+PB_BIND(douyin_RoomRank, douyin_RoomRank, 4)
+
+
 PB_BIND(douyin_PushFrame, douyin_PushFrame, 2)
 
 
@@ -144,7 +156,7 @@ PB_BIND(douyin_ExtList, douyin_ExtList, 2)
 PB_BIND(douyin_Rsp, douyin_Rsp, 2)
 
 
-PB_BIND(douyin_Rsp_F, douyin_Rsp_F, AUTO)
+PB_BIND(douyin_Rsp_F, douyin_Rsp_F, 2)
 
 
 PB_BIND(douyin_PreMessage, douyin_PreMessage, 2)

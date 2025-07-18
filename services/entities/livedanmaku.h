@@ -227,6 +227,7 @@ public:
         danmaku.reply_type_enum = object.value("reply_type_enum").toInt();
         danmaku.wealth_level = object.value("honor_level").toInt();
         danmaku.fromRoomId = object.value("from_room_id").toString();
+        danmaku.logId = object.value("log_id").toString();
         return danmaku;
     }
 
@@ -358,6 +359,10 @@ public:
         if (!fromRoomId.isEmpty())
         {
             object.insert("from_room_id", fromRoomId);
+        }
+        if (!logId.isEmpty())
+        {
+            object.insert("log_id", logId);
         }
         return object;
     }
@@ -542,6 +547,11 @@ public:
         this->text = s;
     }
 
+    void setCoinType(QString s)
+    {
+        this->coin_type = s;
+    }
+
     void setNumber(int num)
     {
         this->number = num;
@@ -681,6 +691,11 @@ public:
         this->original_gift_name = name;
     }
 
+    void setLogId(QString logId)
+    {
+        this->logId = logId;
+    }
+
     QString getText() const
     {
         return text;
@@ -806,6 +821,17 @@ public:
     bool isGoldCoin() const
     {
         return coin_type == "gold";
+    }
+
+    QString getCoinName() const
+    {
+        if (coin_type == "gold")
+            return "金瓜子";
+        else if (coin_type == "silver")
+            return "银瓜子";
+        else if (coin_type.contains("dy"))
+            return "抖币";
+        return "<未知单位>";
     }
 
     bool isSilverCoin() const
@@ -1053,6 +1079,11 @@ public:
         return fromRoomId;
     }
 
+    QString getLogId() const
+    {
+        return logId;
+    }
+
 protected:
     MessageType msgType = MSG_DANMAKU;
 
@@ -1099,6 +1130,7 @@ protected:
     qint64 total_coin = 0;
     qint64 discount_price = 0;
     QString original_gift_name;
+    QString logId;
 
     QString spread_desc; // 星光推广
     QString spread_info; // 颜色
