@@ -96,6 +96,7 @@ INCLUDEPATH += \
     widgets/guard_online/ \
     widgets/smooth_scroll/ \
     widgets/buy_vip/ \
+    widgets/webview_login/ \
     widgets/ \
     third_party/ \
     widgets/editor/ \
@@ -254,7 +255,9 @@ SOURCES += \
     third_party/utils/stringutil.cpp \
     third_party/utils/textinputdialog.cpp \
     widgets/video_player/livevideoplayer.cpp \
-    widgets/video_lyric_creator/videolyricscreator.cpp
+    widgets/video_lyric_creator/videolyricscreator.cpp \
+    widgets/webview_login/WebLoginDialog.cpp \
+    widgets/webview_login/WebLoginUtil.cpp
 
 HEADERS += \
     global/accountinfo.h \
@@ -481,6 +484,8 @@ HEADERS += \
     third_party/utils/textinputdialog.h \
     widgets/video_player/livevideoplayer.h \
     widgets/video_lyric_creator/videolyricscreator.h \
+    widgets/webview_login/WebLoginDialog.h \
+    widgets/webview_login/WebLoginUtil.h \
     widgets/windowshwnd.h
 
 FORMS += \

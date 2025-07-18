@@ -37,6 +37,7 @@
 #include "pixmaputil.h"
 #include "emailutil.h"
 #include "douyin_liveservice.h"
+#include "webview_login/WebLoginUtil.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -10107,6 +10108,7 @@ void MainWindow::on_robotNameButton_clicked()
 {
     newFacileMenu;
     menu->addAction(ui->actionQRCode_Login);
+    menu->addAction(ui->actionWebViewLogin);
     menu->addAction(ui->actionSet_Cookie);
     menu->addAction(ui->actionSet_Danmaku_Data_Format)->hide(rt->livePlatform != Bilibili);
     menu->split()->addAction(ui->actionLogout)->disable(ac->browserCookie.isEmpty());
@@ -11732,5 +11734,30 @@ void MainWindow::on_platformButton_clicked()
         switchToPlatform(Kuaishou);
     })->check(rt->livePlatform == Kuaishou)->disable();
     menu->exec();
+}
+
+
+void MainWindow::on_actionWebViewLogin_triggered()
+{
+    QString platformUrl;
+
+    switch (rt->livePlatform)
+    {
+    case Bilibili:
+        platformUrl = "https://live.bilibili.com";
+        break;
+    case Douyin:
+        platformUrl = "https://live.douyin.com";
+        break;
+    default:
+        return ;
+    }
+
+    QString newCookie = WebLoginUtil::getCookie(platformUrl, ac->browserCookie);
+    if (!newCookie.isEmpty())
+    {
+        qDebug() << "浏览器登录Cookie：" << newCookie;
+        autoSetCookie(newCookie);
+    }
 }
 

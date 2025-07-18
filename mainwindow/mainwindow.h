@@ -763,6 +763,8 @@ private slots:
 
     void on_platformButton_clicked();
 
+    void on_actionWebViewLogin_triggered();
+
 private:
     void initView();
     void initStyle();

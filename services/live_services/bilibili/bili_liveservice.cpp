@@ -323,7 +323,7 @@ QString BiliLiveService::toWbiParam(QString params) const
 
 void BiliLiveService::getAccountInfo(const QString &uid, NetJsonFunc func)
 {
-    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + ac->cookieUid + "&platform=web&token=&web_location=1550101");
+    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + uid + "&platform=web&token=&web_location=1550101");
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
