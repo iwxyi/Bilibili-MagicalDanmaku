@@ -978,6 +978,11 @@ void MainWindow::initLiveService()
             liveService->adjustDanmakuLongest();
     });
 
+    connect(liveService, &LiveServiceBase::signalOnlineCountChanged, this, [=](qint64 count){
+        ui->guardCountLabel->setText(snum(count));
+        ui->guardCountTextLabel->setText("在线");
+    });
+
     connect(liveService, &LiveServiceBase::signalDanmuPopularChanged, this, [=](const QString& text){
         ui->danmuCountLabel->setToolTip(text);
     });
@@ -992,6 +997,16 @@ void MainWindow::initLiveService()
 
     connect(liveService, &LiveServiceBase::signalFansCountChanged, this, [=](qint64 count){
         ui->fansCountLabel->setText(snum(count));
+    });
+
+    connect(liveService, &LiveServiceBase::signalTotalComeUserChanged, this, [=](qint64 count){
+        ui->hourRankLabel->setText(snum(count));
+        ui->hourRankTextLabel->setText("总进入");
+    });
+
+    connect(liveService, &LiveServiceBase::signalTotalPvChanged, this, [=](const QString& text){
+        ui->liveRankLabel->setText(text);
+        ui->liveRankTextLabel->setText("总PV");
     });
 
     connect(liveService, &LiveServiceBase::signalSignInfoChanged, this, [=](const QString& text){
@@ -1120,8 +1135,8 @@ void MainWindow::initLiveService()
     connect(liveService, &LiveServiceBase::signalLikeChanged, this, [=](int count) {
         if (rt->livePlatform == Douyin)
         {
-            ui->popularityLabel->setText(snum(count));
-            ui->popularityTextLabel->setText("点赞");
+            ui->roomRankLabel->setText(snum(count));
+            ui->roomRankTextLabel->setText("点赞");
         }
         else
         {
@@ -1333,7 +1348,10 @@ void MainWindow::initLiveService()
 /// 根据不同的平台调整对应的控件
 void MainWindow::adjustWidgetsByPlatform()
 {
-
+    if (rt->livePlatform == Douyin)
+    {
+        ui->guardCountTextLabel->setText("在线");
+    }
 }
 
 /// 读取 settings 中的变量，并进行一系列初始化操作

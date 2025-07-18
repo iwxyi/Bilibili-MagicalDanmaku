@@ -501,7 +501,8 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     // 设置数据
     item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
-    if ((danmaku.is(MSG_DANMAKU) || danmaku.is(MSG_SUPER_CHAT)) && !simpleMode && !us->closeGui) // 只显示弹幕的数据
+    if (rt->livePlatform == Bilibili 
+        && (danmaku.is(MSG_DANMAKU) || danmaku.is(MSG_SUPER_CHAT)) && !simpleMode && !us->closeGui) // 只显示弹幕的数据
     {
         QString path = headPath(danmaku.getUid());
         bool hasPortrait = QFileInfo(path).exists();

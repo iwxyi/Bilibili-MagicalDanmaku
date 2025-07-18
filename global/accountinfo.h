@@ -15,6 +15,7 @@ public:
 
     // 当前账号
     QString cookieUid;        // 自己的UID
+    QString cookieSecUid;     // 自己的secUid
     QString cookieUname;      // 自己的昵称
     QString cookieToken;      // csrf_token
     int cookieULevel = 0;     // 自己的等级

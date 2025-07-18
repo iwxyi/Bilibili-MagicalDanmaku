@@ -94,6 +94,9 @@ signals:
     void signalPopularChanged(qint64 count); // 人气值
     void signalPopularTextChanged(const QString& text);
     void signalFansCountChanged(qint64 count); // 粉丝数
+    void signalOnlineCountChanged(qint64 count); // 在线人数
+    void signalTotalComeUserChanged(qint64 count); // 累计进房总人数
+    void signalTotalPvChanged(const QString& text); // 总PV
     void signalSignInfoChanged(const QString& text); // 自动签到
     void signalSignDescChanged(const QString& text);
     void signalLOTInfoChanged(const QString& text); // 天选等活动

@@ -532,6 +532,11 @@ public:
         this->uid = uid;
     }
 
+    void setSecUid(QString secUid)
+    {
+        this->secUid = secUid;
+    }
+
     void setText(QString s)
     {
         this->text = s;
@@ -684,6 +689,11 @@ public:
     UIDT getUid() const
     {
         return uid;
+    }
+
+    QString getSecUid() const
+    {
+        return secUid;
     }
 
     QString getNickname() const
@@ -1048,6 +1058,7 @@ protected:
 
     QString text;
     UIDT uid = 0; // 用户ID
+    QString secUid; // 用户secUid
     QString nickname;
     QString uname_color; // 没有的话是空的
     QString text_color; // 没有的话是空的

@@ -2775,7 +2775,6 @@ bool CodeRunner::isFilterRejected(QString filterName, const LiveDanmaku &danmaku
     if (!enableFilter || rt->justStart)
         return false;
 
-    qDebug() << "触发过滤器：" << filterName;
     // 查找所有事件，查看有没有对应的过滤器
     bool reject = false;
     for (int row = 0; row < ui->eventListWidget->count(); row++)

@@ -586,12 +586,47 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
             qWarning() << PB_GET_ERROR(&payload_stream);
             return showError(method, "解析错误");
         }
+
+        // 用户信息
         douyin_User user = chat.user;
-        QString uname = chat.has_user ? QString::fromUtf8(chat.user.nickName) : "";
+        QString uname = QString::fromUtf8(chat.user.nickName);
         QString content = QString::fromUtf8(chat.content);
-        qInfo() << "[弹幕]" << uname << ":" << content;
-        LiveDanmaku danmaku(uname, content, snum(user.id), user.Level, QDateTime::currentDateTime(), "", "");
+        qint64 uid = user.id;
+        QString secUid = user.secUid;
+        int level = user.Level;
+
+        LiveDanmaku danmaku(uname, content, uid, level, QDateTime::currentDateTime(), "", "");
         danmaku.setFromRoomId(ac->roomId);
+        danmaku.setSecUid(secUid);
+
+        // 抖音弹幕是没有头像的，但是有这个字段
+        QString avatar;
+        {
+            if (user.has_AvatarThumb)
+                avatar = QString::fromUtf8(user.AvatarThumb.uri);
+            if (user.has_AvatarMedium)
+                avatar = QString::fromUtf8(user.AvatarMedium.uri);
+            if (user.has_AvatarLarge)
+                avatar = QString::fromUtf8(user.AvatarLarge.uri);
+            danmaku.setFaceUrl(avatar);
+        }
+
+        // 关注与被关注
+        if (user.has_FollowInfo)
+        {
+            douyin_FollowInfo followInfo = user.FollowInfo;
+            int followerCount = followInfo.followerCount;
+            int followingCount = followInfo.followingCount;
+        }
+
+        // 粉丝灯牌
+        if (user.has_Medal)
+        {
+            douyin_Image medal = user.Medal;
+        }
+
+        qInfo() << "[弹幕]" << uname << "(" + snum(uid) + ")" << ":" << content;
+        danmaku.setFaceUrl(avatar);
         receiveDanmaku(danmaku);
     }
     else if (method == "WebcastGiftMessage")
@@ -603,6 +638,7 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
             qWarning() << PB_GET_ERROR(&payload_stream);
             return showError(method, "解析错误");
         }
+
         int giftId = gift.giftId;
         int comboCount = gift.comboCount;
         int totalCount = gift.totalCount;
@@ -610,6 +646,7 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         QString giftName = giftStruct.name;
         int singlePrice = giftStruct.diamondCount; // 单价，抖币。有些礼物单价为0
         int totalPrice = singlePrice * totalCount; // 总价，抖币
+
         douyin_User user = gift.user;
         QString uname = user.nickName;
         QString uid = snum(user.id);
@@ -629,13 +666,25 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
             qWarning() << PB_GET_ERROR(&payload_stream);
             return showError(method, "解析错误");
         }
+
         douyin_User user = member.user;
-        QString uname = member.has_user ? QString::fromUtf8(member.user.nickName) : "";
+        QString uname = QString::fromUtf8(member.user.nickName);
+        QString secUid = user.secUid;
+        int level = user.Level;
+        int isTopUser = member.isTopUser;
+        int isAdmin = member.isSetToAdmin;
+        int rankScore = member.rankScore;
         // 如果是匿名的，user.id统一为“111111”，secUid为空，shortId为0
-        qInfo() << "[进房]" << uname << "进入直播间" << user.id;
+        qInfo() << "[进房]" << uname << "(" + snum(user.id) + ")" << "进入直播间"
+            << " 等级:" << level << "房管:" << isAdmin << "Top:" << isTopUser
+            << "积分:" << rankScore;
 
         LiveDanmaku danmaku(uname, snum(user.id), QDateTime::currentDateTime(), false, "", "", "");
         danmaku.setFromRoomId(ac->roomId);
+        danmaku.setSecUid(secUid);
+        danmaku.setLevel(level);
+        danmaku.setAdmin(isAdmin);
+        danmaku.setNumber(rankScore);
         receiveUserCome(danmaku);
     }
     else if (method == "WebcastLikeMessage")
@@ -650,6 +699,31 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         QString uname = like.has_user ? QString::fromUtf8(like.user.nickName) : "";
         qInfo() << "[点赞]" << uname << "点赞" << like.count << like.total;
         emit signalLikeChanged(like.total);
+    }
+    else if (method == "WebcastRoomUserSeqMessage")
+    {
+        douyin_RoomUserSeqMessage roomUserSeq = douyin_RoomUserSeqMessage_init_zero;
+        pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
+        if (!pb_decode(&payload_stream, douyin_RoomUserSeqMessage_fields, &roomUserSeq))
+        {
+            qWarning() << PB_GET_ERROR(&payload_stream);
+            return showError(method, "解析错误");
+        }
+
+        int total = roomUserSeq.total; // 在线观众总数
+        int popularity = roomUserSeq.popularity; // 人气值，有时为0
+        int totalUser = roomUserSeq.totalUser; // 累计进房总人数
+        QString onlineUserForAnchor = QString::fromUtf8(roomUserSeq.onlineUserForAnchor); // 主播端在线人数，似乎等于总数
+        QString totalPvForAnchor = QString::fromUtf8(roomUserSeq.totalPvForAnchor); // 总PV（总访问量，比总人数大），例如"13.2万"
+        QString upRightStatsStr = QString::fromUtf8(roomUserSeq.upRightStatsStr); // 主播右上角统计，为空表示无特殊显示
+        QString upRightStatsStrComplete = QString::fromUtf8(roomUserSeq.upRightStatsStrComplete); // 主播右上角统计完整，同上
+        qDebug() << "[人气] 总数:" << total << "人气值:" << popularity << "总人数:" << totalUser
+                 << "主播端在线人数:" << onlineUserForAnchor << "总PV:" << totalPvForAnchor
+                 << "主播右上角:" << upRightStatsStr << upRightStatsStrComplete;
+        emit signalOnlineCountChanged(total);
+        emit signalPopularChanged(popularity);
+        emit signalTotalComeUserChanged(totalUser);
+        emit signalTotalPvChanged(totalPvForAnchor);
     }
     else
     {
