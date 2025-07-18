@@ -33,7 +33,7 @@ BiliLiveService::BiliLiveService(QObject *parent) : LiveServiceBase(parent)
             if (!ac->cookieUid.isEmpty() && robotFace.isNull())
                 getRobotInfo();
             if (!ac->upUid.isEmpty() && upFace.isNull())
-                getUpInfo(ac->upUid);
+                getUpInfo();
             if (!ac->roomId.isEmpty() && !gettingDanmu)
                 getDanmuInfo();
         });
@@ -321,11 +321,7 @@ QString BiliLiveService::toWbiParam(QString params) const
     return params;
 }
 
-/**
- * 获取所有用户信息
- * 目前其实只有头像、弹幕字数
- */
-void BiliLiveService::getRobotInfo()
+void BiliLiveService::getAccountInfo(const QString &uid, NetJsonFunc func)
 {
     QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + ac->cookieUid + "&platform=web&token=&web_location=1550101");
     get(url, [=](QJsonObject json){
@@ -334,8 +330,17 @@ void BiliLiveService::getRobotInfo()
             qCritical() << s8("获取账号信息返回结果不为0：") << json.value("message").toString();
             return ;
         }
-        QJsonObject data = json.value("data").toObject();
+        func(json.value("data").toObject());
+    });
+}
 
+/**
+ * 获取所有用户信息
+ * 目前其实只有头像、弹幕字数
+ */
+void BiliLiveService::getRobotInfo()
+{
+    getAccountInfo(ac->cookieUid, [=](QJsonObject data){
         // 开始下载头像
         QString face = data.value("face").toString();
         get(face, [=](QNetworkReply* reply){
@@ -603,11 +608,11 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         }
 
         // 异步获取房间封面
-        getRoomCover(roomInfo.value("cover").toString());
+        downloadRoomCover(roomInfo.value("cover").toString());
 
         // 获取主播头像
         if (!wbiMixinKey.isEmpty())
-            getUpInfo(ac->upUid);
+            getUpInfo();
         gettingRoom = false;
         if (!gettingUser)
             emit signalGetRoomAndRobotFinished();
@@ -999,17 +1004,9 @@ QString BiliLiveService::getLiveStatusStr() const
     }
 }
 
-void BiliLiveService::getUpInfo(const QString &uid)
+void BiliLiveService::getUpInfo()
 {
-    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + uid + "&platform=web&token=&web_location=1550101");
-    get(url, [=](QJsonObject json){
-        if (json.value("code").toInt() != 0)
-        {
-            qCritical() << s8("获取主播信息返回结果不为0：") << json.value("message").toString();
-            return ;
-        }
-        QJsonObject data = json.value("data").toObject();
-
+    getAccountInfo(ac->upUid, [=](QJsonObject data){
         // 设置签名
         QString sign = data.value("sign").toString();
         {
@@ -1022,7 +1019,7 @@ void BiliLiveService::getUpInfo(const QString &uid)
 
         // 开始下载头像
         QString faceUrl = data.value("face").toString();
-        getUpCover(faceUrl);
+        downloadUpCover(faceUrl);
     });
 }
 

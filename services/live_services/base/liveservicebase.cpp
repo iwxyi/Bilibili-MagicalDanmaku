@@ -406,7 +406,7 @@ QString LiveServiceBase::getLiveStatusStr() const
     return "";
 }
 
-void LiveServiceBase::getRoomCover(const QString &url)
+void LiveServiceBase::downloadRoomCover(const QString &url)
 {
     get(url, [=](QNetworkReply* reply){
         QPixmap pixmap;
@@ -415,7 +415,7 @@ void LiveServiceBase::getRoomCover(const QString &url)
     });
 }
 
-void LiveServiceBase::getUpCover(const QString &url)
+void LiveServiceBase::downloadUpCover(const QString &url)
 {
     get(url, [=](QNetworkReply* reply){
         QPixmap pixmap;

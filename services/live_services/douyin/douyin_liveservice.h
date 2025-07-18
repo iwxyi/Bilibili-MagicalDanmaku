@@ -36,6 +36,9 @@ protected:
     QString getSignature(QString roomId, QString uniqueId);
     QByteArray imFetch(QString roomId, QString uniqueId);
     void imPush(QString cursor, QString internalExt);
+    void getAccountInfo(const UIDT& uid, NetJsonFunc func) override;
+    void getRobotInfo() override;
+    void getUpInfo() override;
 
 public slots:
     void onBinaryMessageReceived(const QByteArray &message);

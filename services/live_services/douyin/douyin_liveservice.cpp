@@ -165,11 +165,11 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         // 主播信息
         MyJson anchor = roomInfo.o("anchor");
         ac->upUid = anchor.s("id_str");
-        ac->secUid = anchor.s("sec_uid");
+        ac->upSecUid = anchor.s("sec_uid");
         QJsonArray avatarThumb = anchor.o("avatar_thumb").a("url_list");
         QString avatar = avatarThumb.size() ? avatarThumb.first().toString() : "";
         ac->upName = anchor.s("nickname");
-        qInfo() << "主播信息：" << ac->upName;
+        qInfo() << "主播信息：" << ac->upName << ac->upUid << ac->upSecUid;
 
         // 自己的信息
         MyJson userStore = state.o("userStore");
@@ -178,7 +178,11 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         QString userUniqueId = odin.s("user_unique_id"); // 这个才是抖音号，可自定义
         int userType = odin.i("user_type"); // 匿名是12
         ac->cookieUid = userUniqueId;
-        qInfo() << "用户信息：用户唯一ID" << userUniqueId;
+        qInfo() << "用户信息：用户唯一ID" << userId << userUniqueId << " userType:" << userType;
+
+        // 获取主播与机器人账号的信息
+        getRobotInfo();
+        getUpInfo();
 
         emit signalRoomIdChanged(ac->roomId);
         emit signalUpUidChanged(ac->upUid);
@@ -187,8 +191,8 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         emit signalLikeChanged(likeCount);
 
         getDanmuInfo();
-        getRoomCover(roomCover);
-        getUpCover(avatar);
+        downloadRoomCover(roomCover);
+        downloadUpCover(avatar);
 
         triggerCmdEvent("GET_ROOM_INFO", LiveDanmaku().with(json));
     });
@@ -368,6 +372,68 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
     request.setRawHeader("Origin", "https://live.douyin.com");
 
     liveSocket->open(request);
+}
+
+void DouyinLiveService::getAccountInfo(const QString &uid, NetJsonFunc func)
+{
+    if (uid.isEmpty())
+        return;
+
+    QStringList params{
+        "aid", "6383",
+        "app_name", "douyin_web",
+        "browser_language", "zh-CN",
+        "browser_name", "Mozilla",
+        "browser_platform", "Win32",
+        "browser_version", "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+        "cookie_enabled", "true",
+        "device_platform", "web",
+        "language", "zh-CN",
+        "live_id", "1",
+        "live_reason", "",
+        "screen_height", "1080",
+        "screen_width", "1920",
+        "target_uid", uid,
+        // "sec_target_uid", "", // uid和secId只需要一个即可
+        "anchor_id", ac->upUid,
+        // "sec_anchor_id", "",
+        "current_room_id", ac->roomId // 哪个ID都行
+    };
+
+    QString paramsStr;
+    for (int i = 0; i < params.size(); i += 2)
+    {
+        paramsStr += params[i] + "=" + urlDecode(params[i + 1]) + "&";
+    }
+    paramsStr.chop(1);
+
+    get("https://live.douyin.com/webcast/user/profile/?" + paramsStr, [=](MyJson json) {
+        if (json.i("status_code") != 0)
+        {
+            qWarning() << json;
+            return showError("获取账号信息", "状态不为0：" + snum(json.i("status_code")));
+        }
+        func(json.data());
+    });
+
+}
+
+void DouyinLiveService::getRobotInfo()
+{
+    getAccountInfo(ac->cookieUid, [=](MyJson data) {
+
+    });
+}
+
+void DouyinLiveService::getUpInfo()
+{
+    getAccountInfo(ac->upUid, [=](MyJson data) {
+        MyJson userData = data.o("user_data");
+        MyJson followInfo = userData.o("follow_info");
+        int followerCount = followInfo.i("follower_count");
+        int followingCount = followInfo.i("following_count");
+        emit signalFansCountChanged(followerCount);
+    });
 }
 
 // 放到 onBinaryMessageReceived 函数外面，或者类的私有成员/静态函数位置

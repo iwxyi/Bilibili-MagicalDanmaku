@@ -28,6 +28,7 @@ public:
     void getAccountByCookie(const QString& cookie) override;
     void getNavInfo(NetVoidFunc func = nullptr);
     QString toWbiParam(QString params) const;
+    void getAccountInfo(const UIDT& uid, NetJsonFunc func) override;
     void getRobotInfo() override;
     void getBuVID();
     void startConnect() override;
@@ -42,7 +43,7 @@ public:
     /// 直播间接口
     bool isLiving() const override;
     QString getLiveStatusStr() const override;
-    void getUpInfo(const QString &uid) override;
+    void getUpInfo() override;
     void updateExistGuards(int page = 0) override;
     void getGuardCount(const LiveDanmaku &danmaku) override;
     void updateOnlineGoldRank() override;

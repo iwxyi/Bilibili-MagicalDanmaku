@@ -188,6 +188,8 @@ public:
     virtual void getCookieAccount() {}
     virtual void getAccountByCookie(const QString& cookie) {}
     QVariant getCookies() const;
+    /// 获取账号信息
+    virtual void getAccountInfo(const UIDT& uid, NetJsonFunc func) {}
     /// 获取机器人账号信息
     virtual void getRobotInfo() {}
     /// 获取直播间信息
@@ -212,11 +214,11 @@ public:
     /// 获取直播状态的字符串
     virtual QString getLiveStatusStr() const;
     /// 获取并更新直播间封面
-    virtual void getRoomCover(const QString& url);
+    virtual void downloadRoomCover(const QString& url);
     /// 获取主播信息
-    virtual void getUpInfo(const QString &uid) {}
+    virtual void getUpInfo() {}
     /// 获取主播头像
-    virtual void getUpCover(const QString& url);
+    virtual void downloadUpCover(const QString& url);
     /// 更新当前舰长
     virtual void updateExistGuards(int page = 0) override {}
     /// 获取舰长数量
