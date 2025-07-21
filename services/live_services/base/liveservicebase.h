@@ -49,6 +49,9 @@ public:
 
     void setSqlService(SqlService* service);
 
+    void setLiveContent(const QString& content) { liveContent = content; }
+    QString getLiveContent() const { return liveContent; }
+
 signals:
     void signalStartConnectRoom(); // 通知总的开始连接
     void signalConnectionStarted(); // WebSocket开始连接
@@ -383,6 +386,7 @@ protected:
     bool gettingUser = false;
     bool gettingUp = false;
     bool gettingDanmu = false;
+    QString liveContent; // 直播内容
 
     // 房间信息
     QList<LiveDanmaku> roomDanmakus;

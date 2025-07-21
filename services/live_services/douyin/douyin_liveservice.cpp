@@ -481,7 +481,7 @@ void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const Q
     // TODO: 发送抖音弹幕
     return;
     // 获取两个动态参数
-    QString msToken = ; // 从Cookie中获取
+    QString msToken = ""; // 从Cookie中获取
     
     QStringList params{
         "aid", "6383",

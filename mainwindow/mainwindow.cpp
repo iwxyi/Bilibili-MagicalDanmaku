@@ -9556,7 +9556,7 @@ void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
 
     if (us->chatgpt_analysis)
     {
-        /// 直接发送JSON
+        /// 解析JSON
         if (!reply.startsWith("{"))
         {
             int index = reply.indexOf("{");
@@ -9579,6 +9579,14 @@ void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
             qWarning() << "无法解析的GPT回复格式：" << reply;
             return;
         }
+        
+        // 内置的一些AI功能
+        if (json.contains("live_content")) // 主播正在做什么
+        {
+            liveService->setLiveContent(json["live_content"].toString());
+        }
+        
+        // 使用用户自定义的AI回复
         triggerCmdEvent(GPT_TASK_RESPONSE_EVENT, danmaku.with(json));
     }
     else
