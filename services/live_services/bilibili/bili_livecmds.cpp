@@ -1,7 +1,7 @@
 #include "bili_liveservice.h"
 #include "utils/bili_api_util.h"
 #include "coderunner.h"
-#include "bili_nanopb/interact_word_v2.pb.h"
+#include "protobuf/interact_word_v2.pb.h"
 #include "nanopb/pb_decode.h"
 
 /**
@@ -763,12 +763,14 @@ void BiliLiveService::handleMessage(QJsonObject json)
     qInfo() << s8(">消息命令ZCOM：") << cmd;
     if (cmd == "LIVE") // 开播？
     {
+        liveStatus = 1;
         emit signalLiveStarted();
 
         triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "PREPARING") // 下播
     {
+        liveStatus = 0;
         emit signalLiveStopped();
 
         releaseLiveData(true);
@@ -1115,52 +1117,6 @@ void BiliLiveService::handleMessage(QJsonObject json)
 
         // 触发事件
         receiveGift(danmaku.with(json));
-
-        // 进行统计
-        if (coinType == "silver")
-        {
-            qint64 userSilver = us->danmakuCounts->value("silver/" + uid).toLongLong();
-            userSilver += totalCoin;
-            us->danmakuCounts->setValue("silver/"+uid, userSilver);
-
-            dailyGiftSilver += totalCoin;
-            if (dailySettings)
-                dailySettings->setValue("gift_silver", dailyGiftSilver);
-            currentLiveGiftSilver += totalCoin;
-            if (currentLiveSettings)
-                currentLiveSettings->setValue("gift_silver", currentLiveGiftSilver);
-        }
-        if (coinType == "gold")
-        {
-            qint64 userGold = us->danmakuCounts->value("gold/" + uid).toLongLong();
-            userGold += totalCoin;
-            us->danmakuCounts->setValue("gold/"+uid, userGold);
-
-            dailyGiftGold += totalCoin;
-            if (dailySettings)
-                dailySettings->setValue("gift_gold", dailyGiftGold);
-            currentLiveGiftGold += totalCoin;
-            if (currentLiveSettings)
-                currentLiveSettings->setValue("gift_gold", currentLiveGiftGold);
-
-            // 正在PK，保存弹幕历史
-            // 因为最后的大乱斗最佳助攻只提供名字，所以这里需要保存 uname->uid 的映射
-            // 方便起见，直接全部保存下来了
-            pkGifts.append(danmaku);
-
-            // 添加礼物记录
-            appendLiveGift(danmaku);
-
-            // 正在偷塔阶段
-            if (pkEnding && uid == ac->cookieUid) // 机器人账号
-            {
-//                pkVoting -= totalCoin;
-//                if (pkVoting < 0) // 自己用其他设备送了更大的礼物
-//                {
-//                    pkVoting = 0;
-//                }
-            }
-        }
     }
     else if (cmd == "COMBO_SEND") // 连击礼物
     {
@@ -1793,86 +1749,86 @@ void BiliLiveService::handleMessage(QJsonObject json)
     else if (cmd == "INTERACT_WORD_V2")
     {
         MyJson data = json.value("data").toObject();
+        LiveDanmaku danmaku;
+        danmaku.with(data);
+
         int dmscore = data.i("dmscore");
         QString pb_base64 = data.s("pb"); // 这是base64编码
         QByteArray pb = QByteArray::fromBase64(pb_base64.toUtf8());
-        // 开始解析PB
-        // 1. 获取原始数据指针和长度
-        const uint8_t* buffer = reinterpret_cast<const uint8_t*>(pb.constData());
-        size_t size = pb.size();
-
-        // 2. 初始化消息结构体（清空原有数据）
-        InteractWordV2 iw2 = InteractWordV2_init_zero;
-
-        // 3. 创建输入流
-        pb_istream_t stream = pb_istream_from_buffer(buffer, size);
-
-        // 4. 解析数据
-        if (!pb_decode(&stream, InteractWordV2_fields, &iw2)) {
-            qDebug() << "Decoding failed:" << PB_GET_ERROR(&stream);
-            return;
-        }
-
-        qint64 uid = iw2.uid;
-        QString uname = iw2.uname;
-        qint64 timestamp = iw2.timestamp;
-        int msgType = iw2.msg_type; // 1是进入
-        qint64 roomId = iw2.room_id;
-        int guardLevel = iw2.guard_level;
-        qInfo() << "用户进入：" << uname << uid << msgType << roomId << guardLevel << timestamp;
-
-        auto fansMedal = iw2.fans_medal;
-        auto rankInfo = iw2.rank_info;
-        auto userInfo = iw2.uinfo;
-        auto baseInfo = userInfo.base;
-        auto medalInfo = userInfo.medal_info;
-        auto wealthInfo = userInfo.wealth;
-        auto guardInfo = userInfo.guard;
-        LiveDanmaku danmaku;
-        danmaku.setTime(QDateTime::fromSecsSinceEpoch(timestamp));
-        danmaku.setFromRoomId(ac->roomId);
-        danmaku.setUser(baseInfo.uname, snum(iw2.uid), baseInfo.face, baseInfo.name_color_str);
-        danmaku.setMedal(snum(fansMedal.room_id), medalInfo.medal_name, medalInfo.medal_level, medalInfo.v2_medal_color_text, "", snum(medalInfo.ruid));
-
-        danmaku.setGuardLevel(guardInfo.level, guardInfo.expired_str); //过期时间示例：2025-07-15 23:59:59
-
-        if (msgType == 1) // 欢迎
+        if (!pb.isEmpty())
         {
-            danmaku.setMsgType(MSG_WELCOME);
-            receiveUserCome(danmaku);
-        }
-        else if (msgType == 2) // 关注
-        {
-            danmaku.transToAttention(timestamp);
-            appendNewLiveDanmaku(danmaku);
+            // 开始解析PB
+            const uint8_t* buffer = reinterpret_cast<const uint8_t*>(pb.constData());
+            InteractWordV2 iw2 = InteractWordV2_init_zero;
+            pb_istream_t stream = pb_istream_from_buffer(buffer, pb.size());
+            if (!pb_decode(&stream, InteractWordV2_fields, &iw2)) {
+                qWarning() << "Decoding failed:" << PB_GET_ERROR(&stream);
+                return;
+            }
 
-            emit signalSendAttentionThank(danmaku);
+            qint64 uid = iw2.uid;
+            QString uname = iw2.uname;
+            qint64 timestamp = iw2.timestamp;
+            int msgType = iw2.msg_type; // 1是进入
+            qint64 roomId = iw2.room_id;
+            int guardLevel = iw2.guard_level;
+            qInfo() << "用户进入：" << uname << uid << msgType << roomId << guardLevel << timestamp;
 
-            triggerCmdEvent("ATTENTION", danmaku.with(data)); // !这个是单独修改的
-        }
-        else if (msgType == 3) // 分享
-        {
-            danmaku.transToShare();
-            localNotify(uname + "分享了直播间", snum(uid));
+            auto fansMedal = iw2.fans_medal;
+            auto rankInfo = iw2.rank_info;
+            auto userInfo = iw2.uinfo;
+            auto baseInfo = userInfo.base;
+            auto medalInfo = userInfo.medal_info;
+            auto wealthInfo = userInfo.wealth;
+            auto guardInfo = userInfo.guard;
+            danmaku.setTime(QDateTime::fromSecsSinceEpoch(timestamp));
+            danmaku.setFromRoomId(ac->roomId);
+            danmaku.setUser(baseInfo.uname, snum(iw2.uid), baseInfo.face, baseInfo.name_color_str);
+            danmaku.setMedal(snum(fansMedal.room_id), medalInfo.medal_name, medalInfo.medal_level, medalInfo.v2_medal_color_text, "", snum(medalInfo.ruid));
 
-            triggerCmdEvent("SHARE", danmaku.with(data));
-        }
-        else if (msgType == 4) // 特别关注
-        {
-            danmaku.transToAttention(timestamp);
-            danmaku.setSpecial(1);
-            appendNewLiveDanmaku(danmaku);
+            danmaku.setGuardLevel(guardInfo.level, guardInfo.expired_str); //过期时间示例：2025-07-15 23:59:59
 
-            emit signalSendAttentionThank(danmaku);
+            if (msgType == 1) // 欢迎
+            {
+                danmaku.setMsgType(MSG_WELCOME);
+                receiveUserCome(danmaku);
+            }
+            else if (msgType == 2) // 关注
+            {
+                danmaku.transToAttention(timestamp);
+                appendNewLiveDanmaku(danmaku);
 
-            triggerCmdEvent("SPECIAL_ATTENTION", danmaku.with(data)); // !这个是单独修改的
+                emit signalSendAttentionThank(danmaku);
+
+                triggerCmdEvent("ATTENTION", danmaku); // !这个是单独修改的
+            }
+            else if (msgType == 3) // 分享
+            {
+                danmaku.transToShare();
+                localNotify(uname + "分享了直播间", snum(uid));
+
+                triggerCmdEvent("SHARE", danmaku);
+            }
+            else if (msgType == 4) // 特别关注
+            {
+                danmaku.transToAttention(timestamp);
+                danmaku.setSpecial(1);
+                appendNewLiveDanmaku(danmaku);
+
+                emit signalSendAttentionThank(danmaku);
+
+                triggerCmdEvent("SPECIAL_ATTENTION", danmaku); // !这个是单独修改的
+            }
+            else
+            {
+                qWarning() << "未知的交互MsgType=" << msgType;
+            }
         }
         else
         {
-            qWarning() << "未知的交互MsgType=" << msgType;
+            qWarning() << cmd << "pb为空";
         }
-
-        triggerCmdEvent(cmd, danmaku.with(data));
+        triggerCmdEvent(cmd, danmaku);
     }
     else if (cmd == "ROOM_BLOCK_MSG") // 被禁言
     {

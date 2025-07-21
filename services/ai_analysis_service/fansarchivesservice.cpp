@@ -138,7 +138,7 @@ void FansArchivesService::onTimer()
     ChatGPTUtil* chatgpt = new ChatGPTUtil(this);
     chatgpt->setStream(false);
     connect(chatgpt, &ChatGPTUtil::signalResponseError, this, [=](const QByteArray& ba) {
-        qCritical() << QString(ba);
+        emit signalError(QString(ba));
     });
     connect(chatgpt, &ChatGPTUtil::finished, this, [=]{
         chatgpt->deleteLater();

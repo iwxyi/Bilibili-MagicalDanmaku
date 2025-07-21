@@ -1,12 +1,12 @@
 #ifndef BILILIVESERVICE_H
 #define BILILIVESERVICE_H
 
-#include "liveroomservice.h"
+#include "liveservicebase.h"
 
 #define BILI_API_DOMAIN QString("https://live-open.biliapi.com")
 #define BILI_APP_ID 1659569945917
 
-class BiliLiveService : public LiveRoomService
+class BiliLiveService : public LiveServiceBase
 {
     Q_OBJECT
     friend class MainWindow;
@@ -28,6 +28,7 @@ public:
     void getAccountByCookie(const QString& cookie) override;
     void getNavInfo(NetVoidFunc func = nullptr);
     QString toWbiParam(QString params) const;
+    void getAccountInfo(const UIDT& uid, NetJsonFunc func) override;
     void getRobotInfo() override;
     void getBuVID();
     void startConnect() override;
@@ -40,8 +41,9 @@ public:
     void startConnectIdentityCode(const QString &code) override;
 
     /// 直播间接口
-    void getRoomCover(const QString &url) override;
-    void getUpInfo(const QString &uid) override;
+    bool isLiving() const override;
+    QString getLiveStatusStr() const override;
+    void getUpInfo() override;
     void updateExistGuards(int page = 0) override;
     void getGuardCount(const LiveDanmaku &danmaku) override;
     void updateOnlineGoldRank() override;

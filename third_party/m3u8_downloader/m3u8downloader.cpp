@@ -255,7 +255,7 @@ void M3u8Downloader::nextSeq()
     getM3u8();
 }
 
-void M3u8Downloader::SetLiveRoomService(LiveRoomService* live_room_service)
+void M3u8Downloader::SetLiveRoomService(LiveServiceBase* live_room_service)
 {
     this->ptr_live_room_service = live_room_service;
 }

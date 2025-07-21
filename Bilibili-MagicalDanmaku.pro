@@ -1,4 +1,4 @@
-QT       += core gui network websockets multimedia multimediawidgets sql svg qml
+QT       += core gui network websockets multimedia multimediawidgets sql svg qml webenginewidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -59,12 +59,16 @@ contains(DEFINES, ENABLE_TEXTTOSPEECH) {
 # 调用库
 # LIBS += -lDbgHelp
 
+LIBS += -lz
 
 INCLUDEPATH += \
     global/ \
     mainwindow/ \
     services/ \
     services/live_services/ \
+    services/live_services/base/ \
+    services/live_services/bilibili/ \
+    services/live_services/douyin/ \
     services/entities/ \
     services/code_runner/ \
     services/sql_service/ \
@@ -92,6 +96,7 @@ INCLUDEPATH += \
     widgets/guard_online/ \
     widgets/smooth_scroll/ \
     widgets/buy_vip/ \
+    widgets/webview_login/ \
     widgets/ \
     third_party/ \
     widgets/editor/ \
@@ -117,13 +122,17 @@ SOURCES += \
     services/language_service/js/networkwrapper.cpp \
     services/language_service/lua/luaengine.cpp \
     services/language_service/python/pythonengine.cpp \
-    services/live_services/bili_livecmds.cpp \
-    services/live_services/bili_liveopen_cmds.cpp \
-    services/live_services/bili_liveopenservice.cpp \
-    services/live_services/bili_liveservice.cpp \
-    services/live_services/bili_nanopb/interact_word_v2.pb.c \
-    services/live_services/liveroomservice.cpp \
-    services/live_services/livestatisticservice.cpp \
+    services/live_services/bilibili/bili_livecmds.cpp \
+    services/live_services/bilibili/bili_liveopen_cmds.cpp \
+    services/live_services/bilibili/bili_liveopenservice.cpp \
+    services/live_services/bilibili/bili_liveservice.cpp \
+    services/live_services/bilibili/protobuf/interact_word_v2.pb.c \
+    services/live_services/douyin/douyin_livecmds.cpp \
+    services/live_services/douyin/douyin_liveservice.cpp \
+    services/live_services/base/liveservicebase.cpp \
+    services/live_services/base/livestatisticservice.cpp \
+    services/live_services/douyin/douyinsignaturehelper.cpp \
+    services/live_services/douyin/protobuf/douyin.pb.c \
     services/sql_service/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     services/voice_service/voiceservice.cpp \
@@ -246,7 +255,9 @@ SOURCES += \
     third_party/utils/stringutil.cpp \
     third_party/utils/textinputdialog.cpp \
     widgets/video_player/livevideoplayer.cpp \
-    widgets/video_lyric_creator/videolyricscreator.cpp
+    widgets/video_lyric_creator/videolyricscreator.cpp \
+    widgets/webview_login/WebLoginDialog.cpp \
+    widgets/webview_login/WebLoginUtil.cpp
 
 HEADERS += \
     global/accountinfo.h \
@@ -271,12 +282,18 @@ HEADERS += \
     services/language_service/wrapper/danmakuwrapperstd.h \
     services/language_service/wrapper/settingswrapper.h \
     services/language_service/wrapper/settingswrapperstd.h \
-    services/live_services/bili_liveopenservice.h \
-    services/live_services/bili_liveservice.h \
-    services/live_services/bili_nanopb/interact_word_v2.pb.h \
-    services/live_services/bili_nanopb/nanopbutil.h \
-    services/live_services/liveroomservice.h \
-    services/live_services/livestatisticservice.h \
+    services/live_services/bilibili/bili_liveopenservice.h \
+    services/live_services/bilibili/bili_liveservice.h \
+    services/live_services/bilibili/protobuf/interact_word_v2.pb.h \
+    services/live_services/douyin/douyin_api_util.h \
+    services/live_services/douyin/douyin_liveservice.h \
+    services/live_services/base/liveservicebase.h \
+    services/live_services/base/livestatisticservice.h \
+    services/live_services/base/api_type.h \
+    services/live_services/douyin/douyinackgenerator.h \
+    services/live_services/douyin/douyinsignaturehelper.h \
+    services/live_services/douyin/protobuf/douyin.pb.h \
+    services/live_services/douyin/silentwebenginepage.h \
     services/sql_service/sqlservice.h \
     order_player/importsongsdialog.h \
     services/voice_service/voiceservice.h \
@@ -467,6 +484,8 @@ HEADERS += \
     third_party/utils/textinputdialog.h \
     widgets/video_player/livevideoplayer.h \
     widgets/video_lyric_creator/videolyricscreator.h \
+    widgets/webview_login/WebLoginDialog.h \
+    widgets/webview_login/WebLoginUtil.h \
     widgets/windowshwnd.h
 
 FORMS += \

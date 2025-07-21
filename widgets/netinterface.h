@@ -127,6 +127,13 @@ public:
         }
 
         QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
+            // 获取 Set-Cookie
+            QVariant setCookieHeader = reply->header(QNetworkRequest::SetCookieHeader);
+            if (setCookieHeader.isValid()) {
+                QList<QNetworkCookie> cookies = setCookieHeader.value<QList<QNetworkCookie>>();
+                autoAddCookie(cookies);
+            }
+            
             func(reply);
 
             manager->deleteLater();
@@ -423,6 +430,11 @@ public:
     {
         Q_UNUSED(url)
         Q_UNUSED(request)
+    }
+
+    /// 联网返回的Set-Cookie头
+    virtual void autoAddCookie(QList<QNetworkCookie> cookies)
+    {
     }
 
     virtual QVariant getCookies(const QString& cookieString) const

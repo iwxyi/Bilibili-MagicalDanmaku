@@ -31,16 +31,32 @@ public:
     {
     }
 
-    MyJson(QJsonObject json) : QJsonObject(json)
+    MyJson(const QJsonObject& json) : QJsonObject(json)
     {
     }
 
-    MyJson(QByteArray ba) : QJsonObject(QJsonDocument::fromJson(ba).object())
+    MyJson(const QByteArray& ba) : QJsonObject()
     {
-
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(ba, &error);
+        if (error.error == QJsonParseError::NoError)
+        {
+            if (doc.isObject())
+            {
+                *this = doc.object();
+            }
+            else
+            {
+                _err = "Not Json Object";
+            }
+        }
+        else
+        {
+            _err = error.errorString();
+        }
     }
 
-    static MyJson from(QByteArray ba, bool* ok = nullptr, QString* errorString = nullptr)
+    static MyJson from(const QByteArray& ba, bool* ok = nullptr, QString* errorString = nullptr)
     {
         QJsonParseError error;
         QJsonDocument doc = QJsonDocument::fromJson(ba, &error);
@@ -64,48 +80,50 @@ public:
                 *ok = false;
             if (errorString)
                 *errorString = error.errorString();
-            return MyJson();
+            MyJson json;
+            json._err = error.errorString();
+            return json;
         }
     }
 
-    QJsonArray a(QString key) const
+    QJsonArray a(const QString& key) const
     {
         return QJsonObject::value(key).toArray();
     }
 
-    bool b(QString key) const
+    bool b(const QString& key, const bool defaultValue = false) const
     {
-        return QJsonObject::value(key).toBool();
+        return QJsonObject::value(key).toBool(defaultValue);
     }
 
-    double d(QString key) const
+    double d(const QString& key, const double defaultValue = 0) const
     {
-        return QJsonObject::value(key).toDouble();
+        return QJsonObject::value(key).toDouble(defaultValue);
     }
 
-    QString d2(QString key) const
+    QString d2(const QString& key) const
     {
         return QString::number(d(key), 'f', 2);
     }
 
-    int i(QString key) const
+    int i(const QString& key, const int defaultValue = 0) const
     {
-        return QJsonObject::value(key).toInt();
+        return QJsonObject::value(key).toInt(defaultValue);
     }
 
-    qint64 l(QString key) const
+    qint64 l(const QString& key, const qint64 defaultValue = 0) const
     {
-        return qint64(QJsonObject::value(key).toDouble());
+        return qint64(QJsonObject::value(key).toDouble(defaultValue));
     }
 
-    MyJson o(QString key) const
+    MyJson o(const QString& key) const
     {
         return MyJson(QJsonObject::value(key).toObject());
     }
 
-    QString s(QString key) const
+    QString s(const QString& key, const QString& defaultValue = "") const
     {
-        return QJsonObject::value(key).toString();
+        return QJsonObject::value(key).toString(defaultValue);
     }
 
     QByteArray toBa(QJsonDocument::JsonFormat format = QJsonDocument::Indented) const
@@ -113,7 +131,14 @@ public:
         return QJsonDocument(*this).toJson(format);
     }
 
-    void eachVal(QString key, std::function<void(QJsonValue)> const valFunc) const
+    // 链式设置方法
+    MyJson& set(const QString& key, const QJsonValue& value)
+    {
+        insert(key, value);
+        return *this;
+    }
+
+    void eachVal(const QString& key, std::function<void(QJsonValue)> const valFunc) const
     {
         foreach (QJsonValue value, a(key))
         {
@@ -121,12 +146,72 @@ public:
         }
     }
 
-    void each(QString key, std::function<void(QJsonObject)> const valFunc) const
+    void each(const QString& key, std::function<void(QJsonObject)> const valFunc) const
     {
         foreach (QJsonValue value, a(key))
         {
             valFunc(value.toObject());
         }
+    }
+
+    // 带索引的遍历
+    void eachWithIndex(const QString& key, std::function<void(int, QJsonObject)> const valFunc) const
+    {
+        QJsonArray arr = a(key);
+        for (int i = 0; i < arr.size(); ++i)
+        {
+            valFunc(i, arr[i].toObject());
+        }
+    }
+
+    // 过滤数组
+    QJsonArray filter(const QString& key, std::function<bool(QJsonObject)> const filterFunc) const
+    {
+        QJsonArray result;
+        each(key, [&](QJsonObject obj) {
+            if (filterFunc(obj))
+                result.append(obj);
+        });
+        return result;
+    }
+
+    // 映射数组
+    QJsonArray map(const QString& key, std::function<QJsonValue(QJsonObject)> const mapFunc) const
+    {
+        QJsonArray result;
+        each(key, [&](QJsonObject obj) {
+            result.append(mapFunc(obj));
+        });
+        return result;
+    }
+
+    // 合并对象
+    MyJson& merge(const MyJson& other)
+    {
+        for (auto it = other.begin(); it != other.end(); ++it)
+        {
+            insert(it.key(), it.value());
+        }
+        return *this;
+    }
+
+    // 深度合并
+    MyJson& deepMerge(const MyJson& other)
+    {
+        for (auto it = other.begin(); it != other.end(); ++it)
+        {
+            if (contains(it.key()) && value(it.key()).isObject() && it.value().isObject())
+            {
+                MyJson currentObj = o(it.key());
+                currentObj.deepMerge(MyJson(it.value().toObject()));
+                insert(it.key(), currentObj);
+            }
+            else
+            {
+                insert(it.key(), it.value());
+            }
+        }
+        return *this;
     }
 
     int code() const
@@ -172,7 +257,7 @@ public:
     }
 
     // ["aaa", "bbb", "ccc"]
-    QStringList ss(QString key) const
+    QStringList ss(const QString& key) const
     {
         QStringList sl;
         if (!contains(key))
@@ -181,6 +266,58 @@ public:
             sl.append(val.toString());
         });
         return sl;
+    }
+
+    // 验证JSON结构
+    bool validate(const QStringList& requiredKeys) const
+    {
+        for (const QString& key : requiredKeys)
+        {
+            if (!contains(key))
+            {
+                _err = QString("Missing required key: %1").arg(key);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // 获取嵌套值（支持 "a.b.c" 格式）
+    QJsonValue getNested(const QString& path, const QJsonValue& defaultValue = QJsonValue()) const
+    {
+        QStringList keys = path.split('.');
+        MyJson current = *this;
+        
+        for (int i = 0; i < keys.size() - 1; ++i)
+        {
+            if (!current.contains(keys[i]) || !current.value(keys[i]).isObject())
+                return defaultValue;
+            current = current.value(keys[i]).toObject();
+        }
+        
+        if (!current.contains(keys.last()))
+            return defaultValue;
+            
+        return current.value(keys.last());
+    }
+
+    // 设置嵌套值
+    MyJson& setNested(const QString& path, const QJsonValue& value)
+    {
+        QStringList keys = path.split('.');
+        MyJson current = *this;
+        
+        for (int i = 0; i < keys.size() - 1; ++i)
+        {
+            if (!current.contains(keys[i]) || !current.value(keys[i]).isObject())
+            {
+                current.insert(keys[i], MyJson());
+            }
+            current = current.value(keys[i]).toObject();
+        }
+        
+        current.insert(keys.last(), value);
+        return *this;
     }
 
     void insertStringList(const QString& key, const QStringList& vals)
@@ -192,6 +329,19 @@ public:
         }
         insert(key, ar);
     }
+
+    bool hasError() const
+    {
+        return !_err.isEmpty();
+    }
+
+    QString getError() const
+    {
+        return _err;
+    }
+
+private:
+    mutable QString _err;
 };
 
 #endif // MYJSON_H

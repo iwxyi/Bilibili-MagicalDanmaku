@@ -489,6 +489,8 @@ private slots:
 
     void on_actionQRCode_Login_triggered();
 
+    void on_actionWebViewLogin_triggered();
+
     void on_allowAdminControlCheck_clicked();
 
     void on_actionSponsor_triggered();
@@ -761,12 +763,15 @@ private slots:
 
     void on_proxyTestIPButton_clicked();
 
+    void on_platformButton_clicked();
+
 private:
     void initView();
     void initStyle();
     void initObject();
     void initPath();
     void initLiveService();
+    void adjustWidgetsByPlatform();
     void readConfig();
     void readConfig2();
     void initDanmakuWindow();
@@ -948,7 +953,7 @@ private:
     SingleEntrance* fakeEntrance = nullptr;
     
     // 直播数据
-    LiveRoomService* liveService = nullptr;
+    LiveServiceBase* liveService = nullptr;
 
     // 启动与定时
     QTimer* syncTimer = nullptr;

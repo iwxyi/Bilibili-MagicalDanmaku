@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <functional>
-#include "liveroomservice.h"
+#include "liveservicebase.h"
 #include "runtimeinfo.h"
 #include "usersettings.h"
 #include "accountinfo.h"
@@ -55,7 +55,7 @@ class CodeRunner : public QObject
 public:
     explicit CodeRunner(QObject *parent = nullptr);
 
-    void setLiveService(LiveRoomService* service);
+    void setLiveService(LiveServiceBase* service);
     void setHeaps(MySettings *heaps);
     void setMainUI(Ui::MainWindow *ui);
     void setMusicWindow(OrderPlayerWindow* musicWindow);
@@ -139,7 +139,7 @@ public:
     bool isWorking() const;
 
 private:
-    LiveRoomService* liveService = nullptr;
+    LiveServiceBase* liveService = nullptr;
     Ui::MainWindow *ui;
 
 public:

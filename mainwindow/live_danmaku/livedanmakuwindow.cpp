@@ -6,7 +6,7 @@
 #include "guardonlinedialog.h"
 #include "tx_nlp.h"
 #include "string_distance_util.h"
-#include "liveroomservice.h"
+#include "liveservicebase.h"
 
 QT_BEGIN_NAMESPACE
     extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
@@ -225,7 +225,7 @@ LiveDanmakuWindow::~LiveDanmakuWindow()
     us->setValue("livedanmakuwindow/geometry", this->saveGeometry());
 }
 
-void LiveDanmakuWindow::setLiveService(LiveRoomService *service)
+void LiveDanmakuWindow::setLiveService(LiveServiceBase *service)
 {
     this->liveService = service;
 }
@@ -501,7 +501,8 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     // 设置数据
     item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
-    if ((danmaku.is(MSG_DANMAKU) || danmaku.is(MSG_SUPER_CHAT)) && !simpleMode && !us->closeGui) // 只显示弹幕的数据
+    if (rt->livePlatform == Bilibili 
+        && (danmaku.is(MSG_DANMAKU) || danmaku.is(MSG_SUPER_CHAT)) && !simpleMode && !us->closeGui) // 只显示弹幕的数据
     {
         QString path = headPath(danmaku.getUid());
         bool hasPortrait = QFileInfo(path).exists();
@@ -1266,7 +1267,7 @@ void LiveDanmakuWindow::showMenu()
 
         if (danmaku.is(MSG_GIFT) || danmaku.is(MSG_GUARD_BUY))
         {
-            actionValue->setText(snum(danmaku.getTotalCoin()) + " " + (danmaku.isGoldCoin() ? "金瓜子" : "银瓜子"));
+            actionValue->setText(snum(danmaku.getTotalCoin()) + " " + danmaku.getCoinName());
             if (us->giftAlias.contains(danmaku.getGiftId()))
                 actionSetGiftName->setText("礼物别名：" + us->giftAlias.value(danmaku.getGiftId()));
         }
@@ -1353,7 +1354,8 @@ void LiveDanmakuWindow::showMenu()
 
     menu->addAction(actionUserInfo);
     menu->addAction(actionCopyUid);
-    menu->addAction(actionReplyUser);
+    if (rt->livePlatform == Bilibili)
+        menu->addAction(actionReplyUser);
     if (danmaku.getGiftId())
         menu->addAction(actionCopyGiftId);
     menu->addAction(actionMedal);
@@ -2659,6 +2661,9 @@ void LiveDanmakuWindow::showUserMsgHistory(UIDT uid, QString title)
     c = us->danmakuCounts->value("silver/"+uid).toLongLong();
     if (c)
         sums << snum(c)+" 银瓜子";
+    c = us->danmakuCounts->value("douyin_coin/"+uid).toLongLong();
+    if (c)
+        sums << snum(c)+" 抖币";
 
     QStringList sl;
     if (sums.size())

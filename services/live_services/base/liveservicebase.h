@@ -1,5 +1,5 @@
-#ifndef LIVEROOMSERVICE_H
-#define LIVEROOMSERVICE_H
+#ifndef LIVESERVICEBASE_H
+#define LIVESERVICEBASE_H
 
 #include <QWebSocket>
 #include <QRegularExpression>
@@ -26,14 +26,14 @@ typedef std::function<void(QString)> StringFunc;
 
 class QLabel;
 
-class LiveRoomService : public QObject, public NetInterface, public LiveStatisticService
+class LiveServiceBase : public QObject, public NetInterface, public LiveStatisticService
 {
     Q_OBJECT
     friend class MainWindow;
     friend class CodeRunner;
     
 public:
-    explicit LiveRoomService(QObject *parent = nullptr);
+    explicit LiveServiceBase(QObject *parent = nullptr);
 
     /// 初始化所有变量，new、connect等
     virtual void init();
@@ -67,6 +67,8 @@ signals:
     void signalSendAttentionThank(const LiveDanmaku& danmaku); // 发送大些关注
     void signalNewGuardBuy(const LiveDanmaku& danmaku); // 有人上舰长
 
+    void signalAutoAddCookie(QList<QNetworkCookie> cookies);
+    void signalNewAccountSetted(); // 用户各种当时登录成功
     void signalRobotAccountChanged();
     void signalSubAccountChanged(const QString& cookie, const SubAccount& subAccount);
     void signalRoomIdChanged(const QString &roomId); // 房间号改变，例如通过解析身份码导致的房间ID变更
@@ -93,6 +95,9 @@ signals:
     void signalPopularChanged(qint64 count); // 人气值
     void signalPopularTextChanged(const QString& text);
     void signalFansCountChanged(qint64 count); // 粉丝数
+    void signalOnlineCountChanged(qint64 count); // 在线人数
+    void signalTotalComeUserChanged(qint64 count); // 累计进房总人数
+    void signalTotalPvChanged(const QString& text); // 总PV
     void signalSignInfoChanged(const QString& text); // 自动签到
     void signalSignDescChanged(const QString& text);
     void signalLOTInfoChanged(const QString& text); // 天选等活动
@@ -181,17 +186,20 @@ public slots:
 
 public:
     /// 获取机器人账号信息
-    virtual void getCookieAccount() = 0;
-    virtual void getAccountByCookie(const QString& cookie) = 0;
+    virtual void getCookieAccount() {}
+    virtual void getAccountByCookie(const QString& cookie) {}
     QVariant getCookies() const;
+    /// 获取账号信息
+    virtual void getAccountInfo(const UIDT& uid, NetJsonFunc func) {}
     /// 获取机器人账号信息
-    virtual void getRobotInfo() = 0;
+    virtual void getRobotInfo() {}
+    virtual void downloadRobotCover(const QString& url);
     /// 获取直播间信息
     virtual void getRoomInfo(bool reconnect, int reconnectCount = 0) = 0;
     /// 获取直播间Host信息
-    virtual void getDanmuInfo() = 0;
+    virtual void getDanmuInfo() {}
     /// 根据获得的Host信息，开始连接socket
-    virtual void startMsgLoop() = 0;
+    virtual void startMsgLoop() {}
     /// 初次连接socket，发送认证包
     virtual void sendVeriPacket(QWebSocket* socket, QString roomId, QString token) {}
     /// 连接后定时发送心跳包
@@ -203,10 +211,16 @@ public:
     virtual bool isLiving() const;
     /// 是否在直播，或者可能要开播
     virtual bool isLivingOrMayLiving();
+    /// 获取直播状态，不同平台的状态值不同
+    virtual int getLiveStatus() const;
+    /// 获取直播状态的字符串
+    virtual QString getLiveStatusStr() const;
     /// 获取并更新直播间封面
-    virtual void getRoomCover(const QString& url) {}
+    virtual void downloadRoomCover(const QString& url);
     /// 获取主播信息
-    virtual void getUpInfo(const QString &uid) {}
+    virtual void getUpInfo() {}
+    /// 获取主播头像
+    virtual void downloadUpCover(const QString& url);
     /// 更新当前舰长
     virtual void updateExistGuards(int page = 0) override {}
     /// 获取舰长数量
@@ -376,6 +390,7 @@ protected:
     QPixmap upFace; // 主播头像原图
     QMap<ApiType, QString> apiUrls;
     QString roomRankDesc;
+    int liveStatus = -1; // 直播状态
 
     // 我的信息
     QPixmap robotFace; // 自己的原图
@@ -478,4 +493,4 @@ protected:
     QList<QWebSocket*> robots_sockets;
 };
 
-#endif // LIVEROOMSERVICE_H
+#endif // LIVESERVICEBASE_H

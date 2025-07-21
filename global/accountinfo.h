@@ -15,17 +15,19 @@ public:
 
     // 当前账号
     QString cookieUid;        // 自己的UID
+    QString cookieSecUid;     // 自己的secUid
     QString cookieUname;      // 自己的昵称
     QString cookieToken;      // csrf_token
     int cookieULevel = 0;     // 自己的等级
     int cookieGuardLevel = 0; // 自己的大航海
     int danmuLongest = 20;    // 最长的弹幕
-    QString buvid;
+    QString buvid;            // B站的BuVID3
+    QString msToken;          // 抖音的msToken
 
     // 连接的直播间信息
     QString roomId;          // 房间长ID
-    QString shortId;         // 房间短号（有些没有，也没什么用）
-    int liveStatus = 0;      // 是否正在直播
+    QString shortId;         // B站房间短号（有些没有，也没什么用）
+    QString roomRid;         // 抖音房间RID，用于获取直播间信息
     QString roomTitle;       // 房间标题
     QString areaId;          // 例：21（整型，为了方便用字符串）
     QString areaName;        // 例：视频唱见
@@ -48,6 +50,7 @@ public:
     // 主播信息
     QString upUid;                 // 主播的UID
     QString upName;                // 主播昵称
+    QString upSecUid;                // 主播的secUid，抖音加密的UID
     QString identityCode;          // 身份码，获取一次应用后才有
     int anchorLiveLevel = 0;       // 主播等级
     qint64 anchorLiveScore = 0;    // 主播积分（金瓜子）
@@ -56,6 +59,11 @@ public:
     int currentFans = 0;           // 粉丝数量
     int currentFansClub = 0;       // 粉丝团数量
     QHash<QString, QString> currentGuards; // 当前船员ID-Name
+
+    // 平台秘钥
+    QString appId;
+    QString appSecret;
+    QString appToken;
 };
 
 extern AccountInfo *ac;

@@ -23,11 +23,12 @@ class LiveDanmaku;
 
 enum LivePlatform
 {
-    Bilibili,   // 哔哩哔哩
-    Douyin,     // 抖音
-    Huya,       // 虎牙
-    Douyu,      // 斗鱼
-    Kuaishou,   // 快手
+    Bilibili = 0,       // 哔哩哔哩
+    Douyin,             // 抖音
+    Huya,               // 虎牙
+    Douyu,              // 斗鱼
+    Kuaishou,           // 快手
+    BilibiliOpen = 10,  // 哔哩哔哩开放平台
 };
 
 class RuntimeInfo

@@ -16,7 +16,7 @@
 #include "rsautil.h"
 #include "debounce.h"
 
-BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
+BiliLiveService::BiliLiveService(QObject *parent) : LiveServiceBase(parent)
 {
     initWS();
 
@@ -33,7 +33,7 @@ BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
             if (!ac->cookieUid.isEmpty() && robotFace.isNull())
                 getRobotInfo();
             if (!ac->upUid.isEmpty() && upFace.isNull())
-                getUpInfo(ac->upUid);
+                getUpInfo();
             if (!ac->roomId.isEmpty() && !gettingDanmu)
                 getDanmuInfo();
         });
@@ -42,7 +42,7 @@ BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
 
 void BiliLiveService::readConfig()
 {
-    LiveRoomService::readConfig();
+    LiveServiceBase::readConfig();
     todayHeartMinite = us->value("danmaku/todayHeartMinite").toInt();
     emit signalHeartTimeNumberChanged(todayHeartMinite/5, todayHeartMinite);
 }
@@ -55,12 +55,11 @@ void BiliLiveService::releaseLiveData(bool prepare)
 {
     liveTimestamp = QDateTime::currentMSecsSinceEpoch();
     xliveHeartBeatTimer->stop();
-    LiveRoomService::releaseLiveData(prepare);
+    LiveServiceBase::releaseLiveData(prepare);
 }
 
 void BiliLiveService::initWS()
 {
-    liveSocket = new QWebSocket();
     connect(liveSocket, &QWebSocket::connected, this, [=]{
         SOCKET_DEB << "socket connected";
         emit signalStatusChanged("WS状态：已连接");
@@ -96,7 +95,7 @@ void BiliLiveService::initWS()
         if (isLiving() || !us->timerConnectServer)
         {
             localNotify("[连接断开，重连...]");
-            ac->liveStatus = false;
+            liveStatus = false;
             rt->isReconnect = true;
 
             // 尝试5秒钟后重连
@@ -136,24 +135,7 @@ void BiliLiveService::initWS()
         qInfo() << "textMessageReceived";
     });
 
-    connect(liveSocket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
-        SOCKET_DEB << "stateChanged" << state;
-        QString str = "未知";
-        if (state == QAbstractSocket::UnconnectedState)
-            str = "未连接";
-        else if (state == QAbstractSocket::ConnectingState)
-            str = "连接中";
-        else if (state == QAbstractSocket::ConnectedState)
-            str = "已连接";
-        else if (state == QAbstractSocket::BoundState)
-            str = "已绑定";
-        else if (state == QAbstractSocket::ClosingState)
-            str = "断开中";
-        else if (state == QAbstractSocket::ListeningState)
-            str = "监听中";
-        emit signalConnectionStateTextChanged(str);
-    });
-
+    // 定时心跳
     heartTimer = new QTimer(this);
     heartTimer->setInterval(30000);
     connect(heartTimer, &QTimer::timeout, this, [=]{
@@ -339,47 +321,29 @@ QString BiliLiveService::toWbiParam(QString params) const
     return params;
 }
 
-/**
- * 获取所有用户信息
- * 目前其实只有头像、弹幕字数
- */
-void BiliLiveService::getRobotInfo()
+void BiliLiveService::getAccountInfo(const QString &uid, NetJsonFunc func)
 {
-    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + ac->cookieUid + "&platform=web&token=&web_location=1550101");
+    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + uid + "&platform=web&token=&web_location=1550101");
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("获取账号信息返回结果不为0：") << json.value("message").toString();
             return ;
         }
-        QJsonObject data = json.value("data").toObject();
+        func(json.value("data").toObject());
+    });
+}
 
+/**
+ * 获取所有用户信息
+ * 目前其实只有头像、弹幕字数
+ */
+void BiliLiveService::getRobotInfo()
+{
+    getAccountInfo(ac->cookieUid, [=](QJsonObject data){
         // 开始下载头像
         QString face = data.value("face").toString();
-        get(face, [=](QNetworkReply* reply){
-            QByteArray jpegData = reply->readAll();
-            QPixmap pixmap;
-            pixmap.loadFromData(jpegData);
-            if (pixmap.isNull())
-            {
-                showError("获取账号头像出错");
-                return ;
-            }
-
-            // 设置成圆角
-            int side = qMin(pixmap.width(), pixmap.height());
-            QPixmap p(side, side);
-            p.fill(Qt::transparent);
-            QPainter painter(&p);
-            painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
-            QPainterPath path;
-            path.addEllipse(0, 0, side, side);
-            painter.setClipPath(path);
-            painter.drawPixmap(0, 0, side, side, pixmap);
-
-            // 设置到Robot头像
-            emit signalRobotHeadChanged(p);
-        });
+        downloadRobotCover(face);
     });
 
     // 检查是否需要用户信息
@@ -524,7 +488,7 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         ac->roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样，但防止是短ID
         ac->shortId = QString::number(roomInfo.value("short_id").toInt());
         ac->upUid = QString::number(static_cast<qint64>(roomInfo.value("uid").toDouble()));
-        ac->liveStatus = roomInfo.value("live_status").toInt();
+        liveStatus = roomInfo.value("live_status").toInt();
         int pkStatus = roomInfo.value("pk_status").toInt();
         ac->roomTitle = roomInfo.value("title").toString();
         ac->upName = anchorInfo.value("base_info").toObject().value("uname").toString();
@@ -621,11 +585,11 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         }
 
         // 异步获取房间封面
-        getRoomCover(roomInfo.value("cover").toString());
+        downloadRoomCover(roomInfo.value("cover").toString());
 
         // 获取主播头像
         if (!wbiMixinKey.isEmpty())
-            getUpInfo(ac->upUid);
+            getUpInfo();
         gettingRoom = false;
         if (!gettingUser)
             emit signalGetRoomAndRobotFinished();
@@ -634,6 +598,8 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         emit signalRoomIdChanged(ac->roomId);
         emit signalUpUidChanged(ac->upUid);
         emit signalRoomInfoChanged();
+
+        triggerCmdEvent("GET_ROOM_INFO", LiveDanmaku().with(json));
 
         // 判断房间，未开播则暂停连接，等待开播
         if (!isLivingOrMayLiving())
@@ -767,11 +733,6 @@ void BiliLiveService::startMsgLoop()
     QString host = hostServer.getLink();
     qInfo() << "连接服务器：" << host;
     SOCKET_DEB << "hostServer:" << host << "   hostIndex:" << (hostUseIndex-1);
-
-    // 设置安全套接字连接模式（不知道有啥用）
-    QSslConfiguration config = liveSocket->sslConfiguration();
-    config.setProtocol(QSsl::TlsV1_2OrLater);
-    liveSocket->setSslConfiguration(config);
     liveSocket->open(host);
 }
 
@@ -995,26 +956,29 @@ void BiliLiveService::startConnectIdentityCode(const QString &code)
     }); */
 }
 
-void BiliLiveService::getRoomCover(const QString &url)
+bool BiliLiveService::isLiving() const
 {
-    get(url, [=](QNetworkReply* reply){
-        QPixmap pixmap;
-        pixmap.loadFromData(reply->readAll());
-        emit signalRoomCoverChanged(pixmap);
-    });
+    return liveStatus == 1;
 }
 
-void BiliLiveService::getUpInfo(const QString &uid)
+QString BiliLiveService::getLiveStatusStr() const
 {
-    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + uid + "&platform=web&token=&web_location=1550101");
-    get(url, [=](QJsonObject json){
-        if (json.value("code").toInt() != 0)
-        {
-            qCritical() << s8("获取主播信息返回结果不为0：") << json.value("message").toString();
-            return ;
-        }
-        QJsonObject data = json.value("data").toObject();
+    switch (liveStatus)
+    {
+    case 0:
+        return "未开播";
+    case 1:
+        return "直播中";
+    case 2:
+        return "轮播中";
+    default:
+        return "未知状态" + snum(liveStatus);
+    }
+}
 
+void BiliLiveService::getUpInfo()
+{
+    getAccountInfo(ac->upUid, [=](QJsonObject data){
         // 设置签名
         QString sign = data.value("sign").toString();
         {
@@ -1027,12 +991,7 @@ void BiliLiveService::getUpInfo(const QString &uid)
 
         // 开始下载头像
         QString faceUrl = data.value("face").toString();
-        get(faceUrl, [=](QNetworkReply* reply){
-            QPixmap pixmap;
-            pixmap.loadFromData(reply->readAll());
-            upFace = pixmap;
-            emit signalUpFaceChanged(pixmap);
-        });
+        downloadUpCover(faceUrl);
     });
 }
 

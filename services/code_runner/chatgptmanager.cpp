@@ -6,7 +6,7 @@ ChatGPTManager::ChatGPTManager(QObject *parent) : QObject(parent)
 {
 }
 
-void ChatGPTManager::setLiveService(LiveRoomService *service)
+void ChatGPTManager::setLiveService(LiveServiceBase *service)
 {
     this->liveService = service;
 }

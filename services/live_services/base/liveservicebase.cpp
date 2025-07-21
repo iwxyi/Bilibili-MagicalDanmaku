@@ -1,14 +1,14 @@
 #include <QRegularExpression>
-#include "liveroomservice.h"
+#include "liveservicebase.h"
 #include "coderunner.h"
 
-LiveRoomService::LiveRoomService(QObject *parent) 
+LiveServiceBase::LiveServiceBase(QObject *parent) 
     : QObject(parent), NetInterface(this), LiveStatisticService(this)
 {
     init();
 }
 
-void LiveRoomService::init()
+void LiveServiceBase::init()
 {
     // 配置
     robotRecord = new MySettings(rt->dataPath + "robots.ini", QSettings::Format::IniFormat);
@@ -35,9 +35,37 @@ void LiveRoomService::init()
     });
 
     initTimeTasks();
+
+    // WebSocket
+    liveSocket = new QWebSocket();
+
+    QSslConfiguration config = liveSocket->sslConfiguration();
+    config.setProtocol(QSsl::TlsV1_2OrLater);
+    liveSocket->setSslConfiguration(config);
+
+    connect(liveSocket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
+        QString str = "未知";
+        if (state == QAbstractSocket::UnconnectedState)
+            str = "未连接";
+        else if (state == QAbstractSocket::ConnectingState)
+            str = "连接中";
+        else if (state == QAbstractSocket::ConnectedState)
+            str = "已连接";
+        else if (state == QAbstractSocket::BoundState)
+            str = "已绑定";
+        else if (state == QAbstractSocket::ClosingState)
+            str = "断开中";
+        else if (state == QAbstractSocket::ListeningState)
+            str = "监听中";
+        emit signalConnectionStateTextChanged(str);
+    });
+
+    connect(liveSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, [=](QAbstractSocket::SocketError error){
+        qWarning() << "连接错误：" << error;
+    });
 }
 
-void LiveRoomService::initTimeTasks()
+void LiveServiceBase::initTimeTasks()
 {
     // 每分钟定时
     connect(minuteTimer, &QTimer::timeout, this, [=]{
@@ -239,12 +267,12 @@ void LiveRoomService::initTimeTasks()
     }
 }
 
-void LiveRoomService::readConfig()
+void LiveServiceBase::readConfig()
 {
 
 }
 
-void LiveRoomService::releaseLiveData(bool prepare)
+void LiveServiceBase::releaseLiveData(bool prepare)
 {
     if (!prepare) // 断开连接
     {
@@ -257,7 +285,7 @@ void LiveRoomService::releaseLiveData(bool prepare)
     _guardJudged = false;
 }
 
-QList<LiveDanmaku> LiveRoomService::getDanmusByUID(QString uid, int count) const
+QList<LiveDanmaku> LiveServiceBase::getDanmusByUID(QString uid, int count) const
 {
     QList<LiveDanmaku> dms;
     for (int i = 0; i < roomDanmakus.size(); i++)
@@ -273,7 +301,7 @@ QList<LiveDanmaku> LiveRoomService::getDanmusByUID(QString uid, int count) const
     return dms;
 }
 
-QList<LiveDanmaku> LiveRoomService::getAllDanmus(int count) const
+QList<LiveDanmaku> LiveServiceBase::getAllDanmus(int count) const
 {
     if (count == 0)
         return roomDanmakus;
@@ -281,17 +309,17 @@ QList<LiveDanmaku> LiveRoomService::getAllDanmus(int count) const
         return roomDanmakus.mid(roomDanmakus.size() - count, count);
 }
 
-void LiveRoomService::setSqlService(SqlService *service)
+void LiveServiceBase::setSqlService(SqlService *service)
 {
     this->sqlService = service;
 }
 
-bool LiveRoomService::isLiving() const
+bool LiveServiceBase::isLiving() const
 {
-    return ac->liveStatus == 1;
+    return liveStatus == 1;
 }
 
-bool LiveRoomService::isLivingOrMayLiving()
+bool LiveServiceBase::isLivingOrMayLiving()
 {
     if (us->timerConnectServer)
     {
@@ -372,7 +400,74 @@ bool LiveRoomService::isLivingOrMayLiving()
     return true;
 }
 
-void LiveRoomService::sendExpireGift()
+int LiveServiceBase::getLiveStatus() const
+{
+    return liveStatus;
+}
+
+QString LiveServiceBase::getLiveStatusStr() const
+{
+    return "";
+}
+
+void LiveServiceBase::downloadRoomCover(const QString &url)
+{
+    if (url.isEmpty())
+    {
+        // 设置为默认封面
+        QPixmap pixmap(":/bg/bg");
+        emit signalRoomCoverChanged(pixmap);
+        return;
+    }
+
+    get(url, [=](QNetworkReply* reply){
+        QPixmap pixmap;
+        pixmap.loadFromData(reply->readAll());
+        emit signalRoomCoverChanged(pixmap);
+    });
+}
+
+void LiveServiceBase::downloadRobotCover(const QString &url)
+{
+    if (url.isEmpty())
+        return;
+    get(url, [=](QNetworkReply* reply){
+        QByteArray jpegData = reply->readAll();
+        QPixmap pixmap;
+        pixmap.loadFromData(jpegData);
+        if (pixmap.isNull())
+        {
+            showError("获取账号头像出错");
+            return ;
+        }
+
+        // 设置成圆角
+        int side = qMin(pixmap.width(), pixmap.height());
+        QPixmap p(side, side);
+        p.fill(Qt::transparent);
+        QPainter painter(&p);
+        painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+        QPainterPath path;
+        path.addEllipse(0, 0, side, side);
+        painter.setClipPath(path);
+        painter.drawPixmap(0, 0, side, side, pixmap);
+
+        // 设置到Robot头像
+        emit signalRobotHeadChanged(p);
+    });
+}
+
+void LiveServiceBase::downloadUpCover(const QString &url)
+{
+    get(url, [=](QNetworkReply* reply){
+        QPixmap pixmap;
+        pixmap.loadFromData(reply->readAll());
+        upFace = pixmap;
+        emit signalUpFaceChanged(pixmap);
+    });
+}
+
+void LiveServiceBase::sendExpireGift()
 {
     getBagList(24 * 3600 * 2); // 默认赠送两天内过期的
 }
@@ -380,13 +475,8 @@ void LiveRoomService::sendExpireGift()
 /**
  * 添加本次直播的金瓜子礼物
  */
-void LiveRoomService::appendLiveGift(const LiveDanmaku &danmaku)
+void LiveServiceBase::appendLiveGift(const LiveDanmaku &danmaku)
 {
-    if (danmaku.getTotalCoin() == 0)
-    {
-        qWarning() << "添加礼物到liveGift错误：" << danmaku.toString();
-        return ;
-    }
     for (int i = 0; i < liveAllGifts.size(); i++)
     {
         auto his = liveAllGifts.at(i);
@@ -402,7 +492,7 @@ void LiveRoomService::appendLiveGift(const LiveDanmaku &danmaku)
     liveAllGifts.append(danmaku);
 }
 
-void LiveRoomService::appendLiveGuard(const LiveDanmaku &danmaku)
+void LiveServiceBase::appendLiveGuard(const LiveDanmaku &danmaku)
 {
     if (!danmaku.is(MSG_GUARD_BUY))
     {
@@ -424,34 +514,34 @@ void LiveRoomService::appendLiveGuard(const LiveDanmaku &danmaku)
     liveAllGuards.append(danmaku);
 }
 
-QVariant LiveRoomService::getCookies() const
+QVariant LiveServiceBase::getCookies() const
 {
     return NetInterface::getCookies(ac->browserCookie);
 }
 
-void LiveRoomService::triggerCmdEvent(const QString &cmd, const LiveDanmaku &danmaku, bool debug)
+void LiveServiceBase::triggerCmdEvent(const QString &cmd, const LiveDanmaku &danmaku, bool debug)
 {
     emit signalTriggerCmdEvent(cmd, danmaku, debug);
 }
 
-void LiveRoomService::localNotify(const QString &text, UIDT uid)
+void LiveServiceBase::localNotify(const QString &text, UIDT uid)
 {
     emit signalLocalNotify(text, uid);
 }
 
-void LiveRoomService::showError(const QString &title, const QString &desc)
+void LiveServiceBase::showError(const QString &title, const QString &desc)
 {
     emit signalShowError(title, desc);
 }
 
-void LiveRoomService::appendNewLiveDanmakus(const QList<LiveDanmaku> &danmakus)
+void LiveServiceBase::appendNewLiveDanmakus(const QList<LiveDanmaku> &danmakus)
 {
     // 添加到队列
     roomDanmakus.append(danmakus);
     rt->allDanmakus.append(danmakus);
 }
 
-void LiveRoomService::appendNewLiveDanmaku(const LiveDanmaku &danmaku)
+void LiveServiceBase::appendNewLiveDanmaku(const LiveDanmaku &danmaku)
 {
     roomDanmakus.append(danmaku);
     lastDanmaku = danmaku;
@@ -476,7 +566,7 @@ void LiveRoomService::appendNewLiveDanmaku(const LiveDanmaku &danmaku)
         rt->allDanmakus.removeFirst();
 }
 
-void LiveRoomService::autoSetCookie(const QString &s)
+void LiveServiceBase::autoSetCookie(const QString &s)
 {
     us->setValue("danmaku/browserCookie", ac->browserCookie = s);
     if (ac->browserCookie.isEmpty())
@@ -507,7 +597,7 @@ void LiveRoomService::autoSetCookie(const QString &s)
  * 如果有标点，那么会首先按照标点进行分割
  * 如果有一条语句不满足，那就直接按照等分长度
  */
-QStringList LiveRoomService::splitLongDanmu(const QString& text, int maxOne) const
+QStringList LiveServiceBase::splitLongDanmu(const QString& text, int maxOne) const
 {
     QStringList sl;
 
@@ -608,7 +698,7 @@ QStringList LiveRoomService::splitLongDanmu(const QString& text, int maxOne) con
     return sl;
 }
 
-void LiveRoomService::sendLongText(QString text)
+void LiveServiceBase::sendLongText(QString text)
 {
     if (text.contains("%n%"))
     {
@@ -622,7 +712,7 @@ void LiveRoomService::sendLongText(QString text)
     emit signalSendAutoMsg(splitLongDanmu(text, ac->danmuLongest).join("\\n"), LiveDanmaku());
 }
 
-bool LiveRoomService::isInFans(QString uid) const
+bool LiveServiceBase::isInFans(QString uid) const
 {
     foreach (auto fan, fansList)
     {
@@ -632,7 +722,7 @@ bool LiveRoomService::isInFans(QString uid) const
     return false;
 }
 
-void LiveRoomService::markNotRobot(QString uid)
+void LiveServiceBase::markNotRobot(QString uid)
 {
     if (!us->judgeRobot)
         return ;
@@ -646,7 +736,7 @@ void LiveRoomService::markNotRobot(QString uid)
  * 在添加到消息队列前调用此函数判断
  * 若是，则同步合并实时弹幕中的礼物连击
  */
-bool LiveRoomService::mergeGiftCombo(const LiveDanmaku &danmaku)
+bool LiveServiceBase::mergeGiftCombo(const LiveDanmaku &danmaku)
 {
     if (danmaku.getMsgType() != MSG_GIFT)
         return false;
@@ -669,7 +759,8 @@ bool LiveRoomService::mergeGiftCombo(const LiveDanmaku &danmaku)
             return false;
         if (dm.getMsgType() != MSG_GIFT
                 || dm.getUid() != uid
-                || dm.getGiftId() != giftId)
+                || dm.getGiftId() != giftId
+                || dm.getLogId() == danmaku.getLogId())
             continue;
 
         // 是这个没错了
@@ -680,7 +771,7 @@ bool LiveRoomService::mergeGiftCombo(const LiveDanmaku &danmaku)
         return false;
 
     // 开始合并
-    qInfo() << "合并相同礼物至：" << merged->toString();
+    qInfo() << "合并相同礼物至：" << merged->getUid() << merged->getGiftId() << merged->toString();
     merged->addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getDiscountPrice(), danmaku.getTimeline());
 
     // 合并实时弹幕
@@ -692,7 +783,7 @@ bool LiveRoomService::mergeGiftCombo(const LiveDanmaku &danmaku)
 /**
  * WS连接收到弹幕消息
  */
-void LiveRoomService::receiveDanmaku(LiveDanmaku &danmaku)
+void LiveServiceBase::receiveDanmaku(LiveDanmaku &danmaku)
 {
     UIDT uid = danmaku.getUid();
     QString uname = danmaku.getNickname();
@@ -760,7 +851,7 @@ void LiveRoomService::receiveDanmaku(LiveDanmaku &danmaku)
     triggerCmdEvent("DANMU_MSG", danmaku);
 }
 
-void LiveRoomService::receiveGift(LiveDanmaku &danmaku)
+void LiveServiceBase::receiveGift(LiveDanmaku &danmaku)
 {
     UIDT uid = danmaku.getUid();
 
@@ -776,9 +867,59 @@ void LiveRoomService::receiveGift(LiveDanmaku &danmaku)
     markNotRobot(uid);
 
     triggerCmdEvent("SEND_GIFT", danmaku);
+
+    // 统计
+    // 进行统计
+    QString coinType = danmaku.getCoinType();
+    int totalCoin = danmaku.getTotalCoin();
+    if (coinType == "silver")
+    {
+        qint64 userSilver = us->danmakuCounts->value("silver/" + uid).toLongLong();
+        userSilver += totalCoin;
+        us->danmakuCounts->setValue("silver/"+uid, userSilver);
+
+        dailyGiftSilver += totalCoin;
+        if (dailySettings)
+            dailySettings->setValue("gift_silver", dailyGiftSilver);
+        currentLiveGiftSilver += totalCoin;
+        if (currentLiveSettings)
+            currentLiveSettings->setValue("gift_silver", currentLiveGiftSilver);
+    }
+    if (coinType == "gold" || rt->livePlatform != Bilibili)
+    {
+        QString coinType = danmaku.getCoinType();
+        qint64 userGold = us->danmakuCounts->value(coinType + "/" + uid).toLongLong();
+        userGold += totalCoin;
+        us->danmakuCounts->setValue(coinType + "/" + uid, userGold);
+
+        dailyGiftGold += totalCoin;
+        if (dailySettings)
+            dailySettings->setValue("gift_" + coinType, dailyGiftGold);
+        currentLiveGiftGold += totalCoin;
+        if (currentLiveSettings)
+            currentLiveSettings->setValue("gift_" + coinType, currentLiveGiftGold);
+
+        // 正在PK，保存弹幕历史
+        // 因为最后的大乱斗最佳助攻只提供名字，所以这里需要保存 uname->uid 的映射
+        // 方便起见，直接全部保存下来了
+        pkGifts.append(danmaku);
+
+        // 添加礼物记录
+        appendLiveGift(danmaku);
+
+        // 正在偷塔阶段
+        if (pkEnding && uid == ac->cookieUid) // 机器人账号
+        {
+//                pkVoting -= totalCoin;
+//                if (pkVoting < 0) // 自己用其他设备送了更大的礼物
+//                {
+//                    pkVoting = 0;
+//                }
+        }
+    }
 }
 
-void LiveRoomService::receiveUserCome(LiveDanmaku &danmaku)
+void LiveServiceBase::receiveUserCome(LiveDanmaku &danmaku)
 {
     UIDT uid = danmaku.getUid();
 

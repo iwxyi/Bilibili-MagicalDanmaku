@@ -60,7 +60,7 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
     });
 }
 
-void CodeRunner::setLiveService(LiveRoomService *service)
+void CodeRunner::setLiveService(LiveServiceBase *service)
 {
     this->liveService = service;
 }
@@ -777,8 +777,8 @@ QStringList CodeRunner::getEditConditionStringList(QString plainText, LiveDanmak
             QString s = result.at(i);
             if (s.contains(">") || s.contains("\\n")) // 包含多行或者命令的，不需要或者懒得判断长度
                 continue;
-            s = s.replace(QRegExp("^\\s+\\(\\s*[\\w\\d: ,]*\\s*\\)"), "").replace("*", "").trimmed(); // 去掉发送选项
-            // s = s.replace(QRegExp("^\\s+\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "").replace("*", "").trimmed();
+            s = s.replace(QRegExp("^[\\s\\*]*\\([\\w\\d:\\s,]*\\)"), "").replace("*", "").trimmed(); // 去掉发送选项
+            // s = s.replace(QRegExp("^\\s*\\**\\s*\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "").replace("*", "").trimmed();
             if (s.length() > ac->danmuLongest && !s.contains("%"))
             {
                 if (us->debugPrint)
@@ -1444,7 +1444,11 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 房间属性
     else if (key == "%living%")
-        return snum(ac->liveStatus);
+        return liveService->isLiving() ? "1" : "0";
+    else if (key == "%live_status%" || key == "%live_status_code%")
+        return snum(liveService->getLiveStatus());
+    else if (key == "%live_status_str%")
+        return liveService->getLiveStatusStr();
     else if (key == "%room_id%" || key == "%rid%")
         return ac->roomId;
     else if (key == "%room_name%" || key == "%room_title%")
@@ -2771,7 +2775,6 @@ bool CodeRunner::isFilterRejected(QString filterName, const LiveDanmaku &danmaku
     if (!enableFilter || rt->justStart)
         return false;
 
-    qDebug() << "触发过滤器：" << filterName;
     // 查找所有事件，查看有没有对应的过滤器
     bool reject = false;
     for (int row = 0; row < ui->eventListWidget->count(); row++)
