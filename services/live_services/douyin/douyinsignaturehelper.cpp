@@ -69,6 +69,21 @@ QString DouyinSignatureHelper::getXBogus(const QString &xMsStub)
     return resultSignature;
 }
 
+/// 获取抖音的 a_bogus
+/// 但是这个接口已经过时了，生成的短签名和当前的很长一串a_bogus参数完全不一致
+/// 如果使用会导致 403（也可能是其他原因）
+QString DouyinSignatureHelper::getXBogusForUrl(const QString &url)
+{
+    QMutexLocker locker(&mutex);
+    initializeIfNeeded();
+    pendingUrl = url;
+    resultSignature.clear();
+    eventLoop->quit();
+    timer->start(200);
+    eventLoop->exec();
+    return resultSignature;
+}
+
 void DouyinSignatureHelper::initializeIfNeeded()
 {
     if (!isInitialized) {
@@ -106,18 +121,34 @@ void DouyinSignatureHelper::tryGetSignature()
     view->page()->runJavaScript(checkJs, [=](const QVariant &result){
         if (result.toBool()) {
             timer->stop();
-            // 调用 frontierSign
-            QString js = QString(
-                             "window.byted_acrawler.frontierSign({'X-MS-STUB':'%1'})"
-                             ).arg(pendingStub);
-            view->page()->runJavaScript(js, [=](const QVariant &res){
-                if (res.type() == QVariant::Map) {
-                    QVariantMap map = res.toMap();
-                    resultSignature = map.value("X-Bogus").toString();
-                }
-                // 退出事件循环，返回结果
-                eventLoop->quit();
-            });
+            if (!pendingUrl.isEmpty()) {
+                // 新增：直接用url生成X-Bogus
+                QString js = QString(
+                    "window.byted_acrawler.frontierSign && window.byted_acrawler.frontierSign('%1')"
+                ).arg(pendingUrl.replace("'", "\\'"));
+                view->page()->runJavaScript(js, [=](const QVariant &res){
+                    if (res.type() == QVariant::Map) {
+                        QVariantMap map = res.toMap();
+                        resultSignature = map.value("X-Bogus").toString();
+                    } else if (res.type() == QVariant::String) {
+                        resultSignature = res.toString();
+                    }
+                    pendingUrl.clear();
+                    eventLoop->quit();
+                });
+            } else {
+                // 旧逻辑：用X-MS-STUB生成
+                QString js = QString(
+                                 "window.byted_acrawler.frontierSign({'X-MS-STUB':'%1'})"
+                                 ).arg(pendingStub);
+                view->page()->runJavaScript(js, [=](const QVariant &res){
+                    if (res.type() == QVariant::Map) {
+                        QVariantMap map = res.toMap();
+                        resultSignature = map.value("X-Bogus").toString();
+                    }
+                    eventLoop->quit();
+                });
+            }
         }
         // else: 继续轮询
     });

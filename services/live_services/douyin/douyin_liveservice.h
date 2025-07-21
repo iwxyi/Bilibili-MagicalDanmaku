@@ -35,6 +35,8 @@ protected:
     void getAccountInfo(const UIDT& uid, NetJsonFunc func) override;
     void getRobotInfo() override;
     void getUpInfo() override;
+    virtual void sendMsg(const QString& msg, const QString& cookie = "") override;
+    virtual void sendRoomMsg(QString roomRid, const QString& msg, const QString& cookie = "") override;
 
 public slots:
     void onBinaryMessageReceived(const QByteArray &message);

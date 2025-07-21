@@ -429,6 +429,8 @@ void LiveServiceBase::downloadRoomCover(const QString &url)
 
 void LiveServiceBase::downloadRobotCover(const QString &url)
 {
+    if (url.isEmpty())
+        return;
     get(url, [=](QNetworkReply* reply){
         QByteArray jpegData = reply->readAll();
         QPixmap pixmap;

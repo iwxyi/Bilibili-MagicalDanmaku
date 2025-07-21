@@ -3815,6 +3815,10 @@ void MainWindow::on_testDanmakuButton_clicked()
     {
         on_proxyTestIPButton_clicked();
     }
+    else if (text == "测试弹幕")
+    {
+        liveService->sendMsg("111122222");
+    }
     else
     {
         liveService->appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,

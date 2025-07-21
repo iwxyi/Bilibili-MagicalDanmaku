@@ -234,8 +234,15 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
 /// live_can_add_dy_2_desktop=%221%22
 void DouyinLiveService::setUrlCookie(const QString &url, QNetworkRequest *request)
 {
-    if (url.contains("douyin.com") && !ac->browserCookie.isEmpty())
-        request->setHeader(QNetworkRequest::CookieHeader, ac->userCookies);
+    if (url.contains("douyin.com"))
+    {
+        if (!ac->browserCookie.isEmpty())
+        {
+            request->setHeader(QNetworkRequest::CookieHeader, ac->userCookies);
+        }
+        request->setRawHeader("Referer", "https://live.douyin.com/");
+        request->setRawHeader("Origin", "https://live.douyin.com");
+    }
 }
 
 void DouyinLiveService::autoAddCookie(QList<QNetworkCookie> cookies)
@@ -442,7 +449,6 @@ void DouyinLiveService::getAccountInfo(const QString &uid, NetJsonFunc func)
         }
         func(json.data());
     });
-
 }
 
 /// 获取机器人信息
@@ -461,5 +467,63 @@ void DouyinLiveService::getUpInfo()
         int followerCount = followInfo.i("follower_count");
         int followingCount = followInfo.i("following_count");
         emit signalFansCountChanged(followerCount);
+    });
+}
+
+void DouyinLiveService::sendMsg(const QString &msg, const QString &cookie)
+{
+    sendRoomMsg(ac->roomRid, msg, cookie);
+}
+
+/// 发送弹幕
+void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const QString &cookie)
+{
+    // TODO: 发送抖音弹幕
+    return;
+    // 获取两个动态参数
+    QString msToken = ; // 从Cookie中获取
+    
+    QStringList params{
+        "aid", "6383",
+        "app_name", "douyin_web",
+        "browser_language", "zh-CN",
+        "browser_name", "Mozilla",
+        "browser_platform", "Win32",
+        "browser_version", "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+        "cookie_enabled", "true",
+        "device_platform", "web",
+        "language", "zh-CN",
+        "live_id", "1",
+        "live_reason", "",
+        "screen_height", "1080",
+        "screen_width", "1920",
+        "room_id", roomRid,
+        "type", "0",
+        "rtf_content", "",
+        "content", urlEncode(msg),
+        "msToken", msToken
+    };
+
+    QString paramsStr;
+    for (int i = 0; i < params.size(); i += 2)
+    {
+        paramsStr += params[i] + "=" + urlDecode(params[i + 1]) + "&";
+    }
+    paramsStr.chop(1);
+
+    QString url = "https://live.douyin.com/webcast/room/chat/?" + paramsStr;
+    DouyinSignatureHelper helper;
+    QString xBogus = helper.getXBogusForUrl(url);
+    url += "&a_bogus=" + xBogus;
+    qDebug() << "发送弹幕：" << url;
+    return;
+
+    get(url, [=](MyJson json) {
+        if (json.i("status_code") != 0)
+        {
+            qWarning() << json;
+            QString msg = json.data().s("prompts");
+            return showError("发送弹幕失败", "状态不为0：" + snum(json.i("status_code")) + "\n" + msg);
+        }
     });
 }

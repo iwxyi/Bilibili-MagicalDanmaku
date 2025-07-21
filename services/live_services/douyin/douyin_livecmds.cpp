@@ -173,7 +173,7 @@ void DouyinLiveService::onBinaryMessageReceived(const QByteArray &message)
 
     // 2.4 解码 Response
     if (!pb_decode(&response_stream, douyin_Response_fields, &response)) {
-        qWarning() << "Decoding Response failed:" << PB_GET_ERROR(&response_stream);
+        qWarning() << "Decoding Response failed:" << PB_GET_ERROR(&response_stream) << decompressedPayload.size();
         return;
     }
 
