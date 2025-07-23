@@ -82,6 +82,7 @@ INCLUDEPATH += \
     third_party/utils/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
+    mainwindow/code_gui/ \
     third_party/interactive_buttons/ \
     third_party/facile_menu/ \
     order_player/ \
@@ -113,6 +114,10 @@ INCLUDEPATH += \
 
 SOURCES += \
     global/usersetting.cpp \
+    mainwindow/code_gui/codeguieditor.cpp \
+    mainwindow/code_gui/codelinecommenteditor.cpp \
+    mainwindow/code_gui/codelineeditor.cpp \
+    mainwindow/code_gui/codelinesplitterwidget.cpp \
     mainwindow/run_cmd.cpp \
     services/chat_service/chatservice.cpp \
     services/code_runner/chatgptmanager.cpp \
@@ -266,6 +271,12 @@ HEADERS += \
     global/runtimeinfo.h \
     global/signaltransfer.h \
     global/usersettings.h \
+    mainwindow/code_gui/codeeditorinterface.h \
+    mainwindow/code_gui/codeguieditor.h \
+    mainwindow/code_gui/codelinecommenteditor.h \
+    mainwindow/code_gui/codelineeditor.h \
+    mainwindow/code_gui/codelinesplitterwidget.h \
+    mainwindow/code_gui/codelinewidgetbase.h \
     services/chat_service/chatservice.h \
     services/code_runner/chatgptmanager.h \
     services/code_runner/coderunner.h \

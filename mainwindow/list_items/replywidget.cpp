@@ -81,6 +81,16 @@ QString ReplyWidget::body() const
     return replyEdit->toPlainText();
 }
 
+void ReplyWidget::setCode(const QString &code)
+{
+    replyEdit->setPlainText(code);
+}
+
+QString ReplyWidget::getCode() const
+{
+    return replyEdit->toPlainText();
+}
+
 bool ReplyWidget::isMatch(const QString &text) const
 {
     return keyRe.isValid() && text.indexOf(keyRe) > -1;

@@ -38,6 +38,7 @@
 #include "emailutil.h"
 #include "douyin_liveservice.h"
 #include "webview_login/WebLoginUtil.h"
+#include "codeguieditor.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -3931,9 +3932,18 @@ void MainWindow::on_SendMsgEdit_returnPressed()
     ui->SendMsgEdit->clear();
 }
 
+#define CONNECT_SHOW_CODE_GUI_EDITOR(tw) \
+    connect(tw, &ListItemInterface::signalShowCodeGUIEditor, this, [=]{ \
+        CodeGUIEditor* editor = new CodeGUIEditor(this); \
+        editor->setCode(tw->getCode()); \
+        editor->show(); \
+        tw->setCode(editor->toString()); \
+    });
+
 TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int index)
 {
     TaskWidget* tw = new TaskWidget(this);
+    CONNECT_SHOW_CODE_GUI_EDITOR(tw);
     QListWidgetItem* item;
 
     if (index == -1)
@@ -4072,6 +4082,7 @@ void MainWindow::restoreTaskList()
 ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, int index)
 {
     ReplyWidget* rw = new ReplyWidget(this);
+    CONNECT_SHOW_CODE_GUI_EDITOR(rw);
     QListWidgetItem* item;
 
     if (index == -1)
@@ -4309,6 +4320,7 @@ void MainWindow::addListItemOnCurrentPage()
 EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action, int index)
 {
     EventWidget* rw = new EventWidget(this);
+    CONNECT_SHOW_CODE_GUI_EDITOR(rw);
     QListWidgetItem* item;
 
     if (index == -1)

@@ -31,6 +31,8 @@ public:
 
     virtual bool isEnabled() const override;
     virtual QString body() const override;
+    virtual void setCode(const QString &code) override;
+    virtual QString getCode() const override;
 
 signals:
     void signalSendMsgs(QString msgs, bool manual);

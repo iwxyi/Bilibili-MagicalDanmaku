@@ -107,6 +107,16 @@ QString EventWidget::body() const
     return actionEdit->toPlainText();
 }
 
+void EventWidget::setCode(const QString &code)
+{
+    actionEdit->setPlainText(code);
+}
+
+QString EventWidget::getCode() const
+{
+    return actionEdit->toPlainText();
+}
+
 bool EventWidget::isMatch(const QString &text) const
 {
     return cmdKey == text;
