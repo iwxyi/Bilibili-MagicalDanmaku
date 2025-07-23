@@ -229,7 +229,7 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
     const pb_byte_t *data = reinterpret_cast<const uint8_t *>(payload.data());
     auto size = payload.size();
 
-    if (method == "WebcastChatMessage")
+    if (method == "WebcastChatMessage") // 弹幕
     {
         douyin_ChatMessage chat = douyin_ChatMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
@@ -281,7 +281,7 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         danmaku.setFaceUrl(avatar);
         receiveDanmaku(danmaku);
     }
-    else if (method == "WebcastGiftMessage")
+    else if (method == "WebcastGiftMessage") // 送礼
     {
         douyin_GiftMessage gift = douyin_GiftMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
@@ -314,7 +314,7 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         receiveGift(danmaku);
         appendLiveGift(danmaku);
     }
-    else if (method == "WebcastMemberMessage")
+    else if (method == "WebcastMemberMessage") // 进房
     {
         douyin_MemberMessage member = douyin_MemberMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
@@ -344,7 +344,30 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         danmaku.setNumber(rankScore);
         receiveUserCome(danmaku);
     }
-    else if (method == "WebcastLikeMessage")
+    else if (method == "WebcastSocialMessage") // 关注
+    {
+        douyin_SocialMessage social = douyin_SocialMessage_init_zero;
+        pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
+        if (!pb_decode(&payload_stream, douyin_SocialMessage_fields, &social))
+        {
+            qWarning() << PB_GET_ERROR(&payload_stream);
+            return showError(method, "解析错误");
+        }
+        douyin_User user = social.user;
+        QString uname = QString::fromUtf8(user.nickName);
+        qint64 uid = user.id;
+        qInfo() << "[关注]" << uname << "关注了主播";
+
+        LiveDanmaku danmaku;
+        danmaku.setUser(uname, snum(uid), "", "");
+        danmaku.setMsgType(MSG_ATTENTION);
+        danmaku.setTime(QDateTime::currentDateTime());
+        danmaku.setFromRoomId(ac->roomId);
+        appendNewLiveDanmaku(danmaku);
+        emit signalSendAttentionThank(danmaku);
+        triggerCmdEvent("ATTENTION", danmaku);
+    }
+    else if (method == "WebcastLikeMessage") // 点赞
     {
         douyin_LikeMessage like = douyin_LikeMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
@@ -357,7 +380,7 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         qInfo() << "[点赞]" << uname << "点赞" << like.count << like.total;
         emit signalLikeChanged(like.total);
     }
-    else if (method == "WebcastRoomUserSeqMessage")
+    else if (method == "WebcastRoomUserSeqMessage") // 人气
     {
         douyin_RoomUserSeqMessage roomUserSeq = douyin_RoomUserSeqMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
@@ -382,7 +405,7 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         emit signalTotalComeUserChanged(totalUser);
         emit signalTotalPvChanged(totalPvForAnchor);
     }
-    else if (method == "WebcastRoomStatsMessage")
+    else if (method == "WebcastRoomStatsMessage") // 在线人数
     {
         douyin_RoomStatsMessage roomStats = douyin_RoomStatsMessage_init_zero;
         pb_istream_t payload_stream = pb_istream_from_buffer(data, size);
@@ -396,11 +419,9 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         int displayValue = roomStats.display_value;
         int total = roomStats.total;
         int displayType = roomStats.display_type;
-        qDebug() << "[人气] 显示:" << display << "值:" << displayValue << "总数:" << total << "类型:" << displayType;
+        qDebug() << "[在线] 显示:" << display << "值:" << displayValue << "总数:" << total << "类型:" << displayType;
     }
-    else if (method == "WebcastBackupSEIMessage")
-    {}
-    else if (method == "WebcastRoomRankMessage")
+    else if (method == "WebcastRoomRankMessage") // 排行榜
     {
         RoomRankContext ctx;
         douyin_RoomRankMessage roomRank = douyin_RoomRankMessage_init_zero;
@@ -431,10 +452,14 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         }
         emit signalOnlineRankChanged();
     }
+    else if (method == "WebcastBackupSEIMessage")
+    {}
     else
     {
         qInfo() << "[未知消息]" << method << "payload size:" << size;
     }
+
+    triggerCmdEvent(method, LiveDanmaku());
 
     /* 常见消息类型：
 WebcastLikeMessage: 直播间点赞消息
