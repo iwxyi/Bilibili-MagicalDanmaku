@@ -39,7 +39,7 @@ public:
     static QStringList allCompletes; // 所有默认填充的
     static int completerWidth;
 
-private:
+protected:
     QCompleter* completer;
     QString currentPrefix;
 };

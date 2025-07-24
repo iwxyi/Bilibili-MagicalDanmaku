@@ -15,6 +15,50 @@ CodeGUIEditor::CodeGUIEditor(QWidget *parent)
     setWindowIcon(QIcon(":/icons/code_gui"));
     setWindowIconText("代码可视化编辑器");
 
+    // 触发条件
+    triggerTab = new QTabWidget(this);
+    QWidget *timerTriggerWidget = new QWidget(this);
+    {
+        QHBoxLayout *layout = new QHBoxLayout(timerTriggerWidget);
+        QLabel *label = new QLabel("每隔", this);
+        layout->addWidget(label);
+
+        timerTriggerSpinBox = new QSpinBox(this);
+        timerTriggerSpinBox->setRange(1, 99999);
+        timerTriggerSpinBox->setSingleStep(1);
+        timerTriggerSpinBox->setValue(60);
+        timerTriggerSpinBox->setSuffix("秒");
+        layout->addWidget(timerTriggerSpinBox);
+        layout->addWidget(new QLabel("循环执行", this));
+        layout->addStretch();
+    }
+
+    QWidget *replyTriggerWidget = new QWidget(this);
+    {
+        QHBoxLayout *layout = new QHBoxLayout(replyTriggerWidget);
+        QLabel *label = new QLabel("弹幕包含：", this);
+        layout->addWidget(label);
+
+        replyTriggerLineEdit = new QLineEdit(this);
+        replyTriggerLineEdit->setPlaceholderText("支持正则表达式，例如\"^(签到|打卡)$\"");
+        layout->addWidget(replyTriggerLineEdit);
+    }
+
+    QWidget *eventTriggerWidget = new QWidget(this);
+    {
+        QHBoxLayout *layout = new QHBoxLayout(eventTriggerWidget);
+        QLabel *label = new QLabel("事件名称：", this);
+        layout->addWidget(label);
+
+        eventTriggerLineEdit = new QLineEdit(this);
+        layout->addWidget(eventTriggerLineEdit);
+    }
+    
+    triggerTab->addTab(timerTriggerWidget, "定时任务");
+    triggerTab->addTab(replyTriggerWidget, "弹幕关键字");
+    triggerTab->addTab(eventTriggerWidget, "事件触发");
+
+    // 代码种类
     codeTypeTab = new QTabWidget(this);
     okBtn = new InteractiveButtonBase("保存", this);
     connect(okBtn, &InteractiveButtonBase::clicked, this, &CodeGUIEditor::accept);
@@ -25,9 +69,16 @@ CodeGUIEditor::CodeGUIEditor(QWidget *parent)
     itemScrollArea->setWidget(itemScrollWidget);
     itemScrollArea->setWidgetResizable(true);
 
-    addLineBtn = new WaterCircleButton(QIcon(":/icons/add_circle"), this);
-    connect(addLineBtn, &WaterCircleButton::clicked, this, &CodeGUIEditor::showAppendNewLineMenu);
-    itemLayout->addWidget(addLineBtn);
+    addLineBtn = new InteractiveButtonBase(QIcon(":/icons/add_circle"), "添加一行", this);
+    addLineBtn->setRadius(4);
+    addLineBtn->adjustMinimumSize();
+    addLineBtn->setPaddings(72, 18);
+    connect(addLineBtn, &InteractiveButtonBase::clicked, this, &CodeGUIEditor::showAppendNewLineMenu);
+    QHBoxLayout *btnLayout = new QHBoxLayout();
+    btnLayout->addStretch();
+    btnLayout->addWidget(addLineBtn);
+    btnLayout->addStretch();
+    itemLayout->addLayout(btnLayout);
     itemLayout->addStretch();
 
     languageWidget = new QWidget(this);
@@ -38,14 +89,13 @@ CodeGUIEditor::CodeGUIEditor(QWidget *parent)
     codeTypeTab->addTab(itemScrollArea, "内置脚本");
     codeTypeTab->addTab(languageWidget, "编程语言");
     okBtn->setBorderColor(Qt::gray);
+    okBtn->setRadius(4);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->addWidget(triggerTab);
+    triggerTab->hide(); // TODO: 隐藏触发条件
     mainLayout->addWidget(codeTypeTab);
-    QHBoxLayout *btnLayout = new QHBoxLayout();
-    btnLayout->addStretch();
-    btnLayout->addWidget(okBtn);
-    mainLayout->addLayout(btnLayout);
-    setLayout(mainLayout);
+    mainLayout->addWidget(okBtn);
 }
 
 /// 解析代码
@@ -153,6 +203,6 @@ void CodeGUIEditor::appendCodeLine(T *editor)
     itemLineEditors.append(editor);
 
     // 因为最后两个是添加按钮、stretch，所以插入到倒数第三个位置
-    int lastIndex = itemLayout->count() - 1;
-    itemLayout->insertWidget(lastIndex - 2, editor);
+    int insertIndex = itemLayout->count() - 2;
+    itemLayout->insertWidget(insertIndex, editor);
 }

@@ -9,7 +9,6 @@
 #include "codeeditorinterface.h"
 #include "conditioneditor.h"
 #include "interactivebuttonbase.h"
-#include "watercirclebutton.h"
 
 /**
  * 代码可视化编辑器
@@ -35,6 +34,11 @@ signals:
     void signalEditFinished(const QString &code);
 
 private:
+    QTabWidget *triggerTab;
+    QSpinBox *timerTriggerSpinBox;
+    QLineEdit *replyTriggerLineEdit;
+    QLineEdit *eventTriggerLineEdit;
+
     QTabWidget *codeTypeTab; // 代码类型：内置脚本、编程语言
     InteractiveButtonBase *okBtn;
     
@@ -42,7 +46,7 @@ private:
     QWidget *itemScrollWidget;
     QVBoxLayout *itemLayout;
     QList<CodeLineWidgetBase *> itemLineEditors;
-    WaterCircleButton *addLineBtn;
+    InteractiveButtonBase *addLineBtn;
 
     QWidget *languageWidget;
     ConditionEditor *conditionEditor;

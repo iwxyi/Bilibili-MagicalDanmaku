@@ -39,7 +39,11 @@ CollapsibleGroupBox::CollapsibleGroupBox(QWidget *parent)
         collapseButton->setText(isCollapsed() ? "▼" : "▲");
     });
 
-    this->setStyleSheet("#CollapsibleGroupBoxContent { background-color: #f8f8f8; border-radius: 4px; }");
+    QString color = "#f8f8f8";
+    // 如果自己的parent也是CollapsibleGroupBox，则背景色为#f0f0f0，用于多层级区分（只限两级）
+    if (this->parentWidget() && this->parentWidget()->objectName() == this->objectName())
+        color = "#f0f0f0";
+    this->setStyleSheet("#CollapsibleGroupBoxContent { background-color: " + color + "; border-radius: 4px; }");
 }
 
 CollapsibleGroupBox::CollapsibleGroupBox(const QString &title, QWidget *parent)

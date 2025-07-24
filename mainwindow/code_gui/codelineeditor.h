@@ -13,6 +13,7 @@
 #include "conditioneditor.h"
 #include "codelinewidgetbase.h"
 #include "collapsiblegroupbox.h"
+#include "conditionlineeditor.h"
 
 /**
  * 代码逻辑中一行的编辑器
@@ -31,24 +32,40 @@ public:
     void fromString(const QString &code) override;
     QString toString() const override;
 
+    struct ConditionsWidgetGroup
+    {
+        CollapsibleGroupBox *groupBox;
+        QList<ConditionLineEditor *> leftEditors;
+        QList<InteractiveButtonBase *>  compBtns;
+        QList<ConditionLineEditor *> rightEditors;
+        InteractiveButtonBase *addConditionBtn;
+
+        bool operator==(const ConditionsWidgetGroup &other) const
+        {
+            return groupBox == other.groupBox;
+        }
+    };
+
 signals:
+
+public slots:
+    void addConditionAnd(int index);
+    void addConditionOr();
+    void addDanmaku();
 
 private:
     QVBoxLayout *mainLayout;
-    QTabWidget *triggerTab;
-    QSpinBox *timerTriggerSpinBox;
-    QLineEdit *replyTriggerLineEdit;
-    QLineEdit *eventTriggerLineEdit;
-    
-    CollapsibleGroupBox *triggerGroupBox, *conditionGroupBox, *priorityGroupBox, *prefrenceGroupBox, *danmakuGroupBox;
+    CollapsibleGroupBox *conditionGroupBox, *priorityGroupBox, *prefrenceGroupBox, *danmakuGroupBox;
     QVBoxLayout *conditionVLayout;
-    QList<QLineEdit *> conditionEdits;
+    QList<ConditionsWidgetGroup> conditionsWidgetGroups;
     QSpinBox *prioritySpinBox;
-    QSpinBox *channelSpinBox, *secondSpinBox;
+    QSpinBox *cdChannelSpinBox, *cdTimeSpinBox;
+    QSpinBox *waitChannelSpinBox, *waitTimeSpinBox;
     QCheckBox *adminCheckBox;
     QSpinBox *subAccountSpinBox;
     QVBoxLayout* danmakuVLayout;
     QList<ConditionEditor *> danmakuEditors;
+    InteractiveButtonBase *addConditionBtn, *addDanmakuBtn;
 };
 
 #endif // CODELINEEDITOR_H

@@ -438,6 +438,7 @@ HEADERS += \
     widgets/custompaintwidget.h \
     widgets/db_browser/dbbrowser.h \
     widgets/db_browser/sqleditor.h \
+    widgets/editor/conditionlineeditor.h \
     widgets/eternal_block_dialog/externalblockdialog.h \
     widgets/eternal_block_dialog/externalblockuser.h \
     widgets/guard_online/guardonlinedialog.h \
