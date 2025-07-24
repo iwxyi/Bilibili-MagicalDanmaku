@@ -1369,10 +1369,15 @@ void MainWindow::readConfig()
     ui->closeGuiCheck->setChecked(us->closeGui = us->value("mainwindow/closeGui", false).toBool());
 
     // 默认配置
-    if (isFileExist(rt->dataPath + "dynamic_config.json"))
+    QString dynamicConfigPath = rt->dataPath + "dynamic_config.json";
+    if (!isFileExist(dynamicConfigPath))
+    {
+        dynamicConfigPath = ":/documents/dynamic_config";
+    }
+    if (isFileExist(dynamicConfigPath))
     {
         // 目前是从文件里读取，但是应当联网更新的
-        QString text = readTextFileAutoCodec(rt->dataPath + "dynamic_config.json");
+        QString text = readTextFileAutoCodec(dynamicConfigPath);
         if (!text.isEmpty())
         {
             QJsonParseError error;
@@ -11361,6 +11366,36 @@ void MainWindow::on_GPTAnalysisFormatButton_clicked()
 
     us->chatgpt_analysis_format = s;
     us->setValue("chatgpt/analysis_format", s);
+}
+
+void MainWindow::on_GPTAnalysisDefaultButton_clicked()
+{
+    if (QMessageBox::question(this, "提示", "确定要恢复【功能型AI】默认设置吗？\n提示词和事件都会重置", QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes)
+    {
+        return;
+    }
+
+    MyJson aiConfig = us->dynamicConfigs.value("chatgpt").toObject();
+
+    QString s = aiConfig.value("analysis_prompt").toString();
+    us->chatgpt_analysis_prompt = s;
+    us->setValue("chatgpt/analysis_prompt", s);
+
+    s = aiConfig.value("analysis_format").toString();
+    us->chatgpt_analysis_format = s;
+    us->setValue("chatgpt/analysis_format", s);
+
+    s = aiConfig.value("analysis_action").toString();
+    us->chatgpt_analysis_action = s;
+    for (int row = 0; row < ui->eventListWidget->count(); row++)
+    {
+        auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(row));
+        auto tw = static_cast<EventWidget*>(widget);
+        if (tw->isEnabled() && tw->isMatch(GPT_TASK_RESPONSE_EVENT))
+        {
+            tw->setCode(s);
+        }
+    }
 }
 
 void MainWindow::on_removeLongerRandomDanmakuCheck_clicked()
