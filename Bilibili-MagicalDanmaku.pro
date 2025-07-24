@@ -215,6 +215,7 @@ SOURCES += \
     third_party/utils/string_hash.cpp \
     third_party/utils/warmwishtutil.cpp \
     widgets/buy_vip/buyvipdialog.cpp \
+    widgets/collapsiblegroupbox.cpp \
     widgets/csvviewer.cpp \
     widgets/db_browser/dbbrowser.cpp \
     widgets/db_browser/sqleditor.cpp \
@@ -432,6 +433,7 @@ HEADERS += \
     widgets/buy_vip/buyvipdialog.h \
     widgets/clickablelabel.h \
     widgets/clickablewidget.h \
+    widgets/collapsiblegroupbox.h \
     widgets/csvviewer.h \
     widgets/custompaintwidget.h \
     widgets/db_browser/dbbrowser.h \

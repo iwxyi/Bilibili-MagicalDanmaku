@@ -7,8 +7,12 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QSpinBox>
+#include <QGroupBox>
+#include <QTabWidget>
+#include <QCheckBox>
 #include "conditioneditor.h"
 #include "codelinewidgetbase.h"
+#include "collapsiblegroupbox.h"
 
 /**
  * 代码逻辑中一行的编辑器
@@ -31,10 +35,20 @@ signals:
 
 private:
     QVBoxLayout *mainLayout;
-    QLabel *conditionLabel, *priorityLabel, *prefrenceLabel, *danmakuLabel;
+    QTabWidget *triggerTab;
+    QSpinBox *timerTriggerSpinBox;
+    QLineEdit *replyTriggerLineEdit;
+    QLineEdit *eventTriggerLineEdit;
+    
+    CollapsibleGroupBox *triggerGroupBox, *conditionGroupBox, *priorityGroupBox, *prefrenceGroupBox, *danmakuGroupBox;
+    QVBoxLayout *conditionVLayout;
     QList<QLineEdit *> conditionEdits;
     QSpinBox *prioritySpinBox;
-    QList<ConditionEditor *> conditionEditors;
+    QSpinBox *channelSpinBox, *secondSpinBox;
+    QCheckBox *adminCheckBox;
+    QSpinBox *subAccountSpinBox;
+    QVBoxLayout* danmakuVLayout;
+    QList<ConditionEditor *> danmakuEditors;
 };
 
 #endif // CODELINEEDITOR_H

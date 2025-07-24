@@ -8,6 +8,7 @@
 CodeGUIEditor::CodeGUIEditor(QWidget *parent)
     : QDialog{parent}
 {
+    setObjectName("CodeGUIEditor");
     // setWindowModality(Qt::WindowModal);
     setMinimumSize(800, 600);
     setWindowTitle("代码可视化编辑器");
