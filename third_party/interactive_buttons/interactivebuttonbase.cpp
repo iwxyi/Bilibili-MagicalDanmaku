@@ -988,7 +988,7 @@ void InteractiveButtonBase::delayShowed(int time, QPoint point)
 /**
  * 获取文字
  */
-QString InteractiveButtonBase::getText()
+QString InteractiveButtonBase::getText() const
 {
     return text;
 }

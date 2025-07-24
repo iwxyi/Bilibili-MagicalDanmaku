@@ -16,10 +16,12 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
 
     check = new QCheckBox("启用", this);
     btn = new InteractiveButtonBase(QIcon(":/icons/run"), this);
+    guiBtn = new InteractiveButtonBase(QIcon(":/icons/code_gui"), this);
 
     hlayout = new QHBoxLayout;
     hlayout->addWidget(check);
     hlayout->addWidget(new QWidget(this));
+    hlayout->addWidget(guiBtn);
     hlayout->addWidget(btn);
     hlayout->setStretch(1, 1);
     hlayout->setMargin(0);
@@ -30,6 +32,11 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
     btn->setSquareSize();
     btn->setFixedForePos();
     btn->setToolTip("发送/执行");
+    guiBtn->setBorderColor(Qt::black);
+    guiBtn->setCursor(Qt::PointingHandCursor);
+    guiBtn->setSquareSize();
+    guiBtn->setFixedForePos();
+    guiBtn->setToolTip("可视化编辑代码");
     check->setToolTip("该功能的开关，如果关闭则不会自动执行\n（除非手动点击右边的发送/执行按钮）");
     check->setCursor(Qt::PointingHandCursor);
 
@@ -53,6 +60,8 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
             painter->drawPath(path);
         }
     });
+
+    connect(guiBtn, &InteractiveButtonBase::clicked, this, &ListItemInterface::signalShowCodeGUIEditor);
 
     _triggerTimer = new QTimer(this);
     _triggerTimer->setInterval(200);

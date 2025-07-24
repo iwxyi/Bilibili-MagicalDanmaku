@@ -85,6 +85,16 @@ QString TaskWidget::body() const
     return edit->toPlainText();
 }
 
+void TaskWidget::setCode(const QString &code)
+{
+    edit->setPlainText(code);
+}
+
+QString TaskWidget::getCode() const
+{
+    return edit->toPlainText();
+}
+
 void TaskWidget::slotSpinChanged(int val)
 {
     timer->setInterval(val * 1000);

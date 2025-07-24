@@ -36,6 +36,16 @@ public:
         return "";
     }
 
+    virtual void setCode(const QString &code)
+    {
+        Q_UNUSED(code);
+    }
+
+    virtual QString getCode() const
+    {
+        return "";
+    }
+
     void setRow(int row);
 
     int getRow() const;
@@ -57,6 +67,7 @@ public:
 signals:
     void signalResized();
     void signalInsertCodeSnippets(const QJsonDocument& doc);
+    void signalShowCodeGUIEditor();
 
 public slots:
     virtual void autoResizeEdit()
@@ -74,6 +85,7 @@ protected:
     CustomPaintWidget* _bgLabel;
     QVBoxLayout* vlayout;
     QHBoxLayout* hlayout;
+    InteractiveButtonBase* guiBtn;
 
 private:
     int _row;
