@@ -46,7 +46,6 @@ CollapsibleGroupBox::CollapsibleGroupBox(QWidget *parent)
 
     connect(collapseButton, &InteractiveButtonBase::clicked, this, [this]() {
         setCollapsed(!isCollapsed());
-        collapseButton->setText(isCollapsed() ? "▼" : "▲");
     });
 
     connect(closeButton, &InteractiveButtonBase::clicked, this, [this]() {
@@ -79,6 +78,7 @@ QString CollapsibleGroupBox::getTitle() const
 void CollapsibleGroupBox::setCollapsed(bool collapsed)
 {
     contentWidget->setVisible(!collapsed);
+    collapseButton->setText(isCollapsed() ? "▼" : "▲");
 }
 
 bool CollapsibleGroupBox::isCollapsed() const

@@ -16,7 +16,10 @@ CodeLineEditor::CodeLineEditor(QWidget *parent)
         // 添加按钮
         QHBoxLayout *btnLayout = new QHBoxLayout();
         addConditionBtn = new InteractiveButtonBase(QIcon(":/icons/add_circle"), "添加条件组（满足任一组即可）", this);
-        connect(addConditionBtn, &InteractiveButtonBase::clicked, this, &CodeLineEditor::addConditionOr);
+        connect(addConditionBtn, &InteractiveButtonBase::clicked, this, [=]{
+            addConditionOr();
+            addConditionAnd(0);
+        });
         btnLayout->addWidget(addConditionBtn);
         btnLayout->addStretch();
         conditionVLayout->addLayout(btnLayout);
@@ -143,15 +146,132 @@ CodeLineEditor::CodeLineEditor(QWidget *parent)
     addDanmakuBtn->setPaddings(18, 9);
 }
 
-void CodeLineEditor::fromString(const QString &code)
+void CodeLineEditor::fromString(const QString &_code)
 {
     // 解析代码
-    if (code.isEmpty())
+    if (_code.isEmpty())
     {
         return;
     }
 
+    // 条件
+    QString code = _code.trimmed();
+    QString condRe;
+    if (code.contains(QRegularExpression("^\\s*\\[\\[\\[.*\\]\\]\\]")))
+        condRe = "^\\s*\\[\\[\\[(.*?)\\]\\]\\]\\s*";
+    else if (code.contains(QRegularExpression("^\\s*\\[\\[.*\\]\\]"))) // [[%text% ~ "[\\u4e00-\\u9fa5]+[\\w]{3}[\\u4e00-\\u9fa5]+"]]
+        condRe = "^\\s*\\[\\[(.*?)\\]\\]\\s*";
+    else
+        condRe = "^\\s*\\[(.*?)\\]\\s*";
+    QRegularExpression re(condRe);
+    if (!re.isValid())
+        qWarning() << "invalid condition expression:" << condRe;
+    QRegularExpressionMatch match;
+    if (code.indexOf(re, 0, &match) != -1) // 有检测到条件表达式
+    {
+        QString cond = match.capturedTexts().first();
+        QString condText = match.capturedTexts().at(1);
+        QStringList condOrList = condText.split(QRegularExpression("(;|\\|\\|)"));
+        for (const QString &condOr : condOrList)
+        {
+            addConditionOr();
+            auto& group = conditionsWidgetGroups.last();
+            int groupIndex = conditionsWidgetGroups.indexOf(group);
+            
+            QStringList condAndList = condOr.split(QRegularExpression("(,|&&)"));
+            for (const QString &condAnd : condAndList)
+            {
+                addConditionAnd(groupIndex);
+                auto& group = conditionsWidgetGroups.at(groupIndex); // 重新获取，因为addConditionAnd会改变group的地址
+                int itemIndex = group.conditionItems.count() - 1;
+                ConditionItem *item = group.conditionItems.at(itemIndex);
+                
+                // 分别设置
+                QRegularExpression compRe("^\\s*([^<>=!]*?)\\s*([<>=!~]{1,2})\\s*([^<>=!]*?)\\s*$");
+                QRegularExpressionMatch compMatch;
+                if (condAnd.indexOf(compRe, 0, &compMatch) != -1)
+                {
+                    item->leftEditor->setPlainText(compMatch.captured(1).trimmed());
+                    item->compBtn->setText(compMatch.captured(2).trimmed());
+                    item->rightEditor->setPlainText(compMatch.captured(3).trimmed());
+                }
+                else
+                {
+                    qWarning() << "invalid condition:" << condAnd;
+                }
+            }
+        }
 
+        code = code.right(code.length() - cond.length());
+    }
+    else
+    {
+        conditionGroupBox->setCollapsed(true);
+    }
+
+    // 优先级
+    QRegularExpression priorityRe("^\\s*\\*+\\s*");
+    QRegularExpressionMatch priorityMatch;
+    if (code.indexOf(priorityRe, 0, &priorityMatch) != -1)
+    {
+        QString priority = priorityMatch.captured(0);
+        int priorityValue = priority.trimmed().size();
+        prioritySpinBox->setValue(priorityValue);
+        code = code.right(code.length() - priority.length());
+    }
+    else
+    {
+        priorityGroupBox->setCollapsed(true);
+    }
+
+    // 选项
+    QRegularExpression optionRe("^\\s*\\(([\\w\\d\\s_]+)\\)\\s*");
+    QRegularExpressionMatch optionMatch;
+    if (code.indexOf(optionRe, 0, &optionMatch) != -1)
+    {
+        QString option = optionMatch.captured(0);
+        QStringList optionList = option.split(QRegularExpression("(,|;)"));
+        for (const QString &option : optionList)
+        {
+            QRegularExpressionMatch match;
+            if (option.trimmed().indexOf(QRegularExpression("^cd(\\d+):(\\d+)$"), 0, &match) != -1)
+            {
+                cdChannelSpinBox->setValue(match.captured(1).trimmed().toInt());
+                cdTimeSpinBox->setValue(match.captured(2).trimmed().toInt());
+            }
+            else if (option.trimmed().indexOf(QRegularExpression("^wait(\\d+):(\\d+)$"), 0, &match) != -1)
+            {
+                waitChannelSpinBox->setValue(match.captured(1).trimmed().toInt());
+                waitTimeSpinBox->setValue(match.captured(2).trimmed().toInt());
+            }
+            else if (option.trimmed().indexOf(QRegularExpression("^admin[\\s\\w:]*$"), 0, &match) != -1)
+            {
+                adminCheckBox->setChecked(true);
+            }
+            else if (option.trimmed().indexOf(QRegularExpression("^ac:(\\d+)$"), 0, &match) != -1)
+            {
+                subAccountSpinBox->setValue(match.captured(1).trimmed().toInt());
+            }
+            else
+            {
+                qWarning() << "invalid option:" << option;
+            }
+        }
+        code = code.right(code.length() - option.length());
+    }
+    else
+    {
+        prefrenceGroupBox->setCollapsed(true);
+    }
+
+    // 弹幕/操作
+    QStringList danmakuList = code.split("\\n");
+    for (const QString &danmaku : danmakuList)
+    {
+        addDanmaku();
+        auto& editor = danmakuEditors.last();
+        editor->setPlainText(danmaku);
+    }
 }
 
 QString CodeLineEditor::toString() const
@@ -384,9 +504,6 @@ void CodeLineEditor::addConditionOr()
 
     conditionsWidgetGroups.append(group);
     conditionVLayout->insertWidget(conditionVLayout->count() - 1, group.groupBox);
-
-    // 添加默认的第一个条件
-    addConditionAnd(conditionsWidgetGroups.count() - 1);
 }
 
 void CodeLineEditor::addDanmaku()

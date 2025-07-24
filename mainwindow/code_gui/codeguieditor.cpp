@@ -178,7 +178,11 @@ QString CodeGUIEditor::toString() const
 void CodeGUIEditor::loadEmptyCode()
 {
     // 加载空代码
-    insertCodeLine(0, new CodeLineEditor(this));
+    CodeLineEditor *editor = new CodeLineEditor(this);
+    editor->addConditionOr();
+    editor->addConditionAnd(0);
+    editor->addDanmaku();
+    insertCodeLine(0, editor);
 }
 
 void CodeGUIEditor::setCode(const QString &code)
@@ -198,7 +202,13 @@ void CodeGUIEditor::setCode(const QString &code)
 void CodeGUIEditor::showAppendNewLineMenu()
 {
     FacileMenu *menu = new FacileMenu(this);
-    menu->addAction("代码行", [this]() { insertCodeLine(itemLineEditors.count(), new CodeLineEditor(this)); });
+    menu->addAction("代码行", [this]() {
+        CodeLineEditor *editor = new CodeLineEditor(this);
+        insertCodeLine(itemLineEditors.count(), editor);
+        editor->addConditionOr();
+        editor->addConditionAnd(0);
+        editor->addDanmaku();
+    });
     menu->addAction("注释", [this]() { insertCodeLine(itemLineEditors.count(), new CodeLineCommentEditor(this)); });
     menu->addAction("分割线", [this]() { insertCodeLine(itemLineEditors.count(), new CodeLineSplitterWidget(this)); });
     menu->exec(QCursor::pos());

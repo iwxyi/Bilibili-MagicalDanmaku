@@ -24,7 +24,10 @@ CodeLineCommentEditor::CodeLineCommentEditor(QWidget *parent)
 void CodeLineCommentEditor::fromString(const QString &code)
 {
     QString comment = code;
-    if (comment.startsWith("//"))
+    if (comment.startsWith("///"))
+    {
+    }
+    else if (comment.startsWith("//"))
     {
         comment = comment.mid(2);
     }
