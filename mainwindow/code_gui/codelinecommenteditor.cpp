@@ -9,6 +9,16 @@ CodeLineCommentEditor::CodeLineCommentEditor(QWidget *parent)
     layout->addWidget(label);
     layout->addWidget(lineEdit);
     layout->setStretch(1, 1);
+
+    closeBtn = new InteractiveButtonBase("×", this);
+    closeBtn->setObjectName("CodeLineCommentEditorCloseBtn");
+    closeBtn->setSquareSize();
+    closeBtn->setFixedForePos();
+    closeBtn->setTextColor(Qt::darkGray);
+    closeBtn->setRadius(4);
+    layout->addWidget(closeBtn);
+
+    connect(closeBtn, &InteractiveButtonBase::clicked, this, &CodeLineWidgetBase::toClose);
 }
 
 void CodeLineCommentEditor::fromString(const QString &code)

@@ -2,12 +2,14 @@
 #define CODELINESPLITTERWIDGET_H
 
 #include <QWidget>
-#include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QLabel>
+#include "interactivebuttonbase.h"
 #include "codelinewidgetbase.h"
 
 class CodeLineSplitterWidget : public CodeLineWidgetBase
 {
+    Q_OBJECT
 public:
     CodeLineSplitterWidget(QWidget *parent = nullptr);
 
@@ -15,8 +17,9 @@ public:
     QString toString() const override;
 
 private:
-    QVBoxLayout *layout;
+    QHBoxLayout *layout;
     QLabel *label;
+    InteractiveButtonBase *closeBtn;
 };
 
 #endif // CODELINESPLITTERWIDGET_H

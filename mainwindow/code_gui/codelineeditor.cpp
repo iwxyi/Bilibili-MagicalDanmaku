@@ -7,6 +7,8 @@ CodeLineEditor::CodeLineEditor(QWidget *parent)
     setObjectName("CodeLineEditor");
     
     conditionGroupBox = new CollapsibleGroupBox("条件", this);
+    conditionGroupBox->setCloseButtonVisible(true);
+    connect(conditionGroupBox, &CollapsibleGroupBox::closeClicked, this, &CodeLineWidgetBase::toClose);
     conditionGroupBox->show();
     {
         conditionVLayout = new QVBoxLayout(conditionGroupBox->getContentWidget());
@@ -162,12 +164,13 @@ QString CodeLineEditor::toString() const
     {
         QStringList conditionList;
         const ConditionsWidgetGroup &group = conditionsWidgetGroups.at(i);
-        int count = group.leftEditors.count();
+        int count = group.conditionItems.count();
         for (int j = 0; j < count; j++) // 遍历单个条件
         {
-            const ConditionLineEditor *leftEditor = group.leftEditors.at(j);
-            const ConditionLineEditor *rightEditor = group.rightEditors.at(j);
-            const InteractiveButtonBase *compBtn = group.compBtns.at(j);
+            const ConditionItem *item = group.conditionItems.at(j);
+            const ConditionLineEditor *leftEditor = item->leftEditor;
+            const ConditionLineEditor *rightEditor = item->rightEditor;
+            const InteractiveButtonBase *compBtn = item->compBtn;
             QString left = leftEditor->toPlainText();
             QString right = rightEditor->toPlainText();
             QString comp = compBtn->getText();
@@ -254,12 +257,14 @@ void CodeLineEditor::addConditionAnd(int index)
     rightEditor->setAutoAdjustWidth(true);
     rightEditor->setPlaceholderText("值2");
     rightEditor->setMinimumWidth(100);
+    InteractiveButtonBase *closeBtn = new InteractiveButtonBase("×", this);
 
     QHBoxLayout *layout = new QHBoxLayout();
     layout->addWidget(leftEditor);
     layout->addWidget(compBtn);
     layout->addWidget(rightEditor);
     layout->addStretch();
+    layout->addWidget(closeBtn);
     QVBoxLayout *itemsLayout = dynamic_cast<QVBoxLayout *>(group.groupBox->getContentWidget()->layout());
     if (itemsLayout)
     {
@@ -272,9 +277,12 @@ void CodeLineEditor::addConditionAnd(int index)
     }
     group.groupBox->show();
 
-    group.leftEditors.append(leftEditor);
-    group.compBtns.append(compBtn);
-    group.rightEditors.append(rightEditor);
+    ConditionItem *item = new ConditionItem();
+    item->leftEditor = leftEditor;
+    item->compBtn = compBtn;
+    item->rightEditor = rightEditor;
+    item->closeBtn = closeBtn;
+    group.conditionItems.append(item);
 
     compBtn->setRadius(4);
     compBtn->setPaddings(6, 0);
@@ -307,6 +315,44 @@ void CodeLineEditor::addConditionAnd(int index)
         menu->exec(QCursor::pos());
         compBtn->adjustMinimumSize();
     });
+
+    closeBtn->setProperty("layout_ptr", QVariant::fromValue((void*)layout));
+    closeBtn->setFixedForePos();
+    closeBtn->setTextColor(Qt::darkGray);
+    closeBtn->setRadius(4);
+    connect(closeBtn, &InteractiveButtonBase::clicked, this, [=]() {
+        int index = conditionsWidgetGroups.indexOf(group);
+        if (index == -1)
+        {
+            qWarning() << "condition group not found";
+            return;
+        }
+        auto& group = conditionsWidgetGroups[index];
+        int itemIndex = group.conditionItems.indexOf(item);
+        ConditionItem *item = group.conditionItems.takeAt(itemIndex);
+        
+        QHBoxLayout *layout = static_cast<QHBoxLayout*>(closeBtn->property("layout_ptr").value<void*>());
+        if (layout)
+        {
+            layout->removeWidget(item->leftEditor);
+            layout->removeWidget(item->compBtn);
+            layout->removeWidget(item->rightEditor);
+            layout->removeWidget(item->closeBtn);
+            delete layout;
+        }
+
+        delete item->leftEditor;
+        delete item->compBtn;
+        delete item->rightEditor;
+        delete item->closeBtn;
+        delete item;
+    });
+
+    // 先显示出来再调整样式，否则因为一开始是隐藏的，所以尺寸计算会有问题
+    closeBtn->show();
+    QTimer::singleShot(0, this, [=]() {
+        closeBtn->setSquareSize();
+    });
 }
 
 /// 添加大的其他条件（“或”）
@@ -314,8 +360,15 @@ void CodeLineEditor::addConditionOr()
 {
     // 添加条件
     ConditionsWidgetGroup group;
-    group.groupBox = new CollapsibleGroupBox("条件", conditionGroupBox);
+    group.groupBox = new CollapsibleGroupBox("条件组", conditionGroupBox);
+    group.groupBox->setCloseButtonVisible(true);
+    connect(group.groupBox, &CollapsibleGroupBox::closeClicked, this, [=]() {
+        conditionsWidgetGroups.removeAll(group);
+        conditionVLayout->removeWidget(group.groupBox);
+        delete group.groupBox;
+    });
     QVBoxLayout *itemsLayout = new QVBoxLayout(group.groupBox->getContentWidget());
+    itemsLayout->setSpacing(0);
 
     QHBoxLayout *btnLayout = new QHBoxLayout();
     group.addConditionBtn = new InteractiveButtonBase(QIcon(":/icons/add_circle"), "添加条件（满足组内所有条件）", this);
@@ -342,6 +395,31 @@ void CodeLineEditor::addDanmaku()
     ConditionLineEditor *editor = new ConditionLineEditor(this);
     editor->setAutoAdjustWidth(false);
     danmakuEditors.append(editor);
+
+    InteractiveButtonBase *closeBtn = new InteractiveButtonBase("×", this);
+    closeBtn->setObjectName("CodeLineEditorDanmakuCloseBtn");
+    closeBtn->setSquareSize();
+    closeBtn->setFixedForePos();
+    closeBtn->setTextColor(Qt::darkGray);
+    closeBtn->setRadius(4);
+
+    QHBoxLayout *layout = new QHBoxLayout();
+    layout->addWidget(editor);
+    layout->addWidget(closeBtn);
+
+    closeBtn->setProperty("layout_ptr", QVariant::fromValue((void*)layout));
+    connect(closeBtn, &InteractiveButtonBase::clicked, this, [=]() {
+        danmakuEditors.removeAll(editor);
+        QHBoxLayout *layout = static_cast<QHBoxLayout*>(closeBtn->property("layout_ptr").value<void*>());
+        delete editor;
+        delete closeBtn;
+        if (layout)
+        {
+            danmakuVLayout->removeItem(layout);
+            delete layout;
+        }
+    });
+    
     int insertIndex = danmakuVLayout->count() - 1;
-    danmakuVLayout->insertWidget(insertIndex, editor);
+    danmakuVLayout->insertLayout(insertIndex, layout);
 }

@@ -20,9 +20,19 @@ CollapsibleGroupBox::CollapsibleGroupBox(QWidget *parent)
     collapseButton->setTextColor(Qt::darkGray);
     collapseButton->setRadius(4);
 
+    closeButton = new InteractiveButtonBase("×", this);
+    closeButton->setObjectName("CollapsibleGroupBoxCloseButton");
+    closeButton->setSquareSize();
+    closeButton->setFixedForePos();
+    closeButton->setTextColor(Qt::darkGray);
+    closeButton->setRadius(4);
+    closeButton->setVisible(false);
+
     QHBoxLayout *titleLayout = new QHBoxLayout();
     titleLayout->addWidget(titleLabel);
     titleLayout->addWidget(collapseButton);
+    titleLayout->addWidget(closeButton);
+    collapseButton->raise(); // 不然容易误触到close
 
     contentWidget = new QWidget(this);
     contentWidget->setObjectName("CollapsibleGroupBoxContent");
@@ -37,6 +47,10 @@ CollapsibleGroupBox::CollapsibleGroupBox(QWidget *parent)
     connect(collapseButton, &InteractiveButtonBase::clicked, this, [this]() {
         setCollapsed(!isCollapsed());
         collapseButton->setText(isCollapsed() ? "▼" : "▲");
+    });
+
+    connect(closeButton, &InteractiveButtonBase::clicked, this, [this]() {
+        emit closeClicked();
     });
 
     QString color = "#f8f8f8";
@@ -70,6 +84,16 @@ void CollapsibleGroupBox::setCollapsed(bool collapsed)
 bool CollapsibleGroupBox::isCollapsed() const
 {
     return !contentWidget->isVisible();
+}
+
+void CollapsibleGroupBox::setCloseButtonVisible(bool visible)
+{
+    closeButton->setVisible(visible);
+}
+
+bool CollapsibleGroupBox::isCloseButtonVisible() const
+{
+    return closeButton->isVisible();
 }
 
 QWidget *CollapsibleGroupBox::getContentWidget() const

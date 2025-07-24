@@ -32,12 +32,18 @@ public:
     void fromString(const QString &code) override;
     QString toString() const override;
 
+    struct ConditionItem
+    {
+        ConditionLineEditor *leftEditor;
+        InteractiveButtonBase *compBtn;
+        ConditionLineEditor *rightEditor;
+        InteractiveButtonBase *closeBtn;
+    };
+
     struct ConditionsWidgetGroup
     {
         CollapsibleGroupBox *groupBox;
-        QList<ConditionLineEditor *> leftEditors;
-        QList<InteractiveButtonBase *>  compBtns;
-        QList<ConditionLineEditor *> rightEditors;
+        QList<ConditionItem *> conditionItems;
         InteractiveButtonBase *addConditionBtn;
 
         bool operator==(const ConditionsWidgetGroup &other) const

@@ -5,6 +5,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include "interactivebuttonbase.h"
 #include "codelinewidgetbase.h"
 
 /**
@@ -14,6 +15,7 @@
  */
 class CodeLineCommentEditor : public CodeLineWidgetBase
 {
+    Q_OBJECT
 public:
     CodeLineCommentEditor(QWidget *parent = nullptr);
 
@@ -24,6 +26,7 @@ private:
     QHBoxLayout *layout;
     QLabel *label;
     QLineEdit *lineEdit;
+    InteractiveButtonBase *closeBtn;
 };
 
 #endif // CODELINECOMMENTEDITOR_H

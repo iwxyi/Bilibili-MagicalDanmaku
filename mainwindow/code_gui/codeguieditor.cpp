@@ -73,6 +73,7 @@ CodeGUIEditor::CodeGUIEditor(QWidget *parent)
     addLineBtn->setRadius(4);
     addLineBtn->adjustMinimumSize();
     addLineBtn->setPaddings(72, 18);
+    addLineBtn->setLeaveAfterClick(true);
     connect(addLineBtn, &InteractiveButtonBase::clicked, this, &CodeGUIEditor::showAppendNewLineMenu);
     QHBoxLayout *btnLayout = new QHBoxLayout();
     btnLayout->addStretch();
@@ -80,6 +81,7 @@ CodeGUIEditor::CodeGUIEditor(QWidget *parent)
     btnLayout->addStretch();
     itemLayout->addLayout(btnLayout);
     itemLayout->addStretch();
+    qDebug() << "itemLayout" << itemLayout->count();
 
     languageWidget = new QWidget(this);
     conditionEditor = new ConditionEditor(this);
@@ -108,7 +110,7 @@ void CodeGUIEditor::fromString(const QString &_code)
     if (firstLine.contains(":")) // 例如：`py:`
     {
         QString lang = firstLine.split(":").first().toLower();
-        if (lang.contains(QRegularExpression("^js|javascript|py|python|py3|python3|lua|exec$")))
+        if (lang.contains(QRegularExpression("^var|js|javascript|py|python|py3|python3|lua|exec$")))
         {
             isLanguage = true;
         }
@@ -150,8 +152,7 @@ void CodeGUIEditor::fromString(const QString &_code)
         if (lineEditor)
         {
             lineEditor->fromString(line);
-            itemLayout->insertWidget(layoutInsertIndex++, lineEditor);
-            itemLineEditors.append(lineEditor);
+            insertCodeLine(layoutInsertIndex++, lineEditor);
         }
     }
 }
@@ -177,7 +178,7 @@ QString CodeGUIEditor::toString() const
 void CodeGUIEditor::loadEmptyCode()
 {
     // 加载空代码
-    appendCodeLine<CodeLineEditor>(new CodeLineEditor(this));
+    insertCodeLine(0, new CodeLineEditor(this));
 }
 
 void CodeGUIEditor::setCode(const QString &code)
@@ -197,19 +198,20 @@ void CodeGUIEditor::setCode(const QString &code)
 void CodeGUIEditor::showAppendNewLineMenu()
 {
     FacileMenu *menu = new FacileMenu(this);
-    menu->addAction("代码行", [this]() { appendCodeLine<CodeLineEditor>(new CodeLineEditor(this)); });
-    menu->addAction("注释", [this]() { appendCodeLine<CodeLineCommentEditor>(new CodeLineCommentEditor(this)); });
-    menu->addAction("分割线", [this]() { appendCodeLine<CodeLineSplitterWidget>(new CodeLineSplitterWidget(this)); });
+    menu->addAction("代码行", [this]() { insertCodeLine(itemLineEditors.count(), new CodeLineEditor(this)); });
+    menu->addAction("注释", [this]() { insertCodeLine(itemLineEditors.count(), new CodeLineCommentEditor(this)); });
+    menu->addAction("分割线", [this]() { insertCodeLine(itemLineEditors.count(), new CodeLineSplitterWidget(this)); });
     menu->exec(QCursor::pos());
 }
 
-/// 插入新行的代码块
-template<typename T>
-void CodeGUIEditor::appendCodeLine(T *editor)
+void CodeGUIEditor::insertCodeLine(int index, CodeLineWidgetBase *editor)
 {
-    itemLineEditors.append(editor);
+    itemLineEditors.insert(index, editor);
+    itemLayout->insertWidget(index, editor);
 
-    // 因为最后两个是添加按钮、stretch，所以插入到倒数第三个位置
-    int insertIndex = itemLayout->count() - 2;
-    itemLayout->insertWidget(insertIndex, editor);
+    connect(editor, &CodeLineWidgetBase::toClose, this, [=]() {
+        itemLineEditors.removeAll(editor);
+        itemLayout->removeWidget(editor);
+        delete editor;
+    });
 }

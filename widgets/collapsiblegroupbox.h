@@ -7,6 +7,7 @@
 
 class CollapsibleGroupBox : public QWidget
 {
+    Q_OBJECT
 public:
     CollapsibleGroupBox(QWidget *parent = nullptr);
     CollapsibleGroupBox(const QString &title, QWidget *parent = nullptr);
@@ -15,13 +16,18 @@ public:
     QString getTitle() const;
     void setCollapsed(bool collapsed);
     bool isCollapsed() const;
+    void setCloseButtonVisible(bool visible);
+    bool isCloseButtonVisible() const;
     QWidget *getContentWidget() const;
+
+signals:
+    void closeClicked();
 
 private:
     QLabel *titleLabel;
     InteractiveButtonBase *collapseButton;
+    InteractiveButtonBase *closeButton;
     QWidget* contentWidget;
-    InteractiveButtonBase *stackExpandButton;
 };
 
 #endif // COLLAPSIBLEGROUPBOX_H

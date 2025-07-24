@@ -22,8 +22,7 @@ public:
     void fromString(const QString &code) override;
     QString toString() const override;
 
-    template<typename T>
-    void appendCodeLine(T *editor);
+    void insertCodeLine(int index, CodeLineWidgetBase *editor);
 
 public slots:
     void loadEmptyCode();

@@ -6,6 +6,7 @@
 
 class CodeLineWidgetBase : public QWidget, public CodeEditorInterface
 {
+    Q_OBJECT
 public:
     CodeLineWidgetBase(QWidget *parent = nullptr) : QWidget{parent}
     {
@@ -17,6 +18,9 @@ public:
 
     virtual void fromString(const QString &code) override = 0;
     virtual QString toString() const override = 0;
+
+signals:
+    void toClose();
 };
 
 #endif // CODELINEWIDGETBASE_H

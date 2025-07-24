@@ -136,6 +136,7 @@
         <file alias="help">icons/help.png</file>
         <file alias="code_gui">icons/code_gui.png</file>
         <file alias="add_circle">icons/add_circle.png</file>
+        <file alias="x">icons/x.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>
