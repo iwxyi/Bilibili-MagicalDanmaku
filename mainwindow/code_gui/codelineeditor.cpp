@@ -91,7 +91,7 @@ CodeLineEditor::CodeLineEditor(QWidget *parent)
         {
             QHBoxLayout *adminLayout = new QHBoxLayout();
             QLabel *label = new QLabel("管理员权限：", this);
-            QCheckBox *adminCheckBox = new QCheckBox("启用", this);
+            adminCheckBox = new QCheckBox("启用", this);
             adminCheckBox->setChecked(false);
             adminLayout->addWidget(label);
             adminLayout->addWidget(adminCheckBox);
@@ -154,8 +154,84 @@ void CodeLineEditor::fromString(const QString &code)
 
 QString CodeLineEditor::toString() const
 {
-    // 生成代码
-    return "";
+    QString result;
+
+    // 条件
+    QStringList conditionsList;
+    for (int i = 0; i < conditionsWidgetGroups.count(); i++) // 遍历条件组
+    {
+        QStringList conditionList;
+        const ConditionsWidgetGroup &group = conditionsWidgetGroups.at(i);
+        int count = group.leftEditors.count();
+        for (int j = 0; j < count; j++) // 遍历单个条件
+        {
+            const ConditionLineEditor *leftEditor = group.leftEditors.at(j);
+            const ConditionLineEditor *rightEditor = group.rightEditors.at(j);
+            const InteractiveButtonBase *compBtn = group.compBtns.at(j);
+            QString left = leftEditor->toPlainText();
+            QString right = rightEditor->toPlainText();
+            QString comp = compBtn->getText();
+            if (right.trimmed().isEmpty()) // 不需要右值
+            {
+                conditionList.append(left);
+            }
+            else
+            {
+                conditionList.append(QString("%1 %2 %3").arg(left).arg(comp).arg(right));
+            }
+        }
+        conditionsList.append(conditionList.join(", "));
+    }
+    if (!conditionsList.isEmpty())
+    {
+        result += "[" + conditionsList.join(", ") + "]";
+    }
+
+    // 优先级
+    QString priorityStr; // 几级优先级就有几个星号
+    for (int i = 0; i < prioritySpinBox->value(); i++)
+    {
+        priorityStr += "*";
+    }
+    result += priorityStr;
+
+    // 选项
+    QStringList optionList;
+    if (cdChannelSpinBox->value() > 0 && cdTimeSpinBox->value() > 0)
+    {
+        optionList.append(QString("cd%1:%2").arg(cdChannelSpinBox->value()).arg(cdTimeSpinBox->value()));
+    }
+    if (waitChannelSpinBox->value() > 0 && waitTimeSpinBox->value() > 0)
+    {
+        optionList.append(QString("wait%1:%2").arg(waitChannelSpinBox->value()).arg(waitTimeSpinBox->value()));
+    }
+    if (adminCheckBox->isChecked())
+    {
+        optionList.append("admin");
+    }
+    if (subAccountSpinBox->value() > 0)
+    {
+        optionList.append(QString("ac:%1").arg(subAccountSpinBox->value()));
+    }
+    if (!optionList.isEmpty())
+    {
+        result += "(" + optionList.join(", ") + ")";
+    }
+
+    // 弹幕/操作
+    QStringList danmakuList;
+    for (int i = 0; i < danmakuEditors.count(); i++)
+    {
+        const ConditionEditor *editor = danmakuEditors.at(i);
+        danmakuList.append(editor->toPlainText());
+    }
+    QString danmakuStr = danmakuList.join("\\n");
+    if (!danmakuStr.isEmpty())
+    {
+        result += danmakuStr;
+    }
+
+    return result;
 }
 
 /// 添加同一组的其他条件（“且”）
@@ -207,25 +283,25 @@ void CodeLineEditor::addConditionAnd(int index)
     // compBtn->setSquareSize();
     connect(compBtn, &InteractiveButtonBase::clicked, this, [=]() {
         newFacileMenu;
-        menu->addAction("=", [=]() {
+        menu->addAction("= （等于）", [=]() {
             compBtn->setText("=");
         });
-        menu->addAction("!=", [=]() {
+        menu->addAction("!= （不等于）", [=]() {
             compBtn->setText("!=");
         });
-        menu->addAction(">", [=]() {
+        menu->addAction("> （大于）", [=]() {
             compBtn->setText(">");
         });
-        menu->addAction(">=", [=]() {
+        menu->addAction(">= （大于等于）", [=]() {
             compBtn->setText(">=");
         });
-        menu->addAction("<", [=]() {
+        menu->addAction("< （小于）", [=]() {
             compBtn->setText("<");
         });
-        menu->addAction("<=", [=]() {
+        menu->addAction("<= （小于等于）", [=]() {
             compBtn->setText("<=");
         });
-        menu->addAction("~", [=]() {
+        menu->addAction("~ （文字包含）", [=]() {
             compBtn->setText("~");
         });
         menu->exec(QCursor::pos());

@@ -159,12 +159,19 @@ void CodeGUIEditor::fromString(const QString &_code)
 /// 生成代码
 QString CodeGUIEditor::toString() const
 {
-    QStringList lines;
-    for (auto line : itemLineEditors)
+    if (codeTypeTab->currentIndex() == 0)
     {
-        lines.append(line->toString());
+        QStringList lines;
+        for (auto line : itemLineEditors)
+        {
+            lines.append(line->toString());
+        }
+        return lines.join("\n");
     }
-    return lines.join("\n");
+    else
+    {
+        return conditionEditor->toPlainText();
+    }
 }
 
 void CodeGUIEditor::loadEmptyCode()
