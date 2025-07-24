@@ -7,7 +7,11 @@
 class CodeLineWidgetBase : public QWidget, public CodeEditorInterface
 {
 public:
-    CodeLineWidgetBase(QWidget *parent = nullptr) : QWidget{parent} {}
+    CodeLineWidgetBase(QWidget *parent = nullptr) : QWidget{parent}
+    {
+        setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        setStyleSheet("CodeLineWidgetBase, CodeLineEditor, CodeLineCommentEditor, CodeLineSplitterWidget { background-color: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 4px; }");
+    }
 
     virtual void fromString(const QString &code) override = 0;
     virtual QString toString() const override = 0;

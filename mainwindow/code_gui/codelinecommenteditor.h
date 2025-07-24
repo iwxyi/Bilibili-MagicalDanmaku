@@ -7,6 +7,11 @@
 #include <QLineEdit>
 #include "codelinewidgetbase.h"
 
+/**
+ * 代码的单行注释编辑器
+ * 以`//`开头，也可能是以`///`开头的大标题
+ * 也可以是空行，当toString()为空时，返回全空字符串
+ */
 class CodeLineCommentEditor : public CodeLineWidgetBase
 {
 public:

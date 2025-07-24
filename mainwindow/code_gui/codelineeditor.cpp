@@ -12,4 +12,5 @@ void CodeLineEditor::fromString(const QString &code)
 QString CodeLineEditor::toString() const
 {
     // 生成代码
+    return "";
 }

@@ -3936,8 +3936,12 @@ void MainWindow::on_SendMsgEdit_returnPressed()
     connect(tw, &ListItemInterface::signalShowCodeGUIEditor, this, [=]{ \
         CodeGUIEditor* editor = new CodeGUIEditor(this); \
         editor->setCode(tw->getCode()); \
-        editor->show(); \
-        tw->setCode(editor->toString()); \
+        editor->exec(); \
+        if (editor->result() == QDialog::Accepted) \
+        { \
+            tw->setCode(editor->toString()); \
+        } \
+        editor->deleteLater(); \
     });
 
 TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int index)

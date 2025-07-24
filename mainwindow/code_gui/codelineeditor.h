@@ -2,6 +2,12 @@
 #define CODELINEEDITOR_H
 
 #include <QWidget>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QSpinBox>
+#include "conditioneditor.h"
 #include "codelinewidgetbase.h"
 
 /**
@@ -21,10 +27,14 @@ public:
     void fromString(const QString &code) override;
     QString toString() const override;
 
-private:
-    
-
 signals:
+
+private:
+    QVBoxLayout *mainLayout;
+    QLabel *conditionLabel, *priorityLabel, *prefrenceLabel, *danmakuLabel;
+    QList<QLineEdit *> conditionEdits;
+    QSpinBox *prioritySpinBox;
+    QList<ConditionEditor *> conditionEditors;
 };
 
 #endif // CODELINEEDITOR_H

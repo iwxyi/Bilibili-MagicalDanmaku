@@ -1,17 +1,20 @@
 #ifndef CODEGUIEDITOR_H
 #define CODEGUIEDITOR_H
 
-#include <QWidget>
+#include <QDialog>
 #include <QTabWidget>
 #include <QScrollArea>
 #include <QVBoxLayout>
 #include "codelineeditor.h"
 #include "codeeditorinterface.h"
+#include "conditioneditor.h"
+#include "interactivebuttonbase.h"
+#include "watercirclebutton.h"
 
 /**
  * 代码可视化编辑器
  */
-class CodeGUIEditor : public QWidget, public CodeEditorInterface
+class CodeGUIEditor : public QDialog, public CodeEditorInterface
 {
     Q_OBJECT
 public:
@@ -20,20 +23,29 @@ public:
     void fromString(const QString &code) override;
     QString toString() const override;
 
+    template<typename T>
+    void appendCodeLine(T *editor);
+
 public slots:
     void loadEmptyCode();
     void setCode(const QString &code);
-    void appendCodeLine();
+    void showAppendNewLineMenu();
 
 signals:
     void signalEditFinished(const QString &code);
 
 private:
     QTabWidget *codeTypeTab; // 代码类型：内置脚本、编程语言
+    InteractiveButtonBase *okBtn;
+    
     QScrollArea *itemScrollArea;
     QWidget *itemScrollWidget;
     QVBoxLayout *itemLayout;
     QList<CodeLineWidgetBase *> itemLineEditors;
+    WaterCircleButton *addLineBtn;
+
+    QWidget *languageWidget;
+    ConditionEditor *conditionEditor;
 };
 
 #endif // CODEGUIEDITOR_H

@@ -21,9 +21,12 @@ void CodeLineCommentEditor::fromString(const QString &code)
     lineEdit->setText(comment.trimmed());
 }
 
-QString CodeLineCommentEditor::toString() const
-{
+QString CodeLineCommentEditor::toString() const{
     QString comment = lineEdit->text();
+    if (comment.isEmpty()) // 完全的空行
+    {
+        return "";
+    }
     if (comment.startsWith("//")) // 有些可能是""///" 的情况
     {
         return comment;
