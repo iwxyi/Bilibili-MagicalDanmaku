@@ -814,7 +814,8 @@
                     "description": "通道编号",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "剩余秒数"
         },
         {
             "name": "wait",
@@ -827,7 +828,8 @@
                     "description": "通道编号",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "剩下要等待的弹幕数量"
         },
         {
             "name": "time",
@@ -840,7 +842,8 @@
                     "description": "时间格式字符串，如 yyyy-MM-dd",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "时间字符串，例如 2025-06-01 10:00:00"
         },
         {
             "name": "unameToUid",
@@ -853,7 +856,8 @@
                     "description": "用户昵称（可部分匹配）",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "用户ID"
         },
         {
             "name": "ignoreEmpty",
@@ -866,25 +870,27 @@
                     "description": "待判断文本",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "忽略空括号之后的文本"
         },
         {
             "name": "inputText",
             "zh_name": "输入文本",
             "catalog": "string",
-            "description": "输入文本，两个参数都可省略",
+            "description": "显示输入框弹窗，手动输入文本",
             "parameters": [
                 {
                     "name": "title",
                     "description": "输入框标题",
-                    "optional": false
+                    "optional": true
                 },
                 {
                     "name": "default",
                     "description": "默认值",
                     "optional": true
                 }
-            ]
+            ],
+            "return": "输入的文本"
         },
         {
             "name": "strlen",
@@ -897,7 +903,8 @@
                     "description": "要计算长度的文本",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "字符串长度"
         },
         {
             "name": "trim",
@@ -910,7 +917,8 @@
                     "description": "要处理的文本",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "删首尾空后的文本"
         },
         {
             "name": "substr",
@@ -933,7 +941,8 @@
                     "description": "子串长度",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "子串"
         },
         {
             "name": "simpleName",
@@ -946,7 +955,8 @@
                     "description": "昵称",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "简化后的昵称"
         },
         {
             "name": "simpleNum",
@@ -959,7 +969,8 @@
                     "description": "原始数值",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "简化后的数值"
         },
         {
             "name": "inGameUsers",
@@ -977,7 +988,8 @@
                     "description": "用户ID",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "在游戏中：1，不在游戏中：0"
         },
         {
             "name": "inGameNumbers",
@@ -995,7 +1007,8 @@
                     "description": "数值",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "在游戏中：1，不在游戏中：0"
         },
         {
             "name": "inGameTexts",
@@ -1013,7 +1026,8 @@
                     "description": "文本",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "在游戏中：1，不在游戏中：0"
         },
         {
             "name": "getValue",
@@ -1031,7 +1045,8 @@
                     "description": "默认值",
                     "optional": true
                 }
-            ]
+            ],
+            "return": "变量值"
         },
         {
             "name": "random",
@@ -1049,14 +1064,22 @@
                     "description": "最大值",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "随机数"
         },
         {
             "name": "randomArray",
             "zh_name": "随机数组",
             "catalog": "math",
             "description": "任意多参数，随机返回其中一个",
-            "parameters": []
+            "parameters": [
+                {
+                    "name": "array",
+                    "description": "英文逗号分隔的多个内容",
+                    "optional": false
+                }
+            ],
+            "return": "随机内容"
         },
         {
             "name": "filterReject",
@@ -1069,7 +1092,8 @@
                     "description": "过滤器名",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "被拒绝：1，未被拒绝：0"
         },
         {
             "name": "inFilterList",
@@ -1087,7 +1111,8 @@
                     "description": "内容",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "在过滤列表中：1，不在过滤列表中：0"
         },
         {
             "name": "inFilterMatch",
@@ -1105,14 +1130,22 @@
                     "description": "内容",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "在过滤正则中：1，不在过滤正则中：0"
         },
         {
             "name": "fileExists",
             "zh_name": "文件存在",
             "catalog": "file",
             "description": "有这个文件则返回1，否则0",
-            "parameters": []
+            "parameters": [
+                {
+                    "name": "filePath",
+                    "description": "文件路径",
+                    "optional": false
+                }
+            ],
+            "return": "文件存在：1，文件不存在：0"
         },
         {
             "name": "abs",
@@ -1125,7 +1158,8 @@
                     "description": "原始数值",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "绝对值"
         },
         {
             "name": "log2",
@@ -1138,7 +1172,8 @@
                     "description": "原始数值",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "对数"
         },
         {
             "name": "log10",
@@ -1151,7 +1186,8 @@
                     "description": "原始数值",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "对数"
         },
         {
             "name": "pow2",
@@ -1164,7 +1200,8 @@
                     "description": "原始数值",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "乘方"
         },
         {
             "name": "pow",
@@ -1182,24 +1219,26 @@
                     "description": "指数",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "乘方结果"
         },
         {
             "name": "pasteText",
             "zh_name": "粘贴文字",
             "catalog": "program",
             "description": "获取剪贴板的文本",
-            "parameters": []
+            "parameters": [],
+            "return": "剪贴板文本"
         },
         {
             "name": "getScreenPositionColor",
             "zh_name": "获取屏幕位置颜色",
             "catalog": "program",
-            "description": "wid为屏幕ID（一般为0），x y 为横纵坐标，返回例如 #f0f0f0 的颜色格式",
+            "description": "",
             "parameters": [
                 {
                     "name": "wid",
-                    "description": "屏幕ID",
+                    "description": "屏幕ID（一般为0，表示主屏幕）",
                     "optional": false
                 },
                 {
@@ -1212,17 +1251,18 @@
                     "description": "纵坐标",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "颜色十六进制，例如 #f0f0f0"
         },
         {
             "name": "getWindowPositionColor",
             "zh_name": "获取窗口位置颜色",
             "catalog": "program",
-            "description": "name 为窗口名字（可以是部分）或者句柄ID，不能是最小化窗口",
+            "description": "",
             "parameters": [
                 {
                     "name": "name",
-                    "description": "窗口名或句柄ID",
+                    "description": "窗口名（可以是部分）或句柄ID，不能是最小化窗口",
                     "optional": false
                 },
                 {
@@ -1235,7 +1275,8 @@
                     "description": "纵坐标",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "颜色"
         },
         {
             "name": "execReplyResult",
@@ -1248,7 +1289,8 @@
                     "description": "回复内容",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "执行结果"
         },
         {
             "name": "execEventResult",
@@ -1261,7 +1303,8 @@
                     "description": "事件名",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "执行结果"
         },
         {
             "name": "readTextFile",
@@ -1292,7 +1335,8 @@
                     "description": "行号",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "指定行的内容"
         },
         {
             "name": "getTextFileLineCount",
@@ -1305,17 +1349,18 @@
                     "description": "文件名",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "行数"
         },
         {
             "name": "compareScreenShot",
             "zh_name": "比较窗口截图",
             "catalog": "program",
-            "description": "比较当前窗口的截图与指定图片文件的相似度。screenId:屏幕ID，只有一个屏幕则为0；x/y/w/h:坐标与宽高；path:要比较的文件路径。返回一个0到100的数字，表示相似程度。具体请参考示例：定时监测屏幕内容",
+            "description": "比较当前窗口的截图与指定图片文件的相似度。具体请参考示例：定时监测屏幕内容",
             "parameters": [
                 {
                     "name": "screenId",
-                    "description": "屏幕ID",
+                    "description": "屏幕ID，只有一个屏幕则为0",
                     "optional": false
                 },
                 {
@@ -1340,56 +1385,61 @@
                 },
                 {
                     "name": "path",
-                    "description": "图片路径",
+                    "description": "要比较的文件(图片文件)路径",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "返回一个0到100的数字，表示相似程度。"
         },
         {
             "name": "getScreenWidth",
             "zh_name": "获取屏幕宽度",
             "catalog": "program",
-            "description": "获取指定显示器的屏幕宽度。如果不指定屏幕ID，则默认为0",
+            "description": "获取指定显示器的屏幕宽度。",
             "parameters": [
                 {
                     "name": "screenId",
-                    "description": "屏幕ID",
+                    "description": "屏幕ID，如果不指定屏幕ID，则默认为0",
                     "optional": true
                 }
-            ]
+            ],
+            "return": "屏幕宽度"
         },
         {
             "name": "getScreenHeight",
             "zh_name": "获取屏幕高度",
             "catalog": "program",
-            "description": "同上",
+            "description": "获取指定显示器的屏幕高度。",
             "parameters": [
                 {
                     "name": "screenId",
-                    "description": "屏幕ID",
+                    "description": "屏幕ID，如果不指定屏幕ID，则默认为0",
                     "optional": true
                 }
-            ]
+            ],
+            "return": "屏幕高度"
         },
         {
             "name": "findWindow",
             "zh_name": "查找窗口",
             "catalog": "program",
-            "description": "根据完整的窗口标题或类名来查找顶级窗口（不搜索子窗口），返回一个窗口句柄（hwnd），可用于作为修改窗口的命令的参数。结合 spy++工具来获取标题或类名",
+            "description": "根据完整的窗口标题或类名来查找顶级窗口（不搜索子窗口），返回一个窗口句柄（hwnd），可用于作为修改窗口的命令的参数。\n结合 spy++工具来获取标题或类名",
             "parameters": [
                 {
                     "name": "title",
                     "description": "窗口标题或类名",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "窗口句柄"
         },
         {
             "name": "getForegroundWindow",
             "zh_name": "获取前景窗口",
             "catalog": "program",
             "description": "获取当前具有焦点的窗口的句柄（hwnd）",
-            "parameters": []
+            "parameters": [],
+            "return": "窗口句柄"
         },
         {
             "name": "isWindowFullScreen",
@@ -1402,20 +1452,22 @@
                     "description": "窗口句柄",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "窗口是否全屏"
         },
         {
             "name": "getCursorPos",
             "zh_name": "获取鼠标位置",
             "catalog": "program",
-            "description": "获取当前鼠标的位置，参数为 x 或 y 字符串",
+            "description": "获取当前鼠标的位置，参数为 \"x\" 或 \"y\"",
             "parameters": [
                 {
                     "name": "axis",
-                    "description": "x 或 y",
+                    "description": "\"x\" 或 \"y\"",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "鼠标位置"
         },
         {
             "name": "getWindowRect",
@@ -1433,7 +1485,8 @@
                     "description": "x/y/w/h 之一",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "窗口位置"
         },
         {
             "name": "getWindowFromPoint",
@@ -1451,7 +1504,8 @@
                     "description": "纵坐标",
                     "optional": false
                 }
-            ]
+            ],
+            "return": "窗口句柄"
         }
     ],
     "commands": [
@@ -1466,11 +1520,11 @@
             "name": "block",
             "zh_name": "禁言",
             "catalog": "live",
-            "description": "禁言用户，uid可使用参数%uid%获得，hour为禁言时长（可选）",
+            "description": "禁言用户，需要管理员权限",
             "parameters": [
                 {
                     "name": "uid",
-                    "description": "用户ID",
+                    "description": "用户ID，一般使用%uid%获得",
                     "optional": false
                 },
                 {
@@ -1488,7 +1542,7 @@
             "parameters": [
                 {
                     "name": "uid",
-                    "description": "用户ID",
+                    "description": "用户ID，一般使用%uid%获得",
                     "optional": false
                 }
             ]
@@ -1497,7 +1551,7 @@
             "name": "eternalBlock",
             "zh_name": "永久禁言",
             "catalog": "live",
-            "description": "永久禁言某用户（需保持程序在线），markname为标记名字（避免时间长了改名不知道）",
+            "description": "永久禁言某用户（需保持程序在线）",
             "parameters": [
                 {
                     "name": "uid",
@@ -1506,7 +1560,7 @@
                 },
                 {
                     "name": "markname",
-                    "description": "标记名字",
+                    "description": "标记名字（避免时间长了改名不知道）",
                     "optional": false
                 }
             ]
@@ -1554,7 +1608,7 @@
             "name": "addGameUser",
             "zh_name": "添加游戏用户",
             "catalog": "game",
-            "description": "添加用户至游戏队列，listId从0到99，使用%>inGameUsers(listId, uid)%判断在不在。程序重启后清空，长期保存可使用addGameNumbers",
+            "description": "添加用户至游戏队列，listId从0到99，使用%>inGameUsers(listId, uid)%判断在不在。\n程序重启后清空，长期保存可使用addGameNumbers",
             "parameters": [
                 {
                     "name": "listId",
@@ -1949,7 +2003,7 @@
             "name": "getData",
             "zh_name": "get数据",
             "catalog": "network",
-            "description": "后台连接网址（GET），返回JSON数据，callback详见“获取网络数据回调”示例。回调中的%text%为纯文本结果",
+            "description": "后台连接网址（GET），返回JSON数据。回调中的\"%text%\"为纯文本结果",
             "parameters": [
                 {
                     "name": "url",
@@ -1958,7 +2012,7 @@
                 },
                 {
                     "name": "callback",
-                    "description": "回调函数",
+                    "description": "回调函数，详见“获取网络数据回调”示例。",
                     "optional": true
                 }
             ]
@@ -2013,7 +2067,7 @@
             "name": "postHeaderData",
             "zh_name": "post头数据",
             "catalog": "network",
-            "description": "同上。headers多个之间用&分隔，格式：header1=value1&header2=value2&header3=value3",
+            "description": "同上。",
             "parameters": [
                 {
                     "name": "url",
@@ -2022,7 +2076,7 @@
                 },
                 {
                     "name": "headers",
-                    "description": "请求头",
+                    "description": "请求头，多个之间用&分隔，示例格式：header1=value1&header2=value2&header3=value3",
                     "optional": false
                 },
                 {
@@ -2068,8 +2122,8 @@
             "parameters": [
                 {
                     "name": "cmd",
-                    "description": "命令",
-                    "optional": true
+                    "description": "命令。如果为空内容，则发送给所有WebSocket",
+                    "optional": false
                 },
                 {
                     "name": "data",
@@ -2087,7 +2141,7 @@
                 {
                     "name": "cmd",
                     "description": "命令",
-                    "optional": true
+                    "optional": false
                 },
                 {
                     "name": "data",
@@ -2206,7 +2260,7 @@
             "name": "setValuesIf",
             "zh_name": "批量设置值如果",
             "catalog": "program",
-            "description": "按条件批量修改已有的值，[condition]同弹幕条件（带方括号），详见下方“批量修改配置”",
+            "description": "按条件批量修改已有的值，[condition]同弹幕条件（带方括号），详见文档中的“批量修改配置”",
             "parameters": [
                 {
                     "name": "exp",
@@ -2322,7 +2376,7 @@
             "name": "improveMusic",
             "zh_name": "提升点歌",
             "catalog": "song",
-            "description": "点歌提前播放，order为提升的索引值",
+            "description": "点歌提前播放",
             "parameters": [
                 {
                     "name": "username",
@@ -2331,7 +2385,7 @@
                 },
                 {
                     "name": "order",
-                    "description": "提升索引",
+                    "description": "提升的索引值",
                     "optional": false
                 }
             ]
@@ -2572,7 +2626,7 @@
             "name": "AIReply",
             "zh_name": "AI回复",
             "catalog": "AI",
-            "description": "调用AI回复某文字，并直接以弹幕的形式发送。maxLen为长度上限，默认单条弹幕，超出则不回复",
+            "description": "调用AI回复某文字，并直接以弹幕的形式发送。",
             "parameters": [
                 {
                     "name": "text",
@@ -2581,7 +2635,7 @@
                 },
                 {
                     "name": "maxLen",
-                    "description": "最大长度",
+                    "description": "最大长度，默认单条弹幕，超出则不回复",
                     "optional": true
                 }
             ]
@@ -2590,7 +2644,7 @@
             "name": "AIChat",
             "zh_name": "AI聊天",
             "catalog": "AI",
-            "description": "调用AI回复文字，若有结果则执行code代码，使用 \\%text\\% 来获取回复结果。具体调用哪个AI，由设置中的选项决定。如果是ChatGPT，UID固定为0",
+            "description": "调用AI回复文字，若有结果则执行code代码，使用 \\%text\\% 来获取回复结果。\\n具体调用哪个AI，由设置中的选项决定。如果是ChatGPT，UID固定为0",
             "parameters": [
                 {
                     "name": "text",
@@ -2627,7 +2681,7 @@
             "name": "ChatGPT",
             "zh_name": "GPT聊天",
             "catalog": "AI",
-            "description": "调用ChatGPT闲聊，同上。如果开启了“功能型GPT”，那么%text%会是对应的msg",
+            "description": "调用ChatGPT闲聊，同上。\\n如果开启了“功能型GPT”，那么%text%会是对应的\"msg\"字段",
             "parameters": [
                 {
                     "name": "uid",
@@ -2720,7 +2774,7 @@
             "name": "call",
             "zh_name": "调用",
             "catalog": "program",
-            "description": "触发事件，可以传递若干个参数，使用 %$1%这样的指令来获取参数",
+            "description": "触发事件，可以传递若干个参数，使用 \"%$1%\" 这样的指令来获取参数",
             "parameters": [
                 {
                     "name": "event",
@@ -2759,7 +2813,7 @@
             "name": "setTimerTask",
             "zh_name": "开启定时任务",
             "catalog": "program",
-            "description": "id为单行注释的文字，格式：//id。time：<-1时重置时间，=-1时关闭，=0时切换开关，=1时开启，>1时设置为对应秒数并重置时间（关闭的话不会开启）。不建议设置1秒，因为弹幕冷却2秒",
+            "description": "id为单行注释的文字，格式：//id。time：",
             "parameters": [
                 {
                     "name": "id",
@@ -2768,7 +2822,7 @@
                 },
                 {
                     "name": "time",
-                    "description": "时间",
+                    "description": "时间，<-1时重置时间，=-1时关闭，=0时切换开关，=1时开启，>1时设置为对应秒数并重置时间（关闭的话不会开启）。不建议设置1秒，因为弹幕冷却2秒",
                     "optional": false
                 }
             ]
@@ -2786,7 +2840,7 @@
                 },
                 {
                     "name": "uname",
-                    "description": "点歌人",
+                    "description": "点歌人，仅作为重复点歌判断依据，可以是任意文字",
                     "optional": false
                 }
             ]
@@ -2816,8 +2870,8 @@
             "description": "显示表格文件，自动判定编码",
             "parameters": [
                 {
-                    "name": "filePath",
-                    "description": "文件路径",
+                    "name": "fileName",
+                    "description": "文件名",
                     "optional": false
                 }
             ]
@@ -3017,11 +3071,11 @@
             "name": "saveScreenShot",
             "zh_name": "保存窗口截图",
             "catalog": "program",
-            "description": "保存指定位置的窗口截图为本地图片。screenId:屏幕ID，只有一个屏幕则为0；x/y/w/h:坐标与宽高；path:要比较的文件路径",
+            "description": "保存指定位置的窗口截图为本地图片。",
             "parameters": [
                 {
                     "name": "screenId",
-                    "description": "屏幕ID",
+                    "description": "屏幕ID，只有一个屏幕则为0",
                     "optional": false
                 },
                 {
@@ -3046,7 +3100,7 @@
                 },
                 {
                     "name": "path",
-                    "description": "图片路径",
+                    "description": "要保存的文件路径",
                     "optional": false
                 }
             ]
@@ -3055,7 +3109,7 @@
             "name": "showWindow",
             "zh_name": "显示窗口",
             "catalog": "program",
-            "description": "将窗口置为指定状态，state: normal/min/max/hide/show",
+            "description": "将窗口置为指定状态",
             "parameters": [
                 {
                     "name": "hwnd",
@@ -3064,7 +3118,7 @@
                 },
                 {
                     "name": "state",
-                    "description": "窗口状态",
+                    "description": "窗口状态，normal/min/max/hide/show",
                     "optional": false
                 }
             ]
@@ -3152,12 +3206,12 @@
             "parameters": [
                 {
                     "name": "path",
-                    "description": "本程序语法中的 JSON 路径，不带`%`，如 `.data?.array?`，对应具体的对象或数组",
+                    "description": "本程序语法中的 JSON 路径，不带\"%\"，如 \".data?.array?\"，对应具体的对象或数组",
                     "optional": false
                 },
                 {
                     "name": "code",
-                    "description": "要执行的代码，需要进行转义：`%` 写作 `\\%`，`\\n` 写作 `%n%` 等",
+                    "description": "要执行的代码，需要进行转义：\"%\" 写作 \"\\%\"，\"\\n\" 写作 \"%n%\" 等",
                     "optional": false
                 }
             ]

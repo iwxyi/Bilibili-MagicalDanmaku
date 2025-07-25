@@ -286,7 +286,7 @@ QQ群：**427436529**，欢迎交流反馈与研究新功能~
 
 目前已实现的功能：
 
-- Cookie登录
+- Cookie登录、浏览器登录
 - 接收观众弹幕、进房、关注、点赞、送礼
 
 注意以下**核心功能尚未实现**：
@@ -1481,7 +1481,7 @@ tips：
 | connectRoom(roomId)                                | 连接直播间       | 切换到任意直播间，支持房间号或身份码                         |
 | SQLExec                                            | SQL执行          | 需要开启数据库。执行SQL语句，如创建表格、插入记录            |
 | SQLQuery                                           | SQL查询          | 需要开启数据库。执行SQL语句并显示查询结果，如查找弹幕记录    |
-| saveScreenShot(screenId, x, y, w, h, path)         | 保存窗口截图     | 保存指定位置的窗口截图为本地图片。screenId:屏幕ID，只有一个屏幕则为0；x/y/w/h:坐标与宽高；path:要比较的文件路径 |
+| saveScreenShot(screenId, x, y, w, h, path)         | 保存窗口截图     | 保存指定位置的窗口截图为本地图片。screenId:屏幕ID，只有一个屏幕则为0；x/y/w/h:坐标与宽高；path:要保存的文件路径 |
 | showWindow(hwnd, state)                            | 显示窗口         | 将窗口置为指定状态，state: normal/min/max/hide/show          |
 | sendWindowMessage(hwnd, text)                      | 发送窗口消息     | 向指定窗口发送文字类的消息，模拟文字输入，如社交软件聊天界面。需要输入框获取到焦点才能输入 |
 | moveWindow(hwnd, x, y, w, h)                       | 移动窗口         | 移动窗口至指定的坐标和尺寸                                   |

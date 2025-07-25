@@ -99,6 +99,9 @@ CodeGUIEditor::CodeGUIEditor(QWidget *parent)
 
     QWidget *leftWidget = new QWidget(this);
     QVBoxLayout *leftLayout = new QVBoxLayout(leftWidget);
+    leftLayout->setSpacing(0);
+    leftLayout->setContentsMargins(0, 0, 0, 0);
+    leftLayout->setMargin(0);
     leftLayout->addWidget(triggerTab);
     triggerTab->hide(); // TODO: 隐藏触发条件
     leftLayout->addWidget(codeTypeTab);
@@ -324,8 +327,8 @@ void CodeGUIEditor::loadScriptDefinitionsTree()
     commandTree->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     macroTree->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
-    QStringList catalogEnList = {"user", "live", "gift", "song", "pk", "program", "time", "game", "greet", "file", "string","AI", "math", "network", "other"};
-    QStringList catalogCnList = {"用户", "直播", "礼物", "音乐", "PK", "程序", "时间", "游戏", "问候", "文件", "字符串", "AI", "数学", "网络", "其他"};
+    QStringList catalogEnList = {"user", "live", "gift", "program", "time", "game", "greet", "song", "pk", "file", "string","AI", "math", "network", "other"};
+    QStringList catalogCnList = {"用户", "直播", "礼物", "程序", "时间", "游戏", "问候", "音乐", "PK", "文件", "字符串", "AI", "数学", "网络", "其他"};
 
     // 变量
     // 按分类放入TreeWidget中
@@ -358,7 +361,7 @@ void CodeGUIEditor::loadScriptDefinitionsTree()
         {
             QTreeWidgetItem *item = new QTreeWidgetItem(typeItem);
             item->setText(0, variable.s("zh_name") + " (" + variable.s("name") + ")");
-            item->setText(1, variable.s("description"));
+            item->setText(1, variable.s("description").replace("\n", " "));
             item->setData(0, CONDITION_INSERT_TEXT_ROLE, "%" + variable.s("zh_name") + "%");
             item->setData(0, CONDITION_INSERT_JSON_ROLE, variable.toBa());
         }
@@ -395,7 +398,7 @@ void CodeGUIEditor::loadScriptDefinitionsTree()
         {
             QTreeWidgetItem *item = new QTreeWidgetItem(typeItem);
             item->setText(0, function.s("zh_name") + " (" + function.s("name") + ")");
-            item->setText(1, function.s("description"));
+            item->setText(1, function.s("description").replace("\n", " "));
             item->setData(0, CONDITION_INSERT_TEXT_ROLE, "%>" + function.s("zh_name") + "()%");
             item->setData(0, CONDITION_INSERT_JSON_ROLE, function.toBa());
         }
@@ -432,7 +435,7 @@ void CodeGUIEditor::loadScriptDefinitionsTree()
         {
             QTreeWidgetItem *item = new QTreeWidgetItem(typeItem);
             item->setText(0, command.s("zh_name") + " (" + command.s("name") + ")");
-            item->setText(1, command.s("description"));
+            item->setText(1, command.s("description").replace("\n", " "));
             item->setData(0, CONDITION_INSERT_TEXT_ROLE, ">" + command.s("zh_name") + "()");
             item->setData(0, CONDITION_INSERT_JSON_ROLE, command.toBa());
         }
@@ -469,7 +472,7 @@ void CodeGUIEditor::loadScriptDefinitionsTree()
         {
             QTreeWidgetItem *item = new QTreeWidgetItem(typeItem);
             item->setText(0, macro.s("zh_name") + " (" + macro.s("name") + ")");
-            item->setText(1, macro.s("description"));
+            item->setText(1, macro.s("description").replace("\n", " "));
             item->setData(0, CONDITION_INSERT_TEXT_ROLE, "#" + macro.s("zh_name") + "()");
             item->setData(0, CONDITION_INSERT_JSON_ROLE, macro.toBa());
         }
@@ -483,7 +486,9 @@ void CodeGUIEditor::showDefinitionDesc(const QByteArray &json)
     QString full;
     full += "名称：" + jsonObj.s("name") + "\n";
     full += "中文：" + jsonObj.s("zh_name") + "\n";
-    full += "描述：" + jsonObj.s("description") + "\n";
+    if (!jsonObj.s("description").isEmpty()) {
+        full += "描述：" + jsonObj.s("description") + "\n";
+    }
     QJsonArray parameters = jsonObj.a("parameters");
     if (parameters.count() > 0) {
         full += "参数：\n";
@@ -491,6 +496,9 @@ void CodeGUIEditor::showDefinitionDesc(const QByteArray &json)
             MyJson param = parameter.toObject();
             full += "    - " + param.s("name") + (param.b("optional") ? "(可选)" : "") + "：" + param.s("description") + "\n";
         }
+    }
+    if (jsonObj.b("return") && !jsonObj.s("return").isEmpty()) {
+        full += "返回：" + jsonObj.s("return") + "\n";
     }
     definitionDescEdit->setPlainText(full);
 }
