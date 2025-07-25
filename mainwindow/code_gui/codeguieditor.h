@@ -5,6 +5,8 @@
 #include <QTabWidget>
 #include <QScrollArea>
 #include <QVBoxLayout>
+#include <QSplitter>
+#include <QTableWidget>
 #include "codelineeditor.h"
 #include "codeeditorinterface.h"
 #include "conditioneditor.h"
@@ -49,6 +51,13 @@ private:
 
     QWidget *languageWidget;
     ConditionEditor *conditionEditor;
+    
+    QSplitter *mainSplitter;
+    QTabWidget *refrenceTab;
+    QTableWidget *variableTable;
+    QTableWidget *functionTable;
+    QTableWidget *commandTable;
+    QTableWidget *macroTable;
 };
 
 #endif // CODEGUIEDITOR_H

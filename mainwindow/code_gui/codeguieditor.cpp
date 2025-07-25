@@ -93,11 +93,37 @@ CodeGUIEditor::CodeGUIEditor(QWidget *parent)
     okBtn->setBorderColor(Qt::gray);
     okBtn->setRadius(4);
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->addWidget(triggerTab);
+    QWidget *leftWidget = new QWidget(this);
+    QVBoxLayout *leftLayout = new QVBoxLayout(leftWidget);
+    leftLayout->addWidget(triggerTab);
     triggerTab->hide(); // TODO: 隐藏触发条件
-    mainLayout->addWidget(codeTypeTab);
+    leftLayout->addWidget(codeTypeTab);
+
+    // ----------------------------
+    refrenceTab = new QTabWidget(this);
+    variableTable = new QTableWidget(this);
+    commandTable = new QTableWidget(this);
+    functionTable = new QTableWidget(this);
+    macroTable = new QTableWidget(this);
+    refrenceTab->addTab(variableTable, "变量");
+    refrenceTab->addTab(functionTable, "函数");
+    refrenceTab->addTab(commandTable, "命令");
+    refrenceTab->addTab(macroTable, "宏");
+    refrenceTab->setMinimumWidth(200);
+    
+    mainSplitter = new QSplitter(this);
+    mainSplitter->addWidget(leftWidget);
+    mainSplitter->addWidget(refrenceTab);
+    mainSplitter->setStretchFactor(0, 1);
+    mainSplitter->setStretchFactor(1, 0);
+    mainSplitter->setCollapsible(1, false);
+    mainSplitter->setSizes({800, 200});
+    mainSplitter->setHandleWidth(1);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->addWidget(mainSplitter);
     mainLayout->addWidget(okBtn);
+    setLayout(mainLayout);
 }
 
 /// 解析代码
