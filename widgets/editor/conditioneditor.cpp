@@ -14,6 +14,7 @@
 
 QStringList ConditionEditor::allCompletes;
 int ConditionEditor::completerWidth = 200;
+ConditionEditor *ConditionEditor::currentConditionEditor = nullptr;
 
 ConditionEditor::ConditionEditor(QWidget *parent) : QPlainTextEdit(parent)
 {
@@ -57,6 +58,13 @@ ConditionEditor::ConditionEditor(QWidget *parent) : QPlainTextEdit(parent)
     document->setDefaultTextOption(textOption);
     // 如果 QPlainTextEdit 中已经有内容，可能需要触发一次更新以应用新的制表位
     // this->update();
+}
+
+ConditionEditor::~ConditionEditor()
+{
+    emit signalDeleted();
+    if (currentConditionEditor == this)
+        currentConditionEditor = nullptr;
 }
 
 void ConditionEditor::updateCompleterModel()
@@ -282,6 +290,13 @@ void ConditionEditor::insertFromMimeData(const QMimeData *source)
         }
     }
     QPlainTextEdit::insertFromMimeData(source);
+}
+
+void ConditionEditor::focusInEvent(QFocusEvent *e)
+{
+    QPlainTextEdit::focusInEvent(e);
+    emit signalFocusIn();
+    currentConditionEditor = this;
 }
 
 void ConditionEditor::showCompleter(QString prefix)

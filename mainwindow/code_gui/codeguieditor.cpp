@@ -4,6 +4,10 @@
 #include "codelinesplitterwidget.h"
 #include "codelineeditor.h"
 #include "facilemenu.h"
+#include <QHeaderView>
+
+#define CONDITION_INSERT_TEXT_ROLE Qt::UserRole
+#define CONDITION_INSERT_JSON_ROLE Qt::UserRole + 1
 
 CodeGUIEditor::CodeGUIEditor(QWidget *parent)
     : QDialog{parent}
@@ -11,6 +15,7 @@ CodeGUIEditor::CodeGUIEditor(QWidget *parent)
     setObjectName("CodeGUIEditor");
     // setWindowModality(Qt::WindowModal);
     setMinimumSize(800, 600);
+    resize(1200, 800);
     setWindowTitle("代码可视化编辑器");
     setWindowIcon(QIcon(":/icons/code_gui"));
     setWindowIconText("代码可视化编辑器");
@@ -81,7 +86,6 @@ CodeGUIEditor::CodeGUIEditor(QWidget *parent)
     btnLayout->addStretch();
     itemLayout->addLayout(btnLayout);
     itemLayout->addStretch();
-    qDebug() << "itemLayout" << itemLayout->count();
 
     languageWidget = new QWidget(this);
     conditionEditor = new ConditionEditor(this);
@@ -101,29 +105,76 @@ CodeGUIEditor::CodeGUIEditor(QWidget *parent)
 
     // ----------------------------
     refrenceTab = new QTabWidget(this);
-    variableTable = new QTableWidget(this);
-    commandTable = new QTableWidget(this);
-    functionTable = new QTableWidget(this);
-    macroTable = new QTableWidget(this);
-    refrenceTab->addTab(variableTable, "变量");
-    refrenceTab->addTab(functionTable, "函数");
-    refrenceTab->addTab(commandTable, "命令");
-    refrenceTab->addTab(macroTable, "宏");
-    refrenceTab->setMinimumWidth(200);
-    
+    variableTree = new QTreeWidget(this);
+    commandTree = new QTreeWidget(this);
+    functionTree = new QTreeWidget(this);
+    macroTree = new QTreeWidget(this);
+    refrenceTab->addTab(variableTree, "变量");
+    refrenceTab->addTab(functionTree, "函数");
+    refrenceTab->addTab(commandTree, "命令");
+    refrenceTab->addTab(macroTree, "宏");
+
+    definitionDescEdit = new QPlainTextEdit(this);
+    definitionDescEdit->setReadOnly(true);
+    definitionDescEdit->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+
+    definitionDescSplitter = new QSplitter(this);
+    definitionDescSplitter->setOrientation(Qt::Vertical);
+    definitionDescSplitter->setChildrenCollapsible(false);
+    definitionDescSplitter->setStretchFactor(0, 1);
+    definitionDescSplitter->setStretchFactor(1, 0);
+    definitionDescSplitter->setHandleWidth(1);
+    definitionDescSplitter->addWidget(refrenceTab);
+    definitionDescSplitter->addWidget(definitionDescEdit);
+    definitionDescSplitter->setSizes({800, 10});
+
     mainSplitter = new QSplitter(this);
     mainSplitter->addWidget(leftWidget);
-    mainSplitter->addWidget(refrenceTab);
+    mainSplitter->addWidget(definitionDescSplitter);
     mainSplitter->setStretchFactor(0, 1);
-    mainSplitter->setStretchFactor(1, 0);
-    mainSplitter->setCollapsible(1, false);
-    mainSplitter->setSizes({800, 200});
+    mainSplitter->setStretchFactor(1, 1);
+    mainSplitter->setSizes({800, 400});
     mainSplitter->setHandleWidth(1);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->addWidget(mainSplitter);
     mainLayout->addWidget(okBtn);
     setLayout(mainLayout);
+
+    loadScriptDefinitionsTree();
+
+    connect(variableTree, &QTreeWidget::currentItemChanged, this, [=](QTreeWidgetItem *current, QTreeWidgetItem *previous) {
+        if (current) {
+            showDefinitionDesc(current->data(0, CONDITION_INSERT_JSON_ROLE).toByteArray());
+        }
+    });
+    connect(variableTree, &QTreeWidget::itemActivated, this, [=]() {
+        insertText(variableTree->currentItem()->data(0, CONDITION_INSERT_TEXT_ROLE).toString(), variableTree->currentItem()->data(0, CONDITION_INSERT_JSON_ROLE).toByteArray());
+    });
+    connect(functionTree, &QTreeWidget::currentItemChanged, this, [=](QTreeWidgetItem *current, QTreeWidgetItem *previous) {
+        if (current) {
+            showDefinitionDesc(current->data(0, CONDITION_INSERT_JSON_ROLE).toByteArray());
+        }
+    });
+    connect(functionTree, &QTreeWidget::itemActivated, this, [=]() {
+        insertText(functionTree->currentItem()->data(0, CONDITION_INSERT_TEXT_ROLE).toString(), functionTree->currentItem()->data(0, CONDITION_INSERT_JSON_ROLE).toByteArray());
+    });
+    connect(commandTree, &QTreeWidget::currentItemChanged, this, [=](QTreeWidgetItem *current, QTreeWidgetItem *previous) {
+        if (current) {
+            showDefinitionDesc(current->data(0, CONDITION_INSERT_JSON_ROLE).toByteArray());
+        }
+    });
+    connect(commandTree, &QTreeWidget::itemActivated, this, [=]() {
+        insertText(commandTree->currentItem()->data(0, CONDITION_INSERT_TEXT_ROLE).toString(), commandTree->currentItem()->data(0, CONDITION_INSERT_JSON_ROLE).toByteArray());
+    });
+    connect(macroTree, &QTreeWidget::currentItemChanged, this, [=](QTreeWidgetItem *current, QTreeWidgetItem *previous) {
+        if (current) {
+            showDefinitionDesc(current->data(0, CONDITION_INSERT_JSON_ROLE).toByteArray());
+        }
+    });
+    connect(macroTree, &QTreeWidget::itemActivated, this, [=]() {
+        insertText(macroTree->currentItem()->data(0, CONDITION_INSERT_TEXT_ROLE).toString(), macroTree->currentItem()->data(0, CONDITION_INSERT_JSON_ROLE).toByteArray());
+    });
 }
 
 /// 解析代码
@@ -250,4 +301,221 @@ void CodeGUIEditor::insertCodeLine(int index, CodeLineWidgetBase *editor)
         itemLayout->removeWidget(editor);
         delete editor;
     });
+}
+
+void CodeGUIEditor::loadScriptDefinitionsTree()
+{
+    QFile file(":/documents/script_definitions");
+    file.open(QIODevice::ReadOnly | QIODevice::Text);
+    MyJson json(file.readAll());
+    QJsonArray variableArray = json.a("variables");
+    QJsonArray functionArray = json.a("functions");
+    QJsonArray commandArray = json.a("commands");
+    QJsonArray macroArray = json.a("macros");
+
+    variableTree->setHeaderLabels({"名称", "描述"});
+    functionTree->setHeaderLabels({"名称", "参数", "描述"});
+    commandTree->setHeaderLabels({"名称", "参数", "描述"});
+    macroTree->setHeaderLabels({"名称", "描述"});
+
+    // 让第一列（名称）自适应内容宽度
+    variableTree->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    functionTree->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    commandTree->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    macroTree->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+
+    QStringList catalogEnList = {"user", "live", "gift", "song", "pk", "program", "time", "game", "greet", "file", "string","AI", "math", "network", "other"};
+    QStringList catalogCnList = {"用户", "直播", "礼物", "音乐", "PK", "程序", "时间", "游戏", "问候", "文件", "字符串", "AI", "数学", "网络", "其他"};
+
+    // 变量
+    // 按分类放入TreeWidget中
+    QMap<QString, QList<MyJson>> variableTypeList;
+    for (auto variableValue : variableArray) // 按catalog分类来遍历，这样能保持排序
+    {
+        MyJson variableJson = variableValue.toObject();
+        if (!variableJson.b("visible", true)) // 如果不可见，则不显示
+            continue;
+
+        QString catalogEn = variableJson.s("catalog");
+        if (catalogEnList.contains(catalogEn))
+        {
+            variableTypeList[catalogEn].append(variableJson);
+        }
+        else
+        {
+            variableTypeList["other"].append(variableJson);
+        }
+    }
+    for (auto catalogEn : catalogEnList) // 遍历分类
+    {
+        if (!variableTypeList.contains(catalogEn))
+            continue;
+        QTreeWidgetItem *typeItem = new QTreeWidgetItem(variableTree);
+        typeItem->setText(0, catalogCnList[catalogEnList.indexOf(catalogEn)]);
+        typeItem->setText(1, QString::number(variableTypeList[catalogEn].count()));
+
+        for (auto variable : variableTypeList[catalogEn])
+        {
+            QTreeWidgetItem *item = new QTreeWidgetItem(typeItem);
+            item->setText(0, variable.s("zh_name") + " (" + variable.s("name") + ")");
+            item->setText(1, variable.s("description"));
+            item->setData(0, CONDITION_INSERT_TEXT_ROLE, "%" + variable.s("zh_name") + "%");
+            item->setData(0, CONDITION_INSERT_JSON_ROLE, variable.toBa());
+        }
+    }
+    variableTree->expandAll();
+
+    // 函数
+    QMap<QString, QList<MyJson>> functionTypeList;
+    for (auto functionValue : functionArray)
+    {
+        MyJson functionJson = functionValue.toObject();
+        if (!functionJson.b("visible", true)) // 如果不可见，则不显示
+            continue;
+
+        QString catalogEn = functionJson.s("catalog");
+        if (catalogEnList.contains(catalogEn))
+        {
+            functionTypeList[catalogEn].append(functionJson); // 按catalog分类来遍历，这样能保持排序
+        }
+        else
+        {
+            functionTypeList["other"].append(functionJson);
+        }
+    }
+    for (auto catalogEn : catalogEnList) // 遍历分类
+    {
+        if (!functionTypeList.contains(catalogEn))
+            continue;
+        QTreeWidgetItem *typeItem = new QTreeWidgetItem(functionTree);
+        typeItem->setText(0, catalogCnList[catalogEnList.indexOf(catalogEn)]);
+        typeItem->setText(1, QString::number(functionTypeList[catalogEn].count()));
+
+        for (auto function : functionTypeList[catalogEn])
+        {
+            QTreeWidgetItem *item = new QTreeWidgetItem(typeItem);
+            item->setText(0, function.s("zh_name") + " (" + function.s("name") + ")");
+            item->setText(1, function.s("description"));
+            item->setData(0, CONDITION_INSERT_TEXT_ROLE, "%>" + function.s("zh_name") + "()%");
+            item->setData(0, CONDITION_INSERT_JSON_ROLE, function.toBa());
+        }
+    }
+    functionTree->expandAll();
+
+    // 命令
+    QMap<QString, QList<MyJson>> commandTypeList;
+    for (auto commandValue : commandArray)
+    {
+        MyJson commandJson = commandValue.toObject();
+        if (!commandJson.b("visible", true)) // 如果不可见，则不显示
+            continue;
+
+        QString catalogEn = commandJson.s("catalog");
+        if (catalogEnList.contains(catalogEn))
+        {
+            commandTypeList[catalogEn].append(commandJson);
+        }
+        else
+        {
+            commandTypeList["other"].append(commandJson);
+        }
+    }
+    for (auto catalogEn : catalogEnList) // 遍历分类
+    {
+        if (!commandTypeList.contains(catalogEn))
+            continue;
+        QTreeWidgetItem *typeItem = new QTreeWidgetItem(commandTree);
+        typeItem->setText(0, catalogCnList[catalogEnList.indexOf(catalogEn)]);
+        typeItem->setText(1, QString::number(commandTypeList[catalogEn].count()));
+
+        for (auto command : commandTypeList[catalogEn])
+        {
+            QTreeWidgetItem *item = new QTreeWidgetItem(typeItem);
+            item->setText(0, command.s("zh_name") + " (" + command.s("name") + ")");
+            item->setText(1, command.s("description"));
+            item->setData(0, CONDITION_INSERT_TEXT_ROLE, ">" + command.s("zh_name") + "()");
+            item->setData(0, CONDITION_INSERT_JSON_ROLE, command.toBa());
+        }
+    }
+    commandTree->expandAll();
+
+    // 宏
+    QMap<QString, QList<MyJson>> macroTypeList;
+    for (auto macroValue : macroArray)
+    {
+        MyJson macroJson = macroValue.toObject();
+        if (!macroJson.b("visible", true)) // 如果不可见，则不显示
+            continue;
+
+        QString catalogEn = macroJson.s("catalog");
+        if (catalogEnList.contains(catalogEn))
+        {
+            macroTypeList[catalogEn].append(macroJson);
+        }
+        else
+        {
+            macroTypeList["other"].append(macroJson);
+        }
+    }
+    for (auto catalogEn : catalogEnList) // 遍历分类
+    {
+        if (!macroTypeList.contains(catalogEn))
+            continue;
+        QTreeWidgetItem *typeItem = new QTreeWidgetItem(macroTree);
+        typeItem->setText(0, catalogCnList[catalogEnList.indexOf(catalogEn)]);
+        typeItem->setText(1, QString::number(macroTypeList[catalogEn].count()));
+
+        for (auto macro : macroTypeList[catalogEn])
+        {
+            QTreeWidgetItem *item = new QTreeWidgetItem(typeItem);
+            item->setText(0, macro.s("zh_name") + " (" + macro.s("name") + ")");
+            item->setText(1, macro.s("description"));
+            item->setData(0, CONDITION_INSERT_TEXT_ROLE, "#" + macro.s("zh_name") + "()");
+            item->setData(0, CONDITION_INSERT_JSON_ROLE, macro.toBa());
+        }
+    }
+    macroTree->expandAll();
+}
+
+void CodeGUIEditor::showDefinitionDesc(const QByteArray &json)
+{
+    MyJson jsonObj = MyJson(json);
+    QString full;
+    full += "名称：" + jsonObj.s("name") + "\n";
+    full += "中文：" + jsonObj.s("zh_name") + "\n";
+    full += "描述：" + jsonObj.s("description") + "\n";
+    QJsonArray parameters = jsonObj.a("parameters");
+    if (parameters.count() > 0) {
+        full += "参数：\n";
+        for (auto parameter : parameters) {
+            MyJson param = parameter.toObject();
+            full += "    - " + param.s("name") + (param.b("optional") ? "(可选)" : "") + "：" + param.s("description") + "\n";
+        }
+    }
+    definitionDescEdit->setPlainText(full);
+}
+
+/// 插入到当前的文本框中
+/// 当前光标所在的文本框
+void CodeGUIEditor::insertText(const QString &text, const QByteArray &jsonStr)
+{
+    ConditionEditor *editor = ConditionEditor::currentConditionEditor;
+    if (!editor)
+        return;
+
+    editor->insertPlainText(text);
+    editor->setFocus();
+
+    // 如果带括号且括号里有参数，那么光标自动移动到括号里面
+    MyJson json = MyJson(jsonStr);
+    if (text.contains("(") && text.contains(")")) {
+        if (json.a("parameters").count() > 0) {
+            int index = text.indexOf("(");
+            int rightLength = text.length() - index - 1;
+            QTextCursor cursor = editor->textCursor();
+            int currentPos = cursor.position();
+            cursor.setPosition(currentPos - rightLength);
+            editor->setTextCursor(cursor);
+        }
+    }
 }
