@@ -21,13 +21,13 @@ typedef struct _douyin_Response {
     char cursor[256];
     uint64_t fetchInterval;
     uint64_t now;
-    char internalExt[256];
+    char internalExt[2560];
     uint32_t fetchType;
     pb_callback_t routeParams;
     uint64_t heartbeatDuration;
     bool needAck;
-    char pushServer[256];
-    char liveCursor[256];
+    char pushServer[2560];
+    char liveCursor[2560];
     bool historyNoMore;
 } douyin_Response;
 
