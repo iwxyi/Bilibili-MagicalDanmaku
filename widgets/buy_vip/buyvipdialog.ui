@@ -246,7 +246,7 @@ QLabel:hover
         <x>0</x>
         <y>0</y>
         <width>455</width>
-        <height>227</height>
+        <height>137</height>
        </rect>
       </property>
       <property name="styleSheet">
