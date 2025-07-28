@@ -67,6 +67,7 @@ keys.json
 
 # Python byte code
 *.pyc
+/venv/
 
 # Binaries
 # --------

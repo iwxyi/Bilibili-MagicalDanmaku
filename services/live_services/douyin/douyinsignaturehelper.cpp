@@ -49,41 +49,6 @@ QString DouyinSignatureHelper::getSignature(const QString &roomId, const QString
     return resultSignature;
 }
 
-QString DouyinSignatureHelper::getXBogus(const QString &xMsStub)
-{
-    QMutexLocker locker(&mutex);
-
-    // 初始化（如果需要）
-    initializeIfNeeded();
-
-    pendingStub = xMsStub;
-    resultSignature.clear();
-    eventLoop->quit(); // 确保之前的循环已退出
-
-    // 启动定时器
-    timer->start(200);
-
-    // 阻塞等待结果
-    eventLoop->exec();
-
-    return resultSignature;
-}
-
-/// 获取抖音的 a_bogus
-/// 但是这个接口已经过时了，生成的短签名和当前的很长一串a_bogus参数完全不一致
-/// 如果使用会导致 403（也可能是其他原因）
-QString DouyinSignatureHelper::getXBogusForUrl(const QString &url)
-{
-    QMutexLocker locker(&mutex);
-    initializeIfNeeded();
-    pendingUrl = url;
-    resultSignature.clear();
-    eventLoop->quit();
-    timer->start(200);
-    eventLoop->exec();
-    return resultSignature;
-}
-
 void DouyinSignatureHelper::initializeIfNeeded()
 {
     if (!isInitialized) {
