@@ -5,6 +5,8 @@
 #include <QTabWidget>
 #include <QScrollArea>
 #include <QVBoxLayout>
+#include <QSplitter>
+#include <QTreeWidget>
 #include "codelineeditor.h"
 #include "codeeditorinterface.h"
 #include "conditioneditor.h"
@@ -24,10 +26,16 @@ public:
 
     void insertCodeLine(int index, CodeLineWidgetBase *editor);
 
+private:
+    void loadScriptDefinitionsTree();
+    void connectAllConditionEditors(QWidget *widget);
+
 public slots:
     void loadEmptyCode();
     void setCode(const QString &code);
     void showAppendNewLineMenu();
+    void showDefinitionDesc(const QByteArray &json);
+    void insertText(const QString &text, const QByteArray &json);
 
 signals:
     void signalEditFinished(const QString &code);
@@ -49,6 +57,15 @@ private:
 
     QWidget *languageWidget;
     ConditionEditor *conditionEditor;
+    
+    QSplitter *mainSplitter;
+    QTabWidget *refrenceTab;
+    QTreeWidget *variableTree;
+    QTreeWidget *functionTree;
+    QTreeWidget *commandTree;
+    QTreeWidget *macroTree;
+    QSplitter *definitionDescSplitter;
+    QPlainTextEdit *definitionDescEdit;
 };
 
 #endif // CODEGUIEDITOR_H

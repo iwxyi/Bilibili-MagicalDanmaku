@@ -484,6 +484,7 @@ void MainWindow::syncMagicalRooms()
 #elif defined(Q_OS_LINUX)
          "linux",
 #endif
+         "live_platform", snum(rt->livePlatform),
          "working", (cr->isWorking() ? "1" : "0"), "permission", snum(hasPermission()),
          "fans", snum(ac->currentFans), "guards", snum(ac->currentGuards.size()),
          "area", ac->parentAreaName + "/" + ac->areaName,

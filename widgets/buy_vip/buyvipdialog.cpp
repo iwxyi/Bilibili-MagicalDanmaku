@@ -330,14 +330,43 @@ void BuyVIPDialog::showEvent(QShowEvent *e)
             });
         }
 
-        if (types[1])
-            btns[0]->simulateStatePress();
-        else if (types[2])
+
+        switch (rt->livePlatform)
+        {
+        case Bilibili:
+        {
+            if (types[1])
+                btns[0]->simulateStatePress();
+            else if (types[2])
+                btns[1]->simulateStatePress();
+            else if (types[3])
+                btns[2]->simulateStatePress();
+            else
+                btns.first()->simulateStatePress();
+            break;
+        }
+        case Douyin:
+        {
             btns[1]->simulateStatePress();
-        else if (types[3])
-            btns[2]->simulateStatePress();
-        else
-            btns.first()->simulateStatePress();
+            btns[0]->setEnabled(false);
+            btns[2]->setEnabled(false);
+            ui->typeRRBgCard->setEnabled(false);
+            ui->typeRobotBgCard->setEnabled(false);
+            break;
+        }
+        default:
+        {
+            btns[0]->setEnabled(false);
+            btns[1]->setEnabled(false);
+            btns[2]->setEnabled(false);
+            ui->typeRRBgCard->setEnabled(false);
+            ui->typeRoomBgCard->setEnabled(false);
+            ui->typeRobotBgCard->setEnabled(false);
+            break;
+        }
+        }
+
+
     }
 }
 

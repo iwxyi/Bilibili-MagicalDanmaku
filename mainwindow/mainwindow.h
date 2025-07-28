@@ -709,6 +709,8 @@ private slots:
 
     void on_GPTAnalysisFormatButton_clicked();
 
+    void on_GPTAnalysisDefaultButton_clicked();
+
     void on_removeLongerRandomDanmakuCheck_clicked();
 
     void on_GPTAnalysisEventButton_clicked();

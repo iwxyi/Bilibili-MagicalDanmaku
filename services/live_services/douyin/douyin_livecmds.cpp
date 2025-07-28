@@ -358,10 +358,7 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         qint64 uid = user.id;
         qInfo() << "[关注]" << uname << "关注了主播";
 
-        LiveDanmaku danmaku;
-        danmaku.setUser(uname, snum(uid), "", "");
-        danmaku.setMsgType(MSG_ATTENTION);
-        danmaku.setTime(QDateTime::currentDateTime());
+        LiveDanmaku danmaku(uname, snum(uid), true, QDateTime::currentDateTime());
         danmaku.setFromRoomId(ac->roomId);
         appendNewLiveDanmaku(danmaku);
         emit signalSendAttentionThank(danmaku);

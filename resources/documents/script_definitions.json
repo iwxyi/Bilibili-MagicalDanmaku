@@ -1,0 +1,3220 @@
+{
+    "metadata": {
+        "version": "1.0",
+        "description": "定义脚本的变量、命令、函数和宏定义",
+        "author": "iwxyi"
+    },
+    "variables": [
+        {
+            "name": "uid",
+            "zh_name": "用户ID",
+            "catalog": "user",
+            "description": "是一串数字，确定唯一用户"
+        },
+        {
+            "name": "uname",
+            "zh_name": "用户昵称",
+            "catalog": "user",
+            "description": "需要用户值，例如定时消息，则只是空字符串"
+        },
+        {
+            "name": "username",
+            "zh_name": "用户昵称",
+            "catalog": "user",
+            "description": "和上面一模一样"
+        },
+        {
+            "name": "nickname",
+            "zh_name": "用户昵称",
+            "catalog": "user",
+            "description": "同上"
+        },
+        {
+            "name": "ai_name",
+            "zh_name": "用户智能昵称",
+            "catalog": "user",
+            "description": "优先专属昵称，其次简写昵称，无简写则用原昵称"
+        },
+        {
+            "name": "local_name",
+            "zh_name": "用户专属昵称",
+            "catalog": "user",
+            "description": "实时弹幕中右键-设置专属昵称"
+        },
+        {
+            "name": "simple_name",
+            "zh_name": "用户简写昵称",
+            "catalog": "user",
+            "description": "去除前缀后缀各种字符"
+        },
+        {
+            "name": "room_id",
+            "zh_name": "直播间ID",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "room_name",
+            "zh_name": "直播间标题",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "up_uid",
+            "zh_name": "主播ID",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "up_uname",
+            "zh_name": "主播名字",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "my_uid",
+            "zh_name": "机器人ID",
+            "catalog": "user",
+            "description": ""
+        },
+        {
+            "name": "my_uname",
+            "zh_name": "机器人名字",
+            "catalog": "user",
+            "description": ""
+        },
+        {
+            "name": "csrf",
+            "zh_name": "csrf",
+            "catalog": "user",
+            "description": "用户的csrf token"
+        },
+        {
+            "name": "level",
+            "zh_name": "用户等级",
+            "catalog": "user",
+            "description": "进入直播间没有level"
+        },
+        {
+            "name": "text",
+            "zh_name": "弹幕消息",
+            "catalog": "live",
+            "description": "若有换行，则替换为 %n%"
+        },
+        {
+            "name": "url_text",
+            "zh_name": "URL编码的弹幕消息",
+            "catalog": "live",
+            "description": "针对弹幕消息进行URL编码，用于网址传参，避免一些特殊文本"
+        },
+        {
+            "name": "come_count",
+            "zh_name": "用户进入次数",
+            "catalog": "user",
+            "description": "长时间没来会被清空"
+        },
+        {
+            "name": "come_time",
+            "zh_name": "用户上次进入时间",
+            "catalog": "user",
+            "description": "10位时间戳，第一次进来是0；自动清理一周没来的。如果是串门回来，则是刚跑到对面串门的时间"
+        },
+        {
+            "name": "come_time_delta",
+            "zh_name": "进入时间差",
+            "catalog": "user",
+            "description": "当前时间 - 用户上次进入时间"
+        },
+        {
+            "name": "gift_id",
+            "zh_name": "礼物ID",
+            "catalog": "gift",
+            "description": "盲盒是爆出来的礼物"
+        },
+        {
+            "name": "gift_gold",
+            "zh_name": "礼物金瓜子",
+            "catalog": "gift",
+            "description": "非送礼答谢则没有，盲盒是原始价格"
+        },
+        {
+            "name": "gift_silver",
+            "zh_name": "礼物银瓜子",
+            "catalog": "gift",
+            "description": ""
+        },
+        {
+            "name": "gift_coin",
+            "zh_name": "礼物瓜子",
+            "catalog": "gift",
+            "description": "不分金瓜子银瓜子"
+        },
+        {
+            "name": "coin_gold",
+            "zh_name": "是金瓜子礼物",
+            "catalog": "gift",
+            "description": "金瓜子是1，银瓜子是0"
+        },
+        {
+            "name": "gift_name",
+            "zh_name": "礼物名字",
+            "catalog": "gift",
+            "description": "如果设置了别名，则使用别名"
+        },
+        {
+            "name": "origin_gift_name",
+            "zh_name": "礼物原始名字",
+            "catalog": "gift",
+            "description": "未设置别名时等同于gift_name"
+        },
+        {
+            "name": "gift_num",
+            "zh_name": "礼物数量",
+            "catalog": "gift",
+            "description": ""
+        },
+        {
+            "name": "gift_multi_num",
+            "zh_name": "带单位的礼物数量",
+            "catalog": "gift",
+            "description": "如果为1个，则忽略，为空文本"
+        },
+        {
+            "name": "guard_buy",
+            "zh_name": "开通大航海",
+            "catalog": "gift",
+            "description": "上船消息，gift_name：舰长/提督/总督；guard：3舰长/2提督/1总督"
+        },
+        {
+            "name": "guard_frist",
+            "zh_name": "初次上船",
+            "catalog": "gift",
+            "description": "初次1，重新上船2，其余0"
+        },
+        {
+            "name": "total_gold",
+            "zh_name": "用户总共金瓜子",
+            "catalog": "gift",
+            "description": "该用户一直以来赠送的所有金瓜子数量"
+        },
+        {
+            "name": "total_silver",
+            "zh_name": "用户总共银瓜子",
+            "catalog": "gift",
+            "description": "同上"
+        },
+        {
+            "name": "anchor_room_id",
+            "zh_name": "粉丝勋章房间ID",
+            "catalog": "live",
+            "description": "进入、弹幕才有粉丝牌，送礼只能获取粉丝牌名字"
+        },
+        {
+            "name": "medal_name",
+            "zh_name": "粉丝勋章名称",
+            "catalog": "live",
+            "description": "同上"
+        },
+        {
+            "name": "medal_level",
+            "zh_name": "粉丝勋章等级",
+            "catalog": "live",
+            "description": "同上"
+        },
+        {
+            "name": "medal_up",
+            "zh_name": "粉丝勋章主播昵称",
+            "catalog": "live",
+            "description": "只有弹幕消息有"
+        },
+        {
+            "name": "nickname_len",
+            "zh_name": "用户昵称长度",
+            "catalog": "user",
+            "description": "用户昵称长度"
+        },
+        {
+            "name": "giftname_len",
+            "zh_name": "礼物名字长度",
+            "catalog": "user",
+            "description": ""
+        },
+        {
+            "name": "name_sum_len",
+            "zh_name": "用户昵称长度+礼物名字长度",
+            "catalog": "user",
+            "description": "",
+            "visible": false
+        },
+        {
+            "name": "ainame_sum_len",
+            "zh_name": "用户短昵称长度+礼物名字长度",
+            "catalog": "user",
+            "description": "",
+            "visible": false
+        },
+        {
+            "name": "danmu_longest",
+            "zh_name": "当前账号的最长弹幕",
+            "catalog": "user",
+            "description": ""
+        },
+        {
+            "name": "new_attention",
+            "zh_name": "新关注",
+            "catalog": "live",
+            "description": "最近50个关注内"
+        },
+        {
+            "name": "guard_buy_count",
+            "zh_name": "上船次数",
+            "catalog": "gift",
+            "description": "舰长+1、提督+10、总督+100（只统计程序运行时），0为初次上船"
+        },
+        {
+            "name": "pking",
+            "zh_name": "大乱斗中",
+            "catalog": "live",
+            "description": "是：1，否：0"
+        },
+        {
+            "name": "pk_video",
+            "zh_name": "视频大乱斗",
+            "catalog": "live",
+            "description": "是：1，否：0"
+        },
+        {
+            "name": "pk_id",
+            "zh_name": "大乱斗编号",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "pk_room_id",
+            "zh_name": "对面房间号",
+            "catalog": "pk",
+            "description": "未在PK中则为空，下同"
+        },
+        {
+            "name": "pk_uid",
+            "zh_name": "对面主播ID",
+            "catalog": "pk",
+            "description": ""
+        },
+        {
+            "name": "pk_uname",
+            "zh_name": "对面主播昵称",
+            "catalog": "pk",
+            "description": ""
+        },
+        {
+            "name": "pk_opposite",
+            "zh_name": "对面进入",
+            "catalog": "pk",
+            "description": "需开启串门提示"
+        },
+        {
+            "name": "pk_view_return",
+            "zh_name": "去对面串门回来",
+            "catalog": "pk",
+            "description": "需开启串门提示"
+        },
+        {
+            "name": "pk_count",
+            "zh_name": "匹配次数",
+            "catalog": "pk",
+            "description": "未在PK中为0，下同"
+        },
+        {
+            "name": "pk_my_votes",
+            "zh_name": "己方积分",
+            "catalog": "pk",
+            "description": ""
+        },
+        {
+            "name": "pk_match_votes",
+            "zh_name": "对方积分",
+            "catalog": "pk",
+            "description": ""
+        },
+        {
+            "name": "area_id",
+            "zh_name": "分区ID",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "area_name",
+            "zh_name": "分区名字",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "parent_area_id",
+            "zh_name": "主分区ID",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "parent_area_name",
+            "zh_name": "主分区名字",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "today_come",
+            "zh_name": "今日进入人次",
+            "catalog": "statistic",
+            "description": "每个人可能重复进入"
+        },
+        {
+            "name": "today_newbie_msg",
+            "zh_name": "今日新人人数",
+            "catalog": "statistic",
+            "description": ""
+        },
+        {
+            "name": "today_danmaku",
+            "zh_name": "今日弹幕总数",
+            "catalog": "statistic",
+            "description": ""
+        },
+        {
+            "name": "today_fans",
+            "zh_name": "今日新增粉丝数",
+            "catalog": "statistic",
+            "description": ""
+        },
+        {
+            "name": "today_gold",
+            "zh_name": "今日金瓜子总数",
+            "catalog": "statistic",
+            "description": ""
+        },
+        {
+            "name": "today_silver",
+            "zh_name": "今日银瓜子总数",
+            "catalog": "statistic",
+            "description": ""
+        },
+        {
+            "name": "today_guard",
+            "zh_name": "今日上船人次",
+            "catalog": "statistic",
+            "description": "续多个月算多次"
+        },
+        {
+            "name": "today_max_ppl",
+            "zh_name": "今日最高人气",
+            "catalog": "statistic",
+            "description": ""
+        },
+        {
+            "name": "popularity",
+            "zh_name": "当前人气",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "guard_count",
+            "zh_name": "大航海人数",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "fans_count",
+            "zh_name": "总粉丝数",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "fans_club",
+            "zh_name": "总粉丝团",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "admin",
+            "zh_name": "房管",
+            "catalog": "live",
+            "description": "只有弹幕、进入才有"
+        },
+        {
+            "name": "guard",
+            "zh_name": "大航海级别",
+            "catalog": "user",
+            "description": "只有弹幕消息/购买舰长/舰长进入有；普通0，舰长3，提督2，总督1"
+        },
+        {
+            "name": "guard_name",
+            "zh_name": "大航海身份",
+            "catalog": "user",
+            "description": "“舰长”/“提督”/“总督”，非船员为空"
+        },
+        {
+            "name": "admin_or_guard",
+            "zh_name": "是否是房管或舰长",
+            "catalog": "user",
+            "description": "只有弹幕消息有，0或1"
+        },
+        {
+            "name": "online_rank",
+            "zh_name": "高能榜",
+            "catalog": "live",
+            "description": "返回高能榜排名，若不在高能榜上，则为0"
+        },
+        {
+            "name": "vip",
+            "zh_name": "姥爷",
+            "catalog": "user",
+            "description": "同上"
+        },
+        {
+            "name": "svip",
+            "zh_name": "年费姥爷",
+            "catalog": "user",
+            "description": "同上"
+        },
+        {
+            "name": "uidentity",
+            "zh_name": "正式会员",
+            "catalog": "user",
+            "description": "同上"
+        },
+        {
+            "name": "iphone",
+            "zh_name": "手机号认证",
+            "catalog": "user",
+            "description": "同上"
+        },
+        {
+            "name": "number",
+            "zh_name": "数量",
+            "catalog": "gift",
+            "description": "各种数量的通用写法，如礼物数量等"
+        },
+        {
+            "name": "time_hour",
+            "zh_name": "当前小时",
+            "catalog": "time",
+            "description": ""
+        },
+        {
+            "name": "time_minute",
+            "zh_name": "当前分钟",
+            "catalog": "time",
+            "description": ""
+        },
+        {
+            "name": "time_second",
+            "zh_name": "当前秒",
+            "catalog": "time",
+            "description": ""
+        },
+        {
+            "name": "time_day",
+            "zh_name": "当前日期",
+            "catalog": "time",
+            "description": ""
+        },
+        {
+            "name": "time_month",
+            "zh_name": "当前月份",
+            "catalog": "time",
+            "description": ""
+        },
+        {
+            "name": "time_year",
+            "zh_name": "当前年份",
+            "catalog": "time",
+            "description": ""
+        },
+        {
+            "name": "time_day_week",
+            "zh_name": "当前星期",
+            "catalog": "time",
+            "description": "1~7"
+        },
+        {
+            "name": "time_day_year",
+            "zh_name": "今年第几天",
+            "catalog": "time",
+            "description": ""
+        },
+        {
+            "name": "timestamp",
+            "zh_name": "当前时间戳",
+            "catalog": "time",
+            "description": "10位时间戳，可用于比较进入时间、多久没来等"
+        },
+        {
+            "name": "timestamp13",
+            "zh_name": "当前时间戳13",
+            "catalog": "time",
+            "description": "13位时间戳"
+        },
+        {
+            "name": "in_game_users",
+            "zh_name": "在游戏用户中",
+            "catalog": "game",
+            "description": "uid在gameUsers[0]中（高性能，但重启清空）"
+        },
+        {
+            "name": "in_game_numbers",
+            "zh_name": "在游戏数值中",
+            "catalog": "game",
+            "description": "uid在gameNumbers[0]中"
+        },
+        {
+            "name": "in_game_texts",
+            "zh_name": "在游戏文本中",
+            "catalog": "game",
+            "description": "text在gameTexts[0]中，空格等都需要一模一样"
+        },
+        {
+            "name": "app_name",
+            "zh_name": "程序名字",
+            "catalog": "program",
+            "description": "返回exe名字（不带后缀），可用于多开区分"
+        },
+        {
+            "name": "app_path",
+            "zh_name": "程序目录",
+            "catalog": "program",
+            "description": "数据路径，绿色版为安装目录"
+        },
+        {
+            "name": "www_path",
+            "zh_name": "网站目录",
+            "catalog": "program",
+            "description": "数据路径下的www目录的绝对路径"
+        },
+        {
+            "name": "server_domain",
+            "zh_name": "网站域名",
+            "catalog": "program",
+            "description": "默认为 http://localhost"
+        },
+        {
+            "name": "server_port",
+            "zh_name": "网站端口",
+            "catalog": "program",
+            "description": "默认为 5520"
+        },
+        {
+            "name": "server_url",
+            "zh_name": "网站网址",
+            "catalog": "program",
+            "description": "等于server_domain:server_port"
+        },
+        {
+            "name": "living",
+            "zh_name": "直播中",
+            "catalog": "live",
+            "description": "直播：1，轮播：2，未开播：0"
+        },
+        {
+            "name": "is_up",
+            "zh_name": "是主播",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "is_me",
+            "zh_name": "是机器人",
+            "catalog": "live",
+            "description": ""
+        },
+        {
+            "name": "is_room_medal",
+            "zh_name": "戴本勋章",
+            "catalog": "live",
+            "description": "戴本直播间的粉丝勋章"
+        },
+        {
+            "name": "care",
+            "zh_name": "特别关心",
+            "catalog": "live",
+            "description": "是：1，否：0"
+        },
+        {
+            "name": "strong_notify",
+            "zh_name": "强提醒",
+            "catalog": "live",
+            "description": "是：1，否：0"
+        },
+        {
+            "name": "not_welcome",
+            "zh_name": "不自动欢迎",
+            "catalog": "live",
+            "description": "不欢迎：1，欢迎：0"
+        },
+        {
+            "name": "not_reply",
+            "zh_name": "不自动回复",
+            "catalog": "live",
+            "description": "是否是机器人发的弹幕，是：1，否：0"
+        },
+        {
+            "name": "blocked",
+            "zh_name": "被禁言",
+            "catalog": "live",
+            "description": "禁言：1，未禁言0"
+        },
+        {
+            "name": "playing_song",
+            "zh_name": "当前歌曲",
+            "catalog": "song",
+            "description": "点歌姬没有播放歌曲则为空"
+        },
+        {
+            "name": "song_order_uname",
+            "zh_name": "当前歌曲点歌者",
+            "catalog": "song",
+            "description": "同上"
+        },
+        {
+            "name": "random100",
+            "zh_name": "随机100",
+            "catalog": "game",
+            "description": "1~100的随机数，同代码块中的都将随机替换为同一个数，可用于设置抽奖概率"
+        },
+        {
+            "name": "special",
+            "zh_name": "特别关注",
+            "catalog": "live",
+            "description": "关注答谢里可用，判断特别关注"
+        },
+        {
+            "name": "spread",
+            "zh_name": "推广方式",
+            "catalog": "live",
+            "description": "一般为空，可能是“星光推广”"
+        },
+        {
+            "name": "pk_magical_room",
+            "zh_name": "对面也用神奇弹幕",
+            "catalog": "pk",
+            "description": "是：1，否：0"
+        },
+        {
+            "name": "cd0~cd99",
+            "zh_name": "冷却通道",
+            "catalog": "program",
+            "description": "冷却通道，等同于 %>cd(X)%"
+        },
+        {
+            "name": "wait0~wait99",
+            "zh_name": "等待通道",
+            "catalog": "program",
+            "description": "等待通道，等同于 %>wait(X)%"
+        },
+        {
+            "name": "local_mode",
+            "zh_name": "本地模式",
+            "catalog": "program",
+            "description": "是：1，否：0"
+        },
+        {
+            "name": "repeat_10",
+            "zh_name": "重复弹幕10",
+            "catalog": "live",
+            "description": "最后一条与最近10条弹幕是否重复，是：1，否：0"
+        },
+        {
+            "name": "playing_tts",
+            "zh_name": "播放TTS",
+            "catalog": "program",
+            "description": "是否正在朗读弹幕/文字，是：1，否：0"
+        },
+        {
+            "name": "mouse_x",
+            "zh_name": "鼠标X",
+            "catalog": "program",
+            "description": "获取当前鼠标的全局X坐标，相对于主屏幕左上角，若在左边副屏则 x 可能是负数"
+        },
+        {
+            "name": "mouse_y",
+            "zh_name": "鼠标Y",
+            "catalog": "program",
+            "description": "同上"
+        },
+        {
+            "name": "hour",
+            "zh_name": "时辰",
+            "catalog": "greet",
+            "description": "早上/中午/下午/晚上"
+        },
+        {
+            "name": "greet",
+            "zh_name": "招呼",
+            "catalog": "greet",
+            "description": "您好、早上好、晚上好"
+        },
+        {
+            "name": "all_greet",
+            "zh_name": "带语气词的招呼",
+            "catalog": "greet",
+            "description": "你好、早上好啊、午饭吃了吗、晚上好呀、怎么还没睡~"
+        },
+        {
+            "name": "tone",
+            "zh_name": "语气词",
+            "catalog": "greet",
+            "description": "“啊”或“呀”"
+        },
+        {
+            "name": "lela",
+            "zh_name": "语气词",
+            "catalog": "greet",
+            "description": "“了”或“啦”"
+        },
+        {
+            "name": "punc",
+            "zh_name": "标点",
+            "catalog": "greet",
+            "description": "“~”或“！”"
+        },
+        {
+            "name": "tone/punc",
+            "zh_name": "语气词或标点",
+            "catalog": "greet",
+            "description": "上面两项，适用于和%greet%结合"
+        }
+    ],
+    "calculate_variables": [
+        {
+            "name": "%{key}%",
+            "zh_name": "获取配置文件中的值",
+            "catalog": "program",
+            "description": "key为setValue(key)中的键值，未设置为空"
+        },
+        {
+            "name": "%[exp]%",
+            "zh_name": "简单的数值计算",
+            "catalog": "program",
+            "description": "暂时只支持加减乘除，不支持括号、小数"
+        },
+        {
+            "name": "%(name)%",
+            "zh_name": "将用户昵称转换为uid",
+            "catalog": "program",
+            "description": "需要实时弹幕上显示才有效，允许部分昵称"
+        }
+    ],
+    "functions": [
+        {
+            "name": "cd",
+            "zh_name": "冷却通道",
+            "catalog": "program",
+            "description": "获取冷却通道剩下的秒数",
+            "parameters": [
+                {
+                    "name": "channel",
+                    "description": "通道编号",
+                    "optional": false
+                }
+            ],
+            "return": "剩余秒数"
+        },
+        {
+            "name": "wait",
+            "zh_name": "等待通道",
+            "catalog": "program",
+            "description": "获取等待通道不是自己的弹幕数量",
+            "parameters": [
+                {
+                    "name": "channel",
+                    "description": "通道编号",
+                    "optional": false
+                }
+            ],
+            "return": "剩下要等待的弹幕数量"
+        },
+        {
+            "name": "time",
+            "zh_name": "格式化时间",
+            "catalog": "time",
+            "description": "当前时间转换为数值，如 yyyy-MM-dd",
+            "parameters": [
+                {
+                    "name": "format",
+                    "description": "时间格式字符串，如 yyyy-MM-dd",
+                    "optional": false
+                }
+            ],
+            "return": "时间字符串，例如 2025-06-01 10:00:00"
+        },
+        {
+            "name": "unameToUid",
+            "zh_name": "查找用户名",
+            "catalog": "user",
+            "description": "由部分昵称倒找弹幕记录，获得UID",
+            "parameters": [
+                {
+                    "name": "uname",
+                    "description": "用户昵称（可部分匹配）",
+                    "optional": false
+                }
+            ],
+            "return": "用户ID"
+        },
+        {
+            "name": "ignoreEmpty",
+            "zh_name": "忽略空",
+            "catalog": "string",
+            "description": "当text为空字符串或者各种括号、引号等包裹的空白内容时进行忽略，若非空则返回原text",
+            "parameters": [
+                {
+                    "name": "text",
+                    "description": "待判断文本",
+                    "optional": false
+                }
+            ],
+            "return": "忽略空括号之后的文本"
+        },
+        {
+            "name": "inputText",
+            "zh_name": "输入文本",
+            "catalog": "string",
+            "description": "显示输入框弹窗，手动输入文本",
+            "parameters": [
+                {
+                    "name": "title",
+                    "description": "输入框标题",
+                    "optional": true
+                },
+                {
+                    "name": "default",
+                    "description": "默认值",
+                    "optional": true
+                }
+            ],
+            "return": "输入的文本"
+        },
+        {
+            "name": "strlen",
+            "zh_name": "取文本长度",
+            "catalog": "string",
+            "description": "一串文字的长度",
+            "parameters": [
+                {
+                    "name": "text",
+                    "description": "要计算长度的文本",
+                    "optional": false
+                }
+            ],
+            "return": "字符串长度"
+        },
+        {
+            "name": "trim",
+            "zh_name": "删首尾空",
+            "catalog": "string",
+            "description": "去掉字符串首尾的空格和制表符",
+            "parameters": [
+                {
+                    "name": "text",
+                    "description": "要处理的文本",
+                    "optional": false
+                }
+            ],
+            "return": "删首尾空后的文本"
+        },
+        {
+            "name": "substr",
+            "zh_name": "取子串",
+            "catalog": "string",
+            "description": "获取文字的一部分",
+            "parameters": [
+                {
+                    "name": "text",
+                    "description": "原始文本",
+                    "optional": false
+                },
+                {
+                    "name": "left",
+                    "description": "起始位置",
+                    "optional": false
+                },
+                {
+                    "name": "length",
+                    "description": "子串长度",
+                    "optional": false
+                }
+            ],
+            "return": "子串"
+        },
+        {
+            "name": "simpleName",
+            "zh_name": "昵称简化",
+            "catalog": "string",
+            "description": "",
+            "parameters": [
+                {
+                    "name": "name",
+                    "description": "昵称",
+                    "optional": false
+                }
+            ],
+            "return": "简化后的昵称"
+        },
+        {
+            "name": "simpleNum",
+            "zh_name": "数值简化",
+            "catalog": "string",
+            "description": "",
+            "parameters": [
+                {
+                    "name": "number",
+                    "description": "原始数值",
+                    "optional": false
+                }
+            ],
+            "return": "简化后的数值"
+        },
+        {
+            "name": "inGameUsers",
+            "zh_name": "在游戏用户中",
+            "catalog": "game",
+            "description": "listId可省略。程序重启数据会清空",
+            "parameters": [
+                {
+                    "name": "listId",
+                    "description": "列表ID",
+                    "optional": true
+                },
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                }
+            ],
+            "return": "在游戏中：1，不在游戏中：0"
+        },
+        {
+            "name": "inGameNumbers",
+            "zh_name": "在游戏数值中",
+            "catalog": "game",
+            "description": "listId可省略，程序重启数据仍在",
+            "parameters": [
+                {
+                    "name": "listId",
+                    "description": "列表ID",
+                    "optional": true
+                },
+                {
+                    "name": "num",
+                    "description": "数值",
+                    "optional": false
+                }
+            ],
+            "return": "在游戏中：1，不在游戏中：0"
+        },
+        {
+            "name": "inGameTexts",
+            "zh_name": "在游戏文本中",
+            "catalog": "game",
+            "description": "listId可省略，程序重启数据仍在",
+            "parameters": [
+                {
+                    "name": "listId",
+                    "description": "列表ID",
+                    "optional": true
+                },
+                {
+                    "name": "text",
+                    "description": "文本",
+                    "optional": false
+                }
+            ],
+            "return": "在游戏中：1，不在游戏中：0"
+        },
+        {
+            "name": "getValue",
+            "zh_name": "取变量值",
+            "catalog": "program",
+            "description": "等同于 %{key}%，默认值def可省略",
+            "parameters": [
+                {
+                    "name": "key",
+                    "description": "变量名",
+                    "optional": false
+                },
+                {
+                    "name": "def",
+                    "description": "默认值",
+                    "optional": true
+                }
+            ],
+            "return": "变量值"
+        },
+        {
+            "name": "random",
+            "zh_name": "取随机数",
+            "catalog": "program",
+            "description": "包含两端数字",
+            "parameters": [
+                {
+                    "name": "min",
+                    "description": "最小值",
+                    "optional": false
+                },
+                {
+                    "name": "max",
+                    "description": "最大值",
+                    "optional": false
+                }
+            ],
+            "return": "随机数"
+        },
+        {
+            "name": "randomArray",
+            "zh_name": "随机数组",
+            "catalog": "math",
+            "description": "任意多参数，随机返回其中一个",
+            "parameters": [
+                {
+                    "name": "array",
+                    "description": "英文逗号分隔的多个内容",
+                    "optional": false
+                }
+            ],
+            "return": "随机内容"
+        },
+        {
+            "name": "filterReject",
+            "zh_name": "过滤器拒绝",
+            "catalog": "program",
+            "description": "被对应filter拒绝则返回1,否则返回0（参考过滤器示例）",
+            "parameters": [
+                {
+                    "name": "filter",
+                    "description": "过滤器名",
+                    "optional": false
+                }
+            ],
+            "return": "被拒绝：1，未被拒绝：0"
+        },
+        {
+            "name": "inFilterList",
+            "zh_name": "在过滤列表中",
+            "catalog": "program",
+            "description": "包含在空格分隔的词库中则返回1（参考过滤器示例）",
+            "parameters": [
+                {
+                    "name": "filter",
+                    "description": "过滤器名",
+                    "optional": false
+                },
+                {
+                    "name": "content",
+                    "description": "内容",
+                    "optional": false
+                }
+            ],
+            "return": "在过滤列表中：1，不在过滤列表中：0"
+        },
+        {
+            "name": "inFilterMatch",
+            "zh_name": "在过滤正则中",
+            "catalog": "program",
+            "description": "满足正则则返回1（参考过滤器示例）",
+            "parameters": [
+                {
+                    "name": "filter",
+                    "description": "过滤器名",
+                    "optional": false
+                },
+                {
+                    "name": "content",
+                    "description": "内容",
+                    "optional": false
+                }
+            ],
+            "return": "在过滤正则中：1，不在过滤正则中：0"
+        },
+        {
+            "name": "fileExists",
+            "zh_name": "文件存在",
+            "catalog": "file",
+            "description": "有这个文件则返回1，否则0",
+            "parameters": [
+                {
+                    "name": "filePath",
+                    "description": "文件路径",
+                    "optional": false
+                }
+            ],
+            "return": "文件存在：1，文件不存在：0"
+        },
+        {
+            "name": "abs",
+            "zh_name": "取绝对值",
+            "catalog": "math",
+            "description": "",
+            "parameters": [
+                {
+                    "name": "val",
+                    "description": "原始数值",
+                    "optional": false
+                }
+            ],
+            "return": "绝对值"
+        },
+        {
+            "name": "log2",
+            "zh_name": "取对数2",
+            "catalog": "math",
+            "description": "",
+            "parameters": [
+                {
+                    "name": "val",
+                    "description": "原始数值",
+                    "optional": false
+                }
+            ],
+            "return": "对数"
+        },
+        {
+            "name": "log10",
+            "zh_name": "取对数10",
+            "catalog": "math",
+            "description": "",
+            "parameters": [
+                {
+                    "name": "val",
+                    "description": "原始数值",
+                    "optional": false
+                }
+            ],
+            "return": "对数"
+        },
+        {
+            "name": "pow2",
+            "zh_name": "取平方",
+            "catalog": "math",
+            "description": "",
+            "parameters": [
+                {
+                    "name": "val",
+                    "description": "原始数值",
+                    "optional": false
+                }
+            ],
+            "return": "乘方"
+        },
+        {
+            "name": "pow",
+            "zh_name": "取乘方",
+            "catalog": "math",
+            "description": "",
+            "parameters": [
+                {
+                    "name": "val",
+                    "description": "底数",
+                    "optional": false
+                },
+                {
+                    "name": "a",
+                    "description": "指数",
+                    "optional": false
+                }
+            ],
+            "return": "乘方结果"
+        },
+        {
+            "name": "pasteText",
+            "zh_name": "粘贴文字",
+            "catalog": "program",
+            "description": "获取剪贴板的文本",
+            "parameters": [],
+            "return": "剪贴板文本"
+        },
+        {
+            "name": "getScreenPositionColor",
+            "zh_name": "获取屏幕位置颜色",
+            "catalog": "program",
+            "description": "",
+            "parameters": [
+                {
+                    "name": "wid",
+                    "description": "屏幕ID（一般为0，表示主屏幕）",
+                    "optional": false
+                },
+                {
+                    "name": "x",
+                    "description": "横坐标",
+                    "optional": false
+                },
+                {
+                    "name": "y",
+                    "description": "纵坐标",
+                    "optional": false
+                }
+            ],
+            "return": "颜色十六进制，例如 #f0f0f0"
+        },
+        {
+            "name": "getWindowPositionColor",
+            "zh_name": "获取窗口位置颜色",
+            "catalog": "program",
+            "description": "",
+            "parameters": [
+                {
+                    "name": "name",
+                    "description": "窗口名（可以是部分）或句柄ID，不能是最小化窗口",
+                    "optional": false
+                },
+                {
+                    "name": "x",
+                    "description": "横坐标",
+                    "optional": false
+                },
+                {
+                    "name": "y",
+                    "description": "纵坐标",
+                    "optional": false
+                }
+            ],
+            "return": "颜色"
+        },
+        {
+            "name": "execReplyResult",
+            "zh_name": "执行回复结果",
+            "catalog": "program",
+            "description": "获取满足text的第一个回复的执行结果；结果中若存在命令则会执行，若有换行符“\\n”则会返回用它分隔的单行文字",
+            "parameters": [
+                {
+                    "name": "text",
+                    "description": "回复内容",
+                    "optional": false
+                }
+            ],
+            "return": "执行结果"
+        },
+        {
+            "name": "execEventResult",
+            "zh_name": "执行事件结果",
+            "catalog": "program",
+            "description": "获取指定事件的执行结果，重复则取第一个，同上",
+            "parameters": [
+                {
+                    "name": "event",
+                    "description": "事件名",
+                    "optional": false
+                }
+            ],
+            "return": "执行结果"
+        },
+        {
+            "name": "readTextFile",
+            "zh_name": "读取文本文件",
+            "catalog": "file",
+            "description": "读取文本文件中的所有内容，所有换行符 \\n 将会被替换为 %n%",
+            "parameters": [
+                {
+                    "name": "fileName",
+                    "description": "文件名",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "getTextFileLine",
+            "zh_name": "获取文本文件行",
+            "catalog": "file",
+            "description": "读取文本文件中的第 line 行，行数从 1 开始",
+            "parameters": [
+                {
+                    "name": "fileName",
+                    "description": "文件名",
+                    "optional": false
+                },
+                {
+                    "name": "line",
+                    "description": "行号",
+                    "optional": false
+                }
+            ],
+            "return": "指定行的内容"
+        },
+        {
+            "name": "getTextFileLineCount",
+            "zh_name": "获取文本文件行数",
+            "catalog": "file",
+            "description": "读取文本文件中的所有行数（以 \\n 为准）",
+            "parameters": [
+                {
+                    "name": "fileName",
+                    "description": "文件名",
+                    "optional": false
+                }
+            ],
+            "return": "行数"
+        },
+        {
+            "name": "compareScreenShot",
+            "zh_name": "比较窗口截图",
+            "catalog": "program",
+            "description": "比较当前窗口的截图与指定图片文件的相似度。具体请参考示例：定时监测屏幕内容",
+            "parameters": [
+                {
+                    "name": "screenId",
+                    "description": "屏幕ID，只有一个屏幕则为0",
+                    "optional": false
+                },
+                {
+                    "name": "x",
+                    "description": "横坐标",
+                    "optional": false
+                },
+                {
+                    "name": "y",
+                    "description": "纵坐标",
+                    "optional": false
+                },
+                {
+                    "name": "w",
+                    "description": "宽度",
+                    "optional": false
+                },
+                {
+                    "name": "h",
+                    "description": "高度",
+                    "optional": false
+                },
+                {
+                    "name": "path",
+                    "description": "要比较的文件(图片文件)路径",
+                    "optional": false
+                }
+            ],
+            "return": "返回一个0到100的数字，表示相似程度。"
+        },
+        {
+            "name": "getScreenWidth",
+            "zh_name": "获取屏幕宽度",
+            "catalog": "program",
+            "description": "获取指定显示器的屏幕宽度。",
+            "parameters": [
+                {
+                    "name": "screenId",
+                    "description": "屏幕ID，如果不指定屏幕ID，则默认为0",
+                    "optional": true
+                }
+            ],
+            "return": "屏幕宽度"
+        },
+        {
+            "name": "getScreenHeight",
+            "zh_name": "获取屏幕高度",
+            "catalog": "program",
+            "description": "获取指定显示器的屏幕高度。",
+            "parameters": [
+                {
+                    "name": "screenId",
+                    "description": "屏幕ID，如果不指定屏幕ID，则默认为0",
+                    "optional": true
+                }
+            ],
+            "return": "屏幕高度"
+        },
+        {
+            "name": "findWindow",
+            "zh_name": "查找窗口",
+            "catalog": "program",
+            "description": "根据完整的窗口标题或类名来查找顶级窗口（不搜索子窗口），返回一个窗口句柄（hwnd），可用于作为修改窗口的命令的参数。\n结合 spy++工具来获取标题或类名",
+            "parameters": [
+                {
+                    "name": "title",
+                    "description": "窗口标题或类名",
+                    "optional": false
+                }
+            ],
+            "return": "窗口句柄"
+        },
+        {
+            "name": "getForegroundWindow",
+            "zh_name": "获取前景窗口",
+            "catalog": "program",
+            "description": "获取当前具有焦点的窗口的句柄（hwnd）",
+            "parameters": [],
+            "return": "窗口句柄"
+        },
+        {
+            "name": "isWindowFullScreen",
+            "zh_name": "窗口是否全屏",
+            "catalog": "program",
+            "description": "判断窗口是否全屏（不包含最大化），可用于判断游戏全屏、视频全屏",
+            "parameters": [
+                {
+                    "name": "hwnd",
+                    "description": "窗口句柄",
+                    "optional": false
+                }
+            ],
+            "return": "窗口是否全屏"
+        },
+        {
+            "name": "getCursorPos",
+            "zh_name": "获取鼠标位置",
+            "catalog": "program",
+            "description": "获取当前鼠标的位置，参数为 \"x\" 或 \"y\"",
+            "parameters": [
+                {
+                    "name": "axis",
+                    "description": "\"x\" 或 \"y\"",
+                    "optional": false
+                }
+            ],
+            "return": "鼠标位置"
+        },
+        {
+            "name": "getWindowRect",
+            "zh_name": "获取窗口位置",
+            "catalog": "program",
+            "description": "获取指定窗口几何坐标的值",
+            "parameters": [
+                {
+                    "name": "hwnd",
+                    "description": "窗口句柄",
+                    "optional": false
+                },
+                {
+                    "name": "attr",
+                    "description": "x/y/w/h 之一",
+                    "optional": false
+                }
+            ],
+            "return": "窗口位置"
+        },
+        {
+            "name": "getWindowFromPoint",
+            "zh_name": "获取坐标所在窗口",
+            "catalog": "program",
+            "description": "获取屏幕上坐标为(x,y)的位置指向的最前面的窗口",
+            "parameters": [
+                {
+                    "name": "x",
+                    "description": "横坐标",
+                    "optional": false
+                },
+                {
+                    "name": "y",
+                    "description": "纵坐标",
+                    "optional": false
+                }
+            ],
+            "return": "窗口句柄"
+        }
+    ],
+    "commands": [
+        {
+            "name": "abort",
+            "zh_name": "终止",
+            "catalog": "program",
+            "description": "终止本流程后面弹幕",
+            "parameters": []
+        },
+        {
+            "name": "block",
+            "zh_name": "禁言",
+            "catalog": "live",
+            "description": "禁言用户，需要管理员权限",
+            "parameters": [
+                {
+                    "name": "uid",
+                    "description": "用户ID，一般使用%uid%获得",
+                    "optional": false
+                },
+                {
+                    "name": "hour",
+                    "description": "禁言时长（小时）",
+                    "optional": true
+                }
+            ]
+        },
+        {
+            "name": "unblock",
+            "zh_name": "解禁",
+            "catalog": "live",
+            "description": "解除禁言",
+            "parameters": [
+                {
+                    "name": "uid",
+                    "description": "用户ID，一般使用%uid%获得",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "eternalBlock",
+            "zh_name": "永久禁言",
+            "catalog": "live",
+            "description": "永久禁言某用户（需保持程序在线）",
+            "parameters": [
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                },
+                {
+                    "name": "markname",
+                    "description": "标记名字（避免时间长了改名不知道）",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "appointAdmin",
+            "zh_name": "任命房管",
+            "catalog": "live",
+            "description": "任命用户为房管，仅主播可用",
+            "parameters": [
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "dismissAdmin",
+            "zh_name": "撤销房管",
+            "catalog": "live",
+            "description": "取消用户的房管身份，仅主播可用",
+            "parameters": [
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "delay",
+            "zh_name": "延时",
+            "catalog": "program",
+            "description": "延迟执行后面所有待执行的操作，单位毫秒",
+            "parameters": [
+                {
+                    "name": "msecond",
+                    "description": "延迟毫秒数",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "addGameUser",
+            "zh_name": "添加游戏用户",
+            "catalog": "game",
+            "description": "添加用户至游戏队列，listId从0到99，使用%>inGameUsers(listId, uid)%判断在不在。\n程序重启后清空，长期保存可使用addGameNumbers",
+            "parameters": [
+                {
+                    "name": "listId",
+                    "description": "队列ID",
+                    "optional": true
+                },
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "removeGameUser",
+            "zh_name": "移除游戏用户",
+            "catalog": "game",
+            "description": "从游戏队列中移除用户",
+            "parameters": [
+                {
+                    "name": "listId",
+                    "description": "队列ID",
+                    "optional": true
+                },
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "addGameNumber",
+            "zh_name": "添加游戏数值",
+            "catalog": "game",
+            "description": "添加用户至游戏队列，listId从0到99，使用%>inGameNumbers(listId, uid)%",
+            "parameters": [
+                {
+                    "name": "listId",
+                    "description": "队列ID",
+                    "optional": true
+                },
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "removeGameNumber",
+            "zh_name": "移除游戏数值",
+            "catalog": "game",
+            "description": "从游戏队列中移除数值",
+            "parameters": [
+                {
+                    "name": "listId",
+                    "description": "队列ID",
+                    "optional": true
+                },
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "addGameText",
+            "zh_name": "添加游戏文本",
+            "catalog": "game",
+            "description": "添加用户至游戏队列，listId从0到99，使用%>inGameTexts(listId, uid)%",
+            "parameters": [
+                {
+                    "name": "listId",
+                    "description": "队列ID",
+                    "optional": true
+                },
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "removeGameText",
+            "zh_name": "移除游戏文本",
+            "catalog": "game",
+            "description": "从游戏队列中移除用户",
+            "parameters": [
+                {
+                    "name": "listId",
+                    "description": "队列ID",
+                    "optional": true
+                },
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "showValueTable",
+            "zh_name": "显示值表格",
+            "catalog": "program",
+            "description": "显示多个值的表格，详见下方示例",
+            "parameters": [
+                {
+                    "name": "caption",
+                    "description": "表格标题",
+                    "optional": false
+                },
+                {
+                    "name": "key",
+                    "description": "主键",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "sendGift",
+            "zh_name": "赠送礼物",
+            "catalog": "live",
+            "description": "赠送礼物，只支持id的方式",
+            "parameters": [
+                {
+                    "name": "giftId",
+                    "description": "礼物ID",
+                    "optional": false
+                },
+                {
+                    "name": "num",
+                    "description": "数量",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "execRemoteCommand",
+            "zh_name": "执行远程命令",
+            "catalog": "program",
+            "description": "执行远程控制（见下面）",
+            "parameters": [
+                {
+                    "name": "cmd",
+                    "description": "命令",
+                    "optional": false
+                },
+                {
+                    "name": "no_notify",
+                    "description": "不发送回馈通知（可选）",
+                    "optional": true
+                }
+            ]
+        },
+        {
+            "name": "sendPrivateMsg",
+            "zh_name": "发送私信",
+            "catalog": "live",
+            "description": "向指定用户发送私信",
+            "parameters": [
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                },
+                {
+                    "name": "msg",
+                    "description": "消息内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "sendRoomMsg",
+            "zh_name": "发送直播间弹幕",
+            "catalog": "live",
+            "description": "向指定直播间发送弹幕（注意：该操作不参与发送的队列，频繁使用可能导致发送过快）",
+            "parameters": [
+                {
+                    "name": "roomId",
+                    "description": "直播间ID",
+                    "optional": false
+                },
+                {
+                    "name": "msg",
+                    "description": "消息内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "sendRoomEmoji",
+            "zh_name": "发送直播间表情",
+            "catalog": "live",
+            "description": "向指定直播间发送表情（注意：同上）",
+            "parameters": [
+                {
+                    "name": "roomId",
+                    "description": "直播间ID",
+                    "optional": false
+                },
+                {
+                    "name": "emojiId",
+                    "description": "表情ID",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "sendEmoji",
+            "zh_name": "发送表情",
+            "catalog": "live",
+            "description": "上面命令的省略房号版（注意：同上）",
+            "parameters": [
+                {
+                    "name": "emojiId",
+                    "description": "表情ID",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "showScreenDanmu",
+            "zh_name": "显示全屏弹幕",
+            "catalog": "live",
+            "description": "将text作为本地全屏移动的弹幕显示，受相关设置影响，需打开“全屏弹幕”",
+            "parameters": [
+                {
+                    "name": "text",
+                    "description": "弹幕内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "timerShot",
+            "zh_name": "延迟发送",
+            "catalog": "program",
+            "description": "定时多少毫秒后发送弹幕msg（msg允许为另一命令，多个命令使用%m%分隔）",
+            "parameters": [
+                {
+                    "name": "msecond",
+                    "description": "延迟毫秒数",
+                    "optional": false
+                },
+                {
+                    "name": "msg",
+                    "description": "弹幕内容或命令",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "localNotify",
+            "zh_name": "本地通知",
+            "catalog": "program",
+            "description": "发送本地消息通知（非弹幕，只有自己看得到）",
+            "parameters": [
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": true
+                },
+                {
+                    "name": "msg",
+                    "description": "消息内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "speakText",
+            "zh_name": "播放语音",
+            "catalog": "program",
+            "description": "朗读文本",
+            "parameters": [
+                {
+                    "name": "msg",
+                    "description": "文本内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "speakTextSSML",
+            "zh_name": "播放语音SSML",
+            "catalog": "program",
+            "description": "使用微软语音来播放SSML文本（不能有换行）；需要配置API",
+            "parameters": [
+                {
+                    "name": "ssml",
+                    "description": "SSML内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "speakTextUrl",
+            "zh_name": "播放语音URL",
+            "catalog": "program",
+            "description": "播放在线合成的语音",
+            "parameters": [
+                {
+                    "name": "url",
+                    "description": "语音URL",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "setVoiceSpeaker",
+            "zh_name": "设置语音发音人",
+            "catalog": "program",
+            "description": "不同语音有不同的发音人，详细看程序说明",
+            "parameters": [
+                {
+                    "name": "name",
+                    "description": "发音人名称",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "setVoiceSpeed",
+            "zh_name": "设置语音音速",
+            "catalog": "program",
+            "description": "0~100",
+            "parameters": [
+                {
+                    "name": "speed",
+                    "description": "音速",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "setVoicePitch",
+            "zh_name": "设置语音音调",
+            "catalog": "program",
+            "description": "0~100",
+            "parameters": [
+                {
+                    "name": "pitch",
+                    "description": "音调",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "setVoiceVolume",
+            "zh_name": "设置语音音量",
+            "catalog": "program",
+            "description": "0~100",
+            "parameters": [
+                {
+                    "name": "volume",
+                    "description": "音量",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "openUrl",
+            "zh_name": "打开网址",
+            "catalog": "program",
+            "description": "浏览器打开网址",
+            "parameters": [
+                {
+                    "name": "url",
+                    "description": "网址",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "connectNet",
+            "zh_name": "连接网址",
+            "catalog": "network",
+            "description": "用于连接其他API，不管返回结果",
+            "parameters": [
+                {
+                    "name": "url",
+                    "description": "网址",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "getData",
+            "zh_name": "get数据",
+            "catalog": "network",
+            "description": "后台连接网址（GET），返回JSON数据。回调中的\"%text%\"为纯文本结果",
+            "parameters": [
+                {
+                    "name": "url",
+                    "description": "网址",
+                    "optional": false
+                },
+                {
+                    "name": "callback",
+                    "description": "回调函数，详见“获取网络数据回调”示例。",
+                    "optional": true
+                }
+            ]
+        },
+        {
+            "name": "postData",
+            "zh_name": "post数据",
+            "catalog": "network",
+            "description": "同上（POST）",
+            "parameters": [
+                {
+                    "name": "url",
+                    "description": "网址",
+                    "optional": false
+                },
+                {
+                    "name": "data",
+                    "description": "数据",
+                    "optional": false
+                },
+                {
+                    "name": "callback",
+                    "description": "回调函数",
+                    "optional": true
+                }
+            ]
+        },
+        {
+            "name": "postJson",
+            "zh_name": "postJson",
+            "catalog": "network",
+            "description": "同上，以JSON格式发送（仅Content-Type区别）",
+            "parameters": [
+                {
+                    "name": "url",
+                    "description": "网址",
+                    "optional": false
+                },
+                {
+                    "name": "data",
+                    "description": "数据",
+                    "optional": false
+                },
+                {
+                    "name": "callback",
+                    "description": "回调函数",
+                    "optional": true
+                }
+            ]
+        },
+        {
+            "name": "postHeaderData",
+            "zh_name": "post头数据",
+            "catalog": "network",
+            "description": "同上。",
+            "parameters": [
+                {
+                    "name": "url",
+                    "description": "网址",
+                    "optional": false
+                },
+                {
+                    "name": "headers",
+                    "description": "请求头，多个之间用&分隔，示例格式：header1=value1&header2=value2&header3=value3",
+                    "optional": false
+                },
+                {
+                    "name": "data",
+                    "description": "数据",
+                    "optional": false
+                },
+                {
+                    "name": "callback",
+                    "description": "回调函数",
+                    "optional": true
+                }
+            ]
+        },
+        {
+            "name": "downloadFile",
+            "zh_name": "下载文件",
+            "catalog": "network",
+            "description": "下载网络文件至本地，成功后触发自定义事件。回调中的%text%为文件路径",
+            "parameters": [
+                {
+                    "name": "url",
+                    "description": "文件URL",
+                    "optional": false
+                },
+                {
+                    "name": "path",
+                    "description": "保存路径",
+                    "optional": false
+                },
+                {
+                    "name": "callback",
+                    "description": "回调函数",
+                    "optional": true
+                }
+            ]
+        },
+        {
+            "name": "sendToSockets",
+            "zh_name": "发送至socket",
+            "catalog": "network",
+            "description": "发送给所有包含cmd的已连接的WebSocket，如果cmd为空，则发送给所有WebSocket",
+            "parameters": [
+                {
+                    "name": "cmd",
+                    "description": "命令。如果为空内容，则发送给所有WebSocket",
+                    "optional": false
+                },
+                {
+                    "name": "data",
+                    "description": "数据",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "sendToLastSocket",
+            "zh_name": "发送至最后socket",
+            "catalog": "network",
+            "description": "发送给最后连上的WebSocket，无视cmd（甚至没收到cmds也行）",
+            "parameters": [
+                {
+                    "name": "cmd",
+                    "description": "命令",
+                    "optional": false
+                },
+                {
+                    "name": "data",
+                    "description": "数据",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "runCommandLine",
+            "zh_name": "运行命令行",
+            "catalog": "program",
+            "description": "运行操作系统的命令行",
+            "parameters": [
+                {
+                    "name": "cmd",
+                    "description": "命令",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "startProgram",
+            "zh_name": "运行程序",
+            "catalog": "program",
+            "description": "打开外部程序（例如守护进程）",
+            "parameters": []
+        },
+        {
+            "name": "setSetting",
+            "zh_name": "设置某项配置",
+            "catalog": "program",
+            "description": "等同于v3.7之前的setValue，已不建议使用",
+            "parameters": []
+        },
+        {
+            "name": "removeSetting",
+            "zh_name": "移除某项配置",
+            "catalog": "program",
+            "description": "同上",
+            "parameters": []
+        },
+        {
+            "name": "setValue",
+            "zh_name": "设置值",
+            "catalog": "program",
+            "description": "保存值到配置文件，通过%{key}%获取，重启后仍在。默认保存在“heaps”分组下，使用“group/key”指定分组",
+            "parameters": [
+                {
+                    "name": "key",
+                    "description": "键名",
+                    "optional": false
+                },
+                {
+                    "name": "val",
+                    "description": "值",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "addValue",
+            "zh_name": "添加值",
+            "catalog": "program",
+            "description": "在原先值的基础上，添加val大小",
+            "parameters": [
+                {
+                    "name": "key",
+                    "description": "键名",
+                    "optional": false
+                },
+                {
+                    "name": "val",
+                    "description": "增量",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "setValues",
+            "zh_name": "批量设置值",
+            "catalog": "program",
+            "description": "批量修改已有的值，exp为正则表达式。不允许批量设置非默认分组（即不能带“/”）",
+            "parameters": [
+                {
+                    "name": "exp",
+                    "description": "正则表达式",
+                    "optional": false
+                },
+                {
+                    "name": "val",
+                    "description": "值",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "addValues",
+            "zh_name": "批量添加值",
+            "catalog": "program",
+            "description": "批量添加已有的值",
+            "parameters": [
+                {
+                    "name": "exp",
+                    "description": "正则表达式",
+                    "optional": false
+                },
+                {
+                    "name": "val",
+                    "description": "增量",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "setValuesIf",
+            "zh_name": "批量设置值如果",
+            "catalog": "program",
+            "description": "按条件批量修改已有的值，[condition]同弹幕条件（带方括号），详见文档中的“批量修改配置”",
+            "parameters": [
+                {
+                    "name": "exp",
+                    "description": "正则表达式",
+                    "optional": false
+                },
+                {
+                    "name": "condition",
+                    "description": "条件",
+                    "optional": true
+                },
+                {
+                    "name": "newVal",
+                    "description": "新值",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "addValuesIf",
+            "zh_name": "批量添加值如果",
+            "catalog": "program",
+            "description": "按条件批量添加已有的值",
+            "parameters": [
+                {
+                    "name": "exp",
+                    "description": "正则表达式",
+                    "optional": false
+                },
+                {
+                    "name": "condition",
+                    "description": "条件",
+                    "optional": true
+                },
+                {
+                    "name": "delta",
+                    "description": "增量",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "removeValue",
+            "zh_name": "移除值",
+            "catalog": "program",
+            "description": "移除配置文件中的单个值",
+            "parameters": [
+                {
+                    "name": "key",
+                    "description": "键名",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "removeValues",
+            "zh_name": "批量移除值",
+            "catalog": "program",
+            "description": "移除配置文件中的多个值（不允许带“/”），exp为正则表达式",
+            "parameters": [
+                {
+                    "name": "exp",
+                    "description": "正则表达式",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "removeValuesIf",
+            "zh_name": "批量移除值如果",
+            "catalog": "program",
+            "description": "按条件移除配置文件中的多个值",
+            "parameters": [
+                {
+                    "name": "exp",
+                    "description": "正则表达式",
+                    "optional": false
+                },
+                {
+                    "name": "condition",
+                    "description": "条件",
+                    "optional": true
+                }
+            ]
+        },
+        {
+            "name": "openFile",
+            "zh_name": "打开文件",
+            "catalog": "file",
+            "description": "打开文件",
+            "parameters": [
+                {
+                    "name": "path",
+                    "description": "文件路径",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "playSound",
+            "zh_name": "播放声音",
+            "catalog": "file",
+            "description": "播放音频文件",
+            "parameters": [
+                {
+                    "name": "path",
+                    "description": "音频文件路径",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "improveMusic",
+            "zh_name": "提升点歌",
+            "catalog": "song",
+            "description": "点歌提前播放",
+            "parameters": [
+                {
+                    "name": "username",
+                    "description": "用户名",
+                    "optional": false
+                },
+                {
+                    "name": "order",
+                    "description": "提升的索引值",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "cutMusic",
+            "zh_name": "切歌",
+            "catalog": "song",
+            "description": "切歌，仅限正在播放该用户自己点的歌时",
+            "parameters": [
+                {
+                    "name": "username",
+                    "description": "用户名",
+                    "optional": true
+                }
+            ]
+        },
+        {
+            "name": "addMusic",
+            "zh_name": "添加音乐",
+            "catalog": "song",
+            "description": "添加本地音乐（完整路径）或者自动搜索网络歌曲到播放列表",
+            "parameters": [
+                {
+                    "name": "path_or_name",
+                    "description": "路径或名称",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "playMusic",
+            "zh_name": "播放音乐",
+            "catalog": "song",
+            "description": "播放点歌姬的音乐；若没有歌曲，尝试播放下一首",
+            "parameters": []
+        },
+        {
+            "name": "pauseMusic",
+            "zh_name": "暂停音乐",
+            "catalog": "song",
+            "description": "暂停点歌姬的音乐",
+            "parameters": []
+        },
+        {
+            "name": "toggleMusicState",
+            "zh_name": "切换音乐状态",
+            "catalog": "song",
+            "description": "切换音乐的播放/暂停状态",
+            "parameters": []
+        },
+        {
+            "name": "messageBox",
+            "zh_name": "消息弹窗",
+            "catalog": "program",
+            "description": "弹窗提示",
+            "parameters": [
+                {
+                    "name": "text",
+                    "description": "提示内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "sendLongText",
+            "zh_name": "发送长文本",
+            "catalog": "program",
+            "description": "发送长文本，自动分割成多条",
+            "parameters": [
+                {
+                    "name": "text",
+                    "description": "文本内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "appendFileLine",
+            "zh_name": "添加文件行",
+            "catalog": "file",
+            "description": "追加一行文本保存至“程序目录/dirName/fileName”末尾，支持变量。可用于保存送礼记录、上船记录等",
+            "parameters": [
+                {
+                    "name": "fileName",
+                    "description": "文件名",
+                    "optional": false
+                },
+                {
+                    "name": "format",
+                    "description": "格式",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "insertFileAnchor",
+            "zh_name": "插入文件锚点",
+            "catalog": "file",
+            "description": "插入文字至文件中的“anchor”前。可组建HTML的<table>内容",
+            "parameters": [
+                {
+                    "name": "fileName",
+                    "description": "文件名",
+                    "optional": false
+                },
+                {
+                    "name": "anchor",
+                    "description": "锚点",
+                    "optional": false
+                },
+                {
+                    "name": "content",
+                    "description": "插入内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "writeTextFile",
+            "zh_name": "保存文本文件",
+            "catalog": "file",
+            "description": "写入文本至“程序目录/fileName”，允许相对/绝对路径。\n注意路径的一些问题，比如“C:\\new\\a.txt”中的“\\n”会被当做换行，可以使用“C://new/a.txt”的形式代替",
+            "parameters": [
+                {
+                    "name": "fileName",
+                    "description": "文件名",
+                    "optional": false
+                },
+                {
+                    "name": "text",
+                    "description": "文本内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "removeFile",
+            "zh_name": "删除文件",
+            "catalog": "file",
+            "description": "删除文件“程序目录/fileName”",
+            "parameters": [
+                {
+                    "name": "fileName",
+                    "description": "文件名",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "removeTextFileLine",
+            "zh_name": "移除文本文件行",
+            "catalog": "file",
+            "description": "删除文本文件中的某一行，行号从1开始",
+            "parameters": [
+                {
+                    "name": "fileName",
+                    "description": "文件名",
+                    "optional": false
+                },
+                {
+                    "name": "line",
+                    "description": "行号",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "modifyTextFileLine",
+            "zh_name": "修改文本文件行",
+            "catalog": "file",
+            "description": "修改文本文件中的某一行，行号从1开始",
+            "parameters": [
+                {
+                    "name": "fileName",
+                    "description": "文件名",
+                    "optional": false
+                },
+                {
+                    "name": "line",
+                    "description": "行号",
+                    "optional": false
+                },
+                {
+                    "name": "newText",
+                    "description": "新文本",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "fileEachLine",
+            "zh_name": "文件每一行",
+            "catalog": "file",
+            "description": "读取txt文件的每一行，执行code命令。fileName 可以是相对文件名、绝对文件路径。startLine 为从哪一行开始读，可忽略。code中多行弹幕/代码需要使用%n%替换\\n，并且需要使用 \\%来转义替换 %，例如 \\%text\\%获取本行内容；会覆盖原有的这两个变量",
+            "parameters": [
+                {
+                    "name": "fileName",
+                    "description": "文件名",
+                    "optional": false
+                },
+                {
+                    "name": "startLine",
+                    "description": "起始行",
+                    "optional": true
+                },
+                {
+                    "name": "code",
+                    "description": "执行命令",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "csvEachLine",
+            "zh_name": "CSV每一行",
+            "catalog": "file",
+            "description": "读取csv文件（表格）的每一行，同上。使用转义的 %$数字% 来获取这一行中的每列元素，如 \\%$2\\% 获取当前行第二列",
+            "parameters": [
+                {
+                    "name": "fileName",
+                    "description": "文件名",
+                    "optional": false
+                },
+                {
+                    "name": "startLine",
+                    "description": "起始行",
+                    "optional": true
+                },
+                {
+                    "name": "code",
+                    "description": "执行命令",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "AIReply",
+            "zh_name": "AI回复",
+            "catalog": "AI",
+            "description": "调用AI回复某文字，并直接以弹幕的形式发送。",
+            "parameters": [
+                {
+                    "name": "text",
+                    "description": "输入文本",
+                    "optional": false
+                },
+                {
+                    "name": "maxLen",
+                    "description": "最大长度，默认单条弹幕，超出则不回复",
+                    "optional": true
+                }
+            ]
+        },
+        {
+            "name": "AIChat",
+            "zh_name": "AI聊天",
+            "catalog": "AI",
+            "description": "调用AI回复文字，若有结果则执行code代码，使用 \\%text\\% 来获取回复结果。\\n具体调用哪个AI，由设置中的选项决定。如果是ChatGPT，UID固定为0",
+            "parameters": [
+                {
+                    "name": "text",
+                    "description": "输入文本",
+                    "optional": false
+                },
+                {
+                    "name": "code",
+                    "description": "执行命令",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "TXChat",
+            "zh_name": "腾讯AI聊天",
+            "catalog": "AI",
+            "description": "调用腾讯AI闲聊，同上",
+            "enable": false,
+            "parameters": [
+                {
+                    "name": "text",
+                    "description": "输入文本",
+                    "optional": false
+                },
+                {
+                    "name": "code",
+                    "description": "执行命令",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "ChatGPT",
+            "zh_name": "GPT聊天",
+            "catalog": "AI",
+            "description": "调用ChatGPT闲聊，同上。\\n如果开启了“功能型GPT”，那么%text%会是对应的\"msg\"字段",
+            "parameters": [
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                },
+                {
+                    "name": "text",
+                    "description": "输入文本",
+                    "optional": false
+                },
+                {
+                    "name": "code",
+                    "description": "执行命令",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "ignoreWelcome",
+            "zh_name": "不自动欢迎",
+            "catalog": "live",
+            "description": "不自动欢迎某用户",
+            "parameters": [
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "setLocalName",
+            "zh_name": "设置专属昵称",
+            "catalog": "live",
+            "description": "设置用户专属昵称",
+            "parameters": [
+                {
+                    "name": "uid",
+                    "description": "用户ID",
+                    "optional": false
+                },
+                {
+                    "name": "name",
+                    "description": "昵称",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "joinBattle",
+            "zh_name": "开启大乱斗",
+            "catalog": "live",
+            "description": "开启大乱斗，1普通，2视频",
+            "parameters": [
+                {
+                    "catalog": "type",
+                    "description": "大乱斗类型",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "triggerEvent",
+            "zh_name": "触发事件",
+            "catalog": "program",
+            "description": "触发自定义事件，可在“事件动作”中响应；附带当前最近处理的数据。若有多个，都会触发",
+            "parameters": [
+                {
+                    "name": "event",
+                    "description": "事件名",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "triggerReply",
+            "zh_name": "触发自动回复",
+            "catalog": "program",
+            "description": "触发自动回复（未开启会被忽略），可作为有参数的方法进行传递。若有多个，都会触发；若未找到合适的回复动作，会报一个警告",
+            "parameters": [
+                {
+                    "name": "msg",
+                    "description": "消息内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "call",
+            "zh_name": "调用",
+            "catalog": "program",
+            "description": "触发事件，可以传递若干个参数，使用 \"%$1%\" 这样的指令来获取参数",
+            "parameters": [
+                {
+                    "name": "event",
+                    "description": "事件名",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "getReplyExecutionResult",
+            "zh_name": "获取回复执行结果",
+            "catalog": "program",
+            "description": "获取第一个符合msg弹幕的回复的执行结果，并返回最终弹幕的拼凑结果，使用%n%连接（写入到文件时会替换为换行）。该回复的代码中的命令会被立刻执行；若没有相应的回复，返回空字符串",
+            "parameters": [
+                {
+                    "name": "msg",
+                    "description": "消息内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "getEventExecutionResult",
+            "zh_name": "获取事件执行结果",
+            "catalog": "program",
+            "description": "同上",
+            "parameters": [
+                {
+                    "name": "event",
+                    "description": "事件名",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "setTimerTask",
+            "zh_name": "开启定时任务",
+            "catalog": "program",
+            "description": "id为单行注释的文字，格式：//id。time：",
+            "parameters": [
+                {
+                    "name": "id",
+                    "description": "任务ID",
+                    "optional": false
+                },
+                {
+                    "name": "time",
+                    "description": "时间，<-1时重置时间，=-1时关闭，=0时切换开关，=1时开启，>1时设置为对应秒数并重置时间（关闭的话不会开启）。不建议设置1秒，因为弹幕冷却2秒",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "orderSong",
+            "zh_name": "点歌",
+            "catalog": "song",
+            "description": "自动点歌，uname可以为任意字符",
+            "parameters": [
+                {
+                    "name": "songName",
+                    "description": "歌曲名",
+                    "optional": false
+                },
+                {
+                    "name": "uname",
+                    "description": "点歌人，仅作为重复点歌判断依据，可以是任意文字",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "addBannedWord",
+            "zh_name": "添加违禁词",
+            "catalog": "program",
+            "description": "在指定|anchor处插入|word",
+            "parameters": [
+                {
+                    "name": "word",
+                    "description": "违禁词",
+                    "optional": false
+                },
+                {
+                    "name": "anchor",
+                    "description": "锚点",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "showCSV",
+            "zh_name": "显示CSV",
+            "catalog": "program",
+            "description": "显示表格文件，自动判定编码",
+            "parameters": [
+                {
+                    "name": "fileName",
+                    "description": "文件名",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "simulateKeys",
+            "zh_name": "模拟按键",
+            "catalog": "program",
+            "description": "模拟例如“ctrl+a”等按键，不分大小写。加号使用“add”代替；不支持汉字等非键盘键位字符。可用0x70这样的形式模拟Win的F1键等。",
+            "parameters": [
+                {
+                    "name": "keys",
+                    "description": "按键组合",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "simulatePressKeys",
+            "zh_name": "模拟按下按键",
+            "catalog": "program",
+            "description": "同上",
+            "parameters": [
+                {
+                    "name": "keys",
+                    "description": "按键组合",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "simulateReleaseKeys",
+            "zh_name": "模拟松开按键",
+            "catalog": "program",
+            "description": "同上",
+            "parameters": [
+                {
+                    "name": "keys",
+                    "description": "按键组合",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "simulateClick",
+            "zh_name": "模拟点击",
+            "catalog": "program",
+            "description": "模拟鼠标左键点击",
+            "parameters": [
+                {
+                    "name": "x",
+                    "description": "横坐标",
+                    "optional": true
+                },
+                {
+                    "name": "y",
+                    "description": "纵坐标",
+                    "optional": true
+                }
+            ]
+        },
+        {
+            "name": "simulateClickButton",
+            "zh_name": "模拟点击按钮",
+            "catalog": "program",
+            "description": "模拟鼠标点击，flag为WIN API 中的mouse_event事件的DWORD参数，即鼠标事件的位或值。如6为左键单击，24为右键单击。可简写为 left、right、middle、x",
+            "parameters": [
+                {
+                    "name": "flag",
+                    "description": "鼠标事件标志",
+                    "optional": false
+                },
+                {
+                    "name": "x",
+                    "description": "横坐标",
+                    "optional": true
+                },
+                {
+                    "name": "y",
+                    "description": "纵坐标",
+                    "optional": true
+                }
+            ]
+        },
+        {
+            "name": "moveMouse",
+            "zh_name": "移动鼠标",
+            "catalog": "program",
+            "description": "移动鼠标到指定x,y点",
+            "parameters": [
+                {
+                    "name": "x",
+                    "description": "横坐标",
+                    "optional": false
+                },
+                {
+                    "name": "y",
+                    "description": "纵坐标",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "execScript",
+            "zh_name": "执行脚本",
+            "catalog": "program",
+            "description": "执行放在程序目录/control/文件夹下的bat或者vbs脚本，或绝对路径",
+            "parameters": [
+                {
+                    "name": "path",
+                    "description": "脚本路径",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "copyText",
+            "zh_name": "复制文字",
+            "catalog": "program",
+            "description": "把文字复制到剪贴板",
+            "parameters": [
+                {
+                    "name": "text",
+                    "description": "文本内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "setRoomTitle",
+            "zh_name": "设置直播标题",
+            "catalog": "live",
+            "description": "主播设置直播间的大标题",
+            "parameters": []
+        },
+        {
+            "name": "setRoomCover",
+            "zh_name": "设置直播封面",
+            "catalog": "live",
+            "description": "主播设置直播间的封面图片，path为图片路径（不会裁剪，只是压缩上传）",
+            "parameters": [
+                {
+                    "name": "path",
+                    "description": "图片路径",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "setLocalMode",
+            "zh_name": "设置本地模式",
+            "catalog": "live",
+            "description": "可通过回复、定时等开关本地模式，不发送弹幕",
+            "parameters": [
+                {
+                    "name": "flag",
+                    "description": "true/false",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "reconnectRoom",
+            "zh_name": "重新连接直播间",
+            "catalog": "live",
+            "description": "强制重连直播间",
+            "parameters": []
+        },
+        {
+            "name": "connectRoom",
+            "zh_name": "连接直播间",
+            "catalog": "live",
+            "description": "切换到任意直播间，支持房间号或身份码",
+            "parameters": [
+                {
+                    "name": "roomId",
+                    "description": "直播间ID或身份码",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "SQLExec",
+            "zh_name": "SQL执行",
+            "catalog": "program",
+            "description": "需要开启数据库。执行SQL语句，如创建表格、插入记录",
+            "parameters": []
+        },
+        {
+            "name": "SQLQuery",
+            "zh_name": "SQL查询",
+            "catalog": "program",
+            "description": "需要开启数据库。执行SQL语句并显示查询结果，如查找弹幕记录",
+            "parameters": []
+        },
+        {
+            "name": "saveScreenShot",
+            "zh_name": "保存窗口截图",
+            "catalog": "program",
+            "description": "保存指定位置的窗口截图为本地图片。",
+            "parameters": [
+                {
+                    "name": "screenId",
+                    "description": "屏幕ID，只有一个屏幕则为0",
+                    "optional": false
+                },
+                {
+                    "name": "x",
+                    "description": "横坐标",
+                    "optional": false
+                },
+                {
+                    "name": "y",
+                    "description": "纵坐标",
+                    "optional": false
+                },
+                {
+                    "name": "w",
+                    "description": "宽度",
+                    "optional": false
+                },
+                {
+                    "name": "h",
+                    "description": "高度",
+                    "optional": false
+                },
+                {
+                    "name": "path",
+                    "description": "要保存的文件路径",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "showWindow",
+            "zh_name": "显示窗口",
+            "catalog": "program",
+            "description": "将窗口置为指定状态",
+            "parameters": [
+                {
+                    "name": "hwnd",
+                    "description": "窗口句柄",
+                    "optional": false
+                },
+                {
+                    "name": "state",
+                    "description": "窗口状态，normal/min/max/hide/show",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "sendWindowMessage",
+            "zh_name": "发送窗口消息",
+            "catalog": "program",
+            "description": "向指定窗口发送文字类的消息，模拟文字输入，如社交软件聊天界面。需要输入框获取到焦点才能输入",
+            "parameters": [
+                {
+                    "name": "hwnd",
+                    "description": "窗口句柄",
+                    "optional": false
+                },
+                {
+                    "name": "text",
+                    "description": "消息内容",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "moveWindow",
+            "zh_name": "移动窗口",
+            "catalog": "program",
+            "description": "移动窗口至指定的坐标和尺寸",
+            "parameters": [
+                {
+                    "name": "hwnd",
+                    "description": "窗口句柄",
+                    "optional": false
+                },
+                {
+                    "name": "x",
+                    "description": "横坐标",
+                    "optional": false
+                },
+                {
+                    "name": "y",
+                    "description": "纵坐标",
+                    "optional": false
+                },
+                {
+                    "name": "w",
+                    "description": "宽度",
+                    "optional": false
+                },
+                {
+                    "name": "h",
+                    "description": "高度",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "sendEmail",
+            "zh_name": "发送邮件",
+            "catalog": "program",
+            "description": "使用设置的账户向指定邮件地址发送邮件",
+            "parameters": [
+                {
+                    "name": "address",
+                    "description": "邮件地址",
+                    "optional": false
+                },
+                {
+                    "name": "subject",
+                    "description": "主题",
+                    "optional": false
+                },
+                {
+                    "name": "body",
+                    "description": "正文",
+                    "optional": false
+                }
+            ]
+        }
+    ],
+    "macros": [
+        {
+            "name": "#traverseJson",
+            "description": "遍历 JSON 的指定内容，并展开为代码列表",
+            "zh_name": "遍历JSON",
+            "parameters": [
+                {
+                    "name": "path",
+                    "description": "本程序语法中的 JSON 路径，不带\"%\"，如 \".data?.array?\"，对应具体的对象或数组",
+                    "optional": false
+                },
+                {
+                    "name": "code",
+                    "description": "要执行的代码，需要进行转义：\"%\" 写作 \"\\%\"，\"\\n\" 写作 \"%n%\" 等",
+                    "optional": false
+                }
+            ]
+        }
+    ]
+}

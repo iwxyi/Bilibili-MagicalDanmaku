@@ -13,6 +13,7 @@ class ConditionEditor : public QPlainTextEdit
     Q_OBJECT
 public:
     ConditionEditor(QWidget* parent = nullptr);
+    ~ConditionEditor();
 
     void updateCompleterModel();
 
@@ -20,6 +21,7 @@ protected:
     void keyPressEvent(QKeyEvent *e) override;
     void inputMethodEvent(QInputMethodEvent *e) override;
     virtual void insertFromMimeData(const QMimeData *source) override;
+    void focusInEvent(QFocusEvent *e) override;
 
 private slots:
     void showCompleter(QString prefix);
@@ -34,10 +36,13 @@ private slots:
 
 signals:
     void signalInsertCodeSnippets(const QJsonDocument& doc);
+    void signalFocusIn();
+    void signalDeleted();
 
 public:
     static QStringList allCompletes; // 所有默认填充的
     static int completerWidth;
+    static ConditionEditor *currentConditionEditor;
 
 protected:
     QCompleter* completer;

@@ -249,7 +249,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1888,8 +1888,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>82</width>
-             <height>16</height>
+             <width>972</width>
+             <height>1744</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2764,17 +2764,51 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="CheckBox1" name="GPTAnalysisCheck">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="toolTip">
-                <string>提前体验新版特性，可能会有未预料的问题</string>
-               </property>
-               <property name="text">
-                <string>启用</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_85">
+               <item>
+                <widget class="CheckBox1" name="GPTAnalysisCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>提前体验新版特性，可能会有未预料的问题</string>
+                 </property>
+                 <property name="text">
+                  <string>启用</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="GPTAnalysisDefaultButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+                 </property>
+                 <property name="text">
+                  <string>恢复默认</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <widget class="QPushButton" name="GPTAnalysisPromptButton">
@@ -11386,7 +11420,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1054</width>
-     <height>37</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

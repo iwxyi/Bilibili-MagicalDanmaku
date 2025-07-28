@@ -122,6 +122,7 @@ CodeLineEditor::CodeLineEditor(QWidget *parent)
     danmakuGroupBox = new CollapsibleGroupBox("弹幕/操作", this);
     {
         danmakuVLayout = new QVBoxLayout(danmakuGroupBox->getContentWidget());
+        danmakuVLayout->setSpacing(0);
         // 动态数量的弹幕/操作
         // 添加按钮
         QHBoxLayout *btnLayout = new QHBoxLayout();
