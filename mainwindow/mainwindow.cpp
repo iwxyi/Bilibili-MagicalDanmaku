@@ -2645,7 +2645,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     us->sync();
 
     // 最后一个备份设置
-    if (!rt->dontBackupSettingsFile)
+    if (!rt->dontBackupSettingFile)
     {
         copyFile(rt->dataPath + "settings.ini", rt->dataPath + "settings.ini.bak", true);
     }

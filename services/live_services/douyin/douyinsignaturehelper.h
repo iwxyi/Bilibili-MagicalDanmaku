@@ -1,9 +1,10 @@
 #ifndef DOUYINSIGNATUREHELPER_H
 #define DOUYINSIGNATUREHELPER_H
 
-#include <QObject>
+#ifdef ENABLE_WEBENGINE
 #include <QWebEngineView>
 #include <QWebChannel>
+#endif
 #include <QTimer>
 #include <QEventLoop>
 #include <QMutex>
@@ -27,7 +28,9 @@ private:
     void initializeIfNeeded();
 
 private:
+#ifdef ENABLE_WEBENGINE
     QWebEngineView *view;
+#endif
     QTimer *timer;
     QEventLoop *eventLoop;
     QString resultSignature;

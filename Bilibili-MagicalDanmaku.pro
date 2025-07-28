@@ -1,4 +1,4 @@
-QT       += core gui network websockets multimedia multimediawidgets sql svg qml webenginewidgets
+QT       += core gui network websockets multimedia multimediawidgets sql svg qml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -30,7 +30,7 @@ win32{
     DEFINES += ENABLE_SHORTCUT ENABLE_TRAY ENABLE_TEXTTOSPEECH ENABLE_LUA
 }
 macx{
-    DEFINES += ENABLE_TEXTTOSPEECH ENABLE_LUA
+    DEFINES += ENABLE_TEXTTOSPEECH ENABLE_LUA ENABLE_WEBENGINE
 }
 DEFINES += ENABLE_HTTP_SERVER
 #unix:!macx{
@@ -48,6 +48,15 @@ contains(DEFINES, ENABLE_SHORTCUT) {
 
 contains(DEFINES, ENABLE_TEXTTOSPEECH) {
     QT += texttospeech
+}
+
+# 优先检查模块是否存在
+qtHaveModule(webenginewidgets) {
+    DEFINES += ENABLE_WEBENGINE
+}
+contains(DEFINES, ENABLE_WEBENGINE) {
+#Win的minGW版不支持 QtWebEngine，但是 MSVC版、Mac、Linux 默认就支持的
+    QT += webenginewidgets
 }
 
 # 调试

@@ -1888,8 +1888,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>972</width>
-             <height>1744</height>
+             <width>974</width>
+             <height>1765</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2804,7 +2804,7 @@ QPushButton:pressed
 </string>
                  </property>
                  <property name="text">
-                  <string>恢复默认</string>
+                  <string> 还原/升级</string>
                  </property>
                 </widget>
                </item>
@@ -11420,7 +11420,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1054</width>
-     <height>24</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

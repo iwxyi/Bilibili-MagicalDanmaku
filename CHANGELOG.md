@@ -1,6 +1,15 @@
-### v5.4.2 [优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.4.1)
+### v5.5.0 [抖音弹幕、代码可视化编辑器](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.5.0)
 
+- 新增支持直播平台：抖音，已实现部分功能。
+  - 包括：获取弹幕、进房、送礼、关注、点赞、Cookie登录、人数统计等信息
+  - 不包括：发送弹幕、录播、PK、礼物连击等功能
+- 新增代码GUI编辑器，支持可视化操作逻辑
+- 新增代码定义的列表，包含变量、函数等，双击插入编辑器
+- 新增直播状态码变量 `%live_status_code%` 和 `%live_status_str%`，可用于判断直播间状态
+- 优化功能型AI，添加直播建议、直播内容识别、观众情绪等功能
+- 新增一键回复功能型AI的按钮
 - 优化自动获取弹幕长度上限的接口（会触发进入直播间）
+- 调整所有用户ID结构都调整为字符串类型，可能会引发新的兼容问题
 
 
 

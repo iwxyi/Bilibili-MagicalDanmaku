@@ -1,4 +1,5 @@
 #pragma once
+#ifdef ENABLE_WEBENGINE
 #include <QDialog>
 #include <QString>
 #include <QWebEngineView>
@@ -34,3 +35,4 @@ private:
     QString cookie;
     void fetchCookie();
 }; 
+#endif

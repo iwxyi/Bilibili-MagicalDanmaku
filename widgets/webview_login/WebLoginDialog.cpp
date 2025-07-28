@@ -1,3 +1,4 @@
+#ifdef ENABLE_WEBENGINE
 #include "WebLoginDialog.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -75,4 +76,5 @@ QString WebLoginDialog::getCookie() const
 {
     qDebug() << "登录Cookie：" << cookie;
     return cookie;
-} 
+}
+#endif

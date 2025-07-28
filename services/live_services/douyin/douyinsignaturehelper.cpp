@@ -6,9 +6,11 @@
 #include <QApplication>
 
 DouyinSignatureHelper::DouyinSignatureHelper(QObject *parent)
-    : QObject(parent), view(new QWebEngineView), timer(new QTimer(this)),
+    : QObject(parent), timer(new QTimer(this)),
     eventLoop(new QEventLoop(this)), isInitialized(false)
 {
+#ifdef ENABLE_WEBENGINE
+    view = new QWebEngineView;
     view->setPage(new SilentWebEnginePage(this));
 
     // 页面加载完成后尝试获取签名
@@ -18,6 +20,7 @@ DouyinSignatureHelper::DouyinSignatureHelper(QObject *parent)
             timer->start(200);
         }
     });
+#endif
 
     // 定时器轮询
     connect(timer, &QTimer::timeout, this, &DouyinSignatureHelper::tryGetSignature);
@@ -87,6 +90,7 @@ QString DouyinSignatureHelper::getXBogusForUrl(const QString &url)
 void DouyinSignatureHelper::initializeIfNeeded()
 {
     if (!isInitialized) {
+#ifdef ENABLE_WEBENGINE
         qInfo() << "开始加载抖音首页";
         // 加载抖音主页
         view->load(QUrl("https://live.douyin.com"));
@@ -95,6 +99,7 @@ void DouyinSignatureHelper::initializeIfNeeded()
         QEventLoop loadLoop;
         connect(view, &QWebEngineView::loadFinished, &loadLoop, &QEventLoop::quit);
         loadLoop.exec();
+#endif
 
         isInitialized = true;
     }
@@ -116,6 +121,7 @@ QString DouyinSignatureHelper::getSTUB(const QString &roomId, const QString &uni
 
 void DouyinSignatureHelper::tryGetSignature()
 {
+#ifdef ENABLE_WEBENGINE
     // 检查 window.byted_acrawler 是否存在
     QString checkJs = "typeof window.byted_acrawler !== 'undefined'";
     view->page()->runJavaScript(checkJs, [=](const QVariant &result){
@@ -152,4 +158,5 @@ void DouyinSignatureHelper::tryGetSignature()
         }
         // else: 继续轮询
     });
+#endif
 }

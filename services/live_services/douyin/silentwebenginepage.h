@@ -1,6 +1,7 @@
 #ifndef SILENTWEBENGINEPAGE_H
 #define SILENTWEBENGINEPAGE_H
 
+#ifdef ENABLE_WEBENGINE
 #include <QWebEnginePage>
 #include <QWebEngineView>
 #include <QDebug>
@@ -36,5 +37,6 @@ protected:
 #endif
     }
 };
+#endif
 
 #endif // SILENTWEBENGINEPAGE_H
