@@ -271,7 +271,8 @@ QString DouyinLiveService::getSignature(QString roomId, QString uniqueId)
     
     MyJson response = getToJson(url);
     if (response.b("success") == true) {
-        QString signature = response.o("signature").s("X-Bogus");
+        QString signature = response.s("signature");
+        qDebug() << "在线签名返回：" << response;
         if (signature.isEmpty())
         {
             qWarning() << "获取signature为空：" << response << url;
@@ -282,7 +283,7 @@ QString DouyinLiveService::getSignature(QString roomId, QString uniqueId)
         }
         return signature;
     } else {
-        qWarning() << "获取signature失败：" << response << url;
+        qWarning() << "获取signature失败：" << response.s("error") << url;
         qWarning() << "请确保已启动本地 signature 服务器 (python douyin_signature_server.py)";
         return "";
     }
@@ -355,11 +356,11 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
     QString uniqueId = ac->cookieUid;
     QString serverUrl = "wss://webcast5-ws-web-lf.douyin.com/webcast/im/push/v2/";
 
-    DouyinSignatureHelper helper;
-    QString signature = helper.getSignature(roomId, uniqueId);
-    qDebug() << "浏览器获取Signature:" << signature;
-    QString signature1 = getSignature(roomId, uniqueId);
-    qDebug() << "接口获取Signature：" << signature1;
+    // DouyinSignatureHelper helper;
+    // QString signature = helper.getSignature(roomId, uniqueId);
+    // qDebug() << "浏览器获取Signature:" << signature;
+    QString signature = getSignature(roomId, uniqueId);
+    qDebug() << "获取Signature：" << signature;
 
     QStringList params{
         "aid", "6383",

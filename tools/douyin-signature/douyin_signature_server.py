@@ -21,7 +21,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('douyin_signature_server.log', encoding='utf-8'),
+        # logging.FileHandler('douyin_signature_server.log', encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
@@ -88,14 +88,26 @@ class DouyinSignatureServer:
             return None
         
         try:
-            # 生成 X-MS-STUB
+            # 生成 X-MS-STUB (MD5 哈希)
+            import hashlib
             stub_str = f"live_id=1,aid=6383,version_code=180800,webcast_sdk_version=1.0.14-beta.0,room_id={room_id},sub_room_id=,sub_channel_id=,did_rule=3,user_unique_id={unique_id},device_platform=web,device_type=,ac=,identity=audience"
+
+            # 计算 MD5 哈希
+            stub_hash = hashlib.md5(stub_str.encode('utf-8')).hexdigest()
             
             # 执行 JS 获取 signature
             signature = await self.page.evaluate(f"""
                 (() => {{
                     try {{
-                        return window.byted_acrawler.frontierSign({{'X-MS-STUB': '{stub_str}'}});
+                        const result =  window.byted_acrawler.frontierSign({{'X-MS-STUB': '{stub_hash}'}});
+                        // 如果返回的是对象，提取 X-Bogus 字段
+                        if (result && typeof result === 'object' && result['X-Bogus']) {{
+                            return result['X-Bogus'];
+                        }} else if (result && typeof result === 'string') {{
+                            return result;
+                        }} else {{
+                            return null;
+                        }}
                     }} catch (e) {{
                         console.error('Signature 计算失败:', e);
                         return null;
