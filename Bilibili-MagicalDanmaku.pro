@@ -30,15 +30,9 @@ win32{
     DEFINES += ENABLE_SHORTCUT ENABLE_TRAY ENABLE_TEXTTOSPEECH ENABLE_LUA
 }
 macx{
-    DEFINES += ENABLE_TEXTTOSPEECH ENABLE_LUA ENABLE_WEBENGINE
+    DEFINES += ENABLE_TEXTTOSPEECH ENABLE_LUA
 }
 DEFINES += ENABLE_HTTP_SERVER
-#unix:!macx{
-#    DEFINES += ENABLE_SHORTCUT ENABLE_TRAY
-#}
-#unix:!android{
-#    DEFINES += ENABLE_SHORTCUT
-#}
 
 contains(DEFINES, ENABLE_SHORTCUT) {
     include($$PWD/third_party/qxtglobalshortcut5/qxt.pri)
@@ -50,7 +44,7 @@ contains(DEFINES, ENABLE_TEXTTOSPEECH) {
     QT += texttospeech
 }
 
-# 优先检查模块是否存在
+# 自动检查模块是否存在
 qtHaveModule(webenginewidgets) {
     DEFINES += ENABLE_WEBENGINE
 }

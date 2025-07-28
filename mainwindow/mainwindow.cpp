@@ -10189,7 +10189,9 @@ void MainWindow::on_robotNameButton_clicked()
 {
     newFacileMenu;
     menu->addAction(ui->actionQRCode_Login);
+#ifdef ENABLE_WEBENGINE
     menu->addAction(ui->actionWebViewLogin);
+#endif
     menu->addAction(ui->actionSet_Cookie);
     menu->addAction(ui->actionSet_Danmaku_Data_Format)->hide(rt->livePlatform != Bilibili);
     menu->split()->addAction(ui->actionLogout)->disable(ac->browserCookie.isEmpty());
