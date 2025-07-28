@@ -616,25 +616,35 @@ void MainWindow::initStyle()
 void MainWindow::initObject()
 {
     rt->firstOpen = !QFileInfo(rt->dataPath + "settings.ini").exists();
+
     if (!rt->firstOpen)
     {
         // 备份当前配置：settings和heaps
         ensureDirExist(rt->dataPath + "backup");
         QString ts = QDateTime::currentDateTime().toString("yyyy_MM_dd_hh_mm");
         copyFile(rt->dataPath + "settings.ini", rt->dataPath + "/backup/settings_" + ts + ".ini");
+    
         copyFile(rt->dataPath + "heaps.ini", rt->dataPath + "/backup/heaps_" + ts + ".ini");
+
+        // 绿色版解压覆盖可能会覆盖 settings.ini，添加还原提示，减少误操作
+    
+        {
+
+        }
     }
 
     us = new UserSettings(rt->dataPath + "settings.ini");
+
     cr->setHeaps(new MySettings(rt->dataPath + "heaps.ini", QSettings::Format::IniFormat));
     cr->extSettings = new MySettings(rt->dataPath + "ext_settings.ini", QSettings::Format::IniFormat);
+
 
     // 版本
     rt->appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
     if (rt->appVersion.startsWith("v") || rt->appVersion.startsWith("V"))
             rt->appVersion.replace(0, 1, "");
     QString oldValue = us->value("runtime/appVersion").toString();
-    if (compareVersion(rt->appVersion, oldValue) != 0)
+    if (compareVersion(rt->appVersion, oldValue) > 0)
     {
         upgradeVersionToLastest(oldValue);
         us->setValue("runtime/appVersion", rt->appVersion);
@@ -2550,6 +2560,12 @@ void MainWindow::closeEvent(QCloseEvent *event)
     us->setValue("mainwindow/geometry", this->saveGeometry());
     us->setValue("mainwindow/fansArchivesSplitterState", ui->fansArchivesSplitter->saveState());
     us->sync();
+
+    // 最后一个备份设置
+    if (!rt->dontBackupSettingsFile)
+    {
+        copyFile(rt->dataPath + "settings.ini", rt->dataPath + "settings.ini.bak", true);
+    }
 
 #if defined(ENABLE_TRAY)
     if (!tray->isVisible())
