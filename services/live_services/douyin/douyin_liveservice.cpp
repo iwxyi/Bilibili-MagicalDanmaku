@@ -262,15 +262,31 @@ void DouyinLiveService::getDanmuInfo()
     imPush(cursor, internalExt);
 }
 
-/// 通过在线库进行计算。
-/// !已经失效，计算出来的库不准确！
+/// 通过本地 Python HTTP 服务器进行计算。
+/// 需要先启动 douyin_signature_server.py
 QString DouyinLiveService::getSignature(QString roomId, QString uniqueId)
 {
-    MyJson signatureObj = postToJson("https://dy.nsapps.cn/signature", QString(R"({"roomId": "%1", "uniqueId": "%2"})").arg(roomId).arg(uniqueId).toUtf8(),
-                                     "", QList<QPair<QString, QString>>{{"content-type", "application/json"}});
-    QString signature = signatureObj.data().s("signature");
-    qInfo() << "signature:" << signature;
-    return signature;
+    QString url = QString("http://localhost:5531/signature?roomId=%1&uniqueId=%2")
+                     .arg(roomId).arg(uniqueId);
+    
+    MyJson response = getToJson(url);
+    if (response.b("success") == true) {
+        QString signature = response.s("signature");
+        qDebug() << "在线签名返回：" << response;
+        if (signature.isEmpty())
+        {
+            qWarning() << "获取signature为空：" << response << url;
+        }
+        else
+        {
+            qInfo() << "signature:" << signature << "   args:" << roomId << uniqueId;
+        }
+        return signature;
+    } else {
+        qWarning() << "获取signature失败：" << response.s("error") << url;
+        qWarning() << "请确保已启动本地 signature 服务器 (python douyin_signature_server.py)";
+        return "";
+    }
 }
 
 /// 组建初次连接的信息
@@ -339,10 +355,12 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
     QString roomId = ac->roomRid;
     QString uniqueId = ac->cookieUid;
     QString serverUrl = "wss://webcast5-ws-web-lf.douyin.com/webcast/im/push/v2/";
-    // QString signature = getSignature(roomId, uniqueId);
 
-    DouyinSignatureHelper helper;
-    QString signature = helper.getSignature(roomId, uniqueId);
+    // DouyinSignatureHelper helper;
+    // QString signature = helper.getSignature(roomId, uniqueId);
+    // qDebug() << "浏览器获取Signature:" << signature;
+    QString signature = getSignature(roomId, uniqueId);
+    qDebug() << "获取Signature：" << signature;
 
     QStringList params{
         "aid", "6383",
@@ -389,11 +407,9 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
     }
     paramsStr.chop(1);
 
-    QString backupUrl = serverUrl;
-    backupUrl.replace("lq", "lf");
-
     // 开始连接
     QString url = serverUrl + "?" + paramsStr;
+    url.replace("webcast3-ws-web-lq", "webcast5-ws-web-lf");
     qInfo() << "开始连接：" << url;
 
     // 需要带相同的Cookie，否则会Refuse。但是实测可以用其他账号的cookie
@@ -513,7 +529,7 @@ void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const Q
 
     QString url = "https://live.douyin.com/webcast/room/chat/?" + paramsStr;
     DouyinSignatureHelper helper;
-    QString xBogus = helper.getXBogusForUrl(url);
+    QString xBogus; // TODO: 获取a_bogus
     url += "&a_bogus=" + xBogus;
     qDebug() << "发送弹幕：" << url;
     return;

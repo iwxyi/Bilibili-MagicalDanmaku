@@ -27,7 +27,7 @@ protected:
 
 #ifdef QT_DEBUG
         // Debug模式下输出所有网页JS控制台信息
-        qDebug() << "[WebEngine]" << message << "Line:" << lineNumber << "Source:" << sourceID;
+        // qDebug() << "[WebEngine]" << message << "Line:" << lineNumber << "Source:" << sourceID;
 #else
         // Release模式下不输出
         Q_UNUSED(level)

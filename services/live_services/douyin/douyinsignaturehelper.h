@@ -18,9 +18,6 @@ public:
 
     // 同步阻塞函数：直接返回签名
     QString getSignature(const QString &roomId, const QString &uniqueId);
-    QString getXBogus(const QString &xMsStub);
-    QString getXBogusForUrl(const QString &url);
-
 
 private:
     void tryGetSignature();
