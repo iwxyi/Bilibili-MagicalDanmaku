@@ -9,6 +9,8 @@ import asyncio
 import json
 import logging
 import time
+import os
+import sys
 from datetime import datetime, time as dt_time
 from typing import Optional
 
@@ -38,16 +40,79 @@ class DouyinSignatureServer:
         """初始化浏览器"""
         try:
             playwright = await async_playwright().start()
-            self.browser = await playwright.chromium.launch(
-                headless=True,
-                args=[
-                    '--no-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    '--disable-web-security',
-                    '--disable-features=VizDisplayCompositor'
-                ]
-            )
+            
+            # Windows Server 兼容性配置
+            browser_args = [
+                '--no-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding',
+                '--disable-ipc-flooding-protection',
+                '--disable-hang-monitor',
+                '--disable-popup-blocking',
+                '--disable-prompt-on-repost',
+                '--disable-search-engine-choice-screen',
+                '--disable-component-extensions-with-background-pages',
+                '--disable-component-update',
+                '--disable-default-apps',
+                '--disable-extensions',
+                '--no-first-run',
+                '--no-default-browser-check',
+                '--password-store=basic',
+                '--use-mock-keychain',
+                '--no-service-autorun',
+                '--export-tagged-pdf',
+                '--unsafely-disable-devtools-self-xss-warnings',
+                '--edge-skip-compat-layer-relaunch',
+                '--enable-automation',
+                '--headless',
+                '--hide-scrollbars',
+                '--mute-audio',
+                '--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4',
+                '--force-color-profile=srgb',
+                '--metrics-recording-only',
+                '--allow-pre-commit-input'
+            ]
+            
+            # 设置环境变量以解决 Windows Server 兼容性问题
+            env = os.environ.copy()
+            env.update({
+                'PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD': '0',
+                'PLAYWRIGHT_BROWSERS_PATH': '0',
+                'DISPLAY': ':0',
+                'XAUTHORITY': '/tmp/.Xauthority'
+            })
+            
+            # 尝试不同的启动方式
+            try:
+                self.browser = await playwright.chromium.launch(
+                    headless=True,
+                    args=browser_args,
+                    env=env,
+                    timeout=60000  # 增加超时时间
+                )
+            except Exception as e:
+                logger.warning(f"Chromium 启动失败，尝试使用 firefox: {e}")
+                try:
+                    self.browser = await playwright.firefox.launch(
+                        headless=True,
+                        args=browser_args,
+                        env=env,
+                        timeout=60000
+                    )
+                except Exception as e2:
+                    logger.warning(f"Firefox 启动失败，尝试使用 webkit: {e2}")
+                    self.browser = await playwright.webkit.launch(
+                        headless=True,
+                        args=browser_args,
+                        env=env,
+                        timeout=60000
+                    )
+            
             self.page = await self.browser.new_page()
             
             # 设置用户代理
@@ -65,12 +130,16 @@ class DouyinSignatureServer:
         """加载抖音首页"""
         try:
             logger.info("开始加载抖音首页...")
+            
+            # 设置页面超时
+            self.page.set_default_timeout(60000)
+            
             await self.page.goto('https://live.douyin.com', wait_until='networkidle')
             
             # 等待 signature 相关 JS 加载
             await self.page.wait_for_function(
                 'typeof window.byted_acrawler !== "undefined"',
-                timeout=30000
+                timeout=60000
             )
             
             self.is_initialized = True
@@ -249,6 +318,13 @@ async def main():
     """主函数"""
     logger.info("启动抖音 Signature 服务器...")
     
+    # 检查操作系统
+    if sys.platform.startswith('win'):
+        logger.info("检测到 Windows 系统，应用兼容性配置")
+        # 设置 Windows 特定的环境变量
+        os.environ['PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD'] = '0'
+        os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '0'
+    
     # 初始化浏览器
     if not await server_instance.initialize_browser():
         logger.error("浏览器初始化失败，退出程序")
@@ -291,6 +367,10 @@ async def main():
 
 if __name__ == '__main__':
     try:
+        # 设置 Windows 事件循环策略
+        if sys.platform.startswith('win'):
+            asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+        
         asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("程序被用户中断")

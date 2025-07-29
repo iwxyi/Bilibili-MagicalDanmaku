@@ -11,6 +11,15 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM 使用虚拟环境
+REM 检查是否存在虚拟环境
+if not exist venv (
+    echo 正在创建虚拟环境...
+    python -m venv venv
+)
+REM 激活虚拟环境
+call venv\Scripts\activate
+
 REM 检查是否已安装依赖
 python -c "import aiohttp, playwright" 2>nul
 if errorlevel 1 (

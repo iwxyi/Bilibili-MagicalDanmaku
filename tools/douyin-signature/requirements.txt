@@ -1,2 +1,14 @@
+# 抖音 Signature 服务器依赖包
+# 适用于 Windows Server 2012 及以上版本
+
+# HTTP 服务器框架
 aiohttp>=3.8.0
-playwright>=1.40.0 
+
+# 浏览器自动化框架
+playwright>=1.40.0
+
+# 可选：如果需要更好的日志记录
+# colorlog>=6.0.0
+
+# 可选：如果需要配置文件支持
+# pyyaml>=6.0.0 
