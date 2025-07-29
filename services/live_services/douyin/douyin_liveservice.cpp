@@ -266,7 +266,7 @@ void DouyinLiveService::getDanmuInfo()
 /// 需要先启动 douyin_signature_server.py
 QString DouyinLiveService::getSignature(QString roomId, QString uniqueId)
 {
-    QString url = QString("http://localhost:5531/signature?roomId=%1&uniqueId=%2")
+    QString url = QString("http://212.64.18.225:5531/signature?roomId=%1&uniqueId=%2")
                      .arg(roomId).arg(uniqueId);
     
     MyJson response = getToJson(url);

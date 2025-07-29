@@ -30,6 +30,11 @@ if errorlevel 1 (
     playwright install chromium
 )
 
+REM 实测多个win上的playwright的浏览器路径总是错误
+REM 通过 playwright install --list 来查看已安装的浏览器路径，和运行py报错的路径对比
+REM 实际安装路径为：C:\Users\Administrator\AppData\Local\ms-playwright
+REM 需要的检测路径：[Python安装路径]\lib\site-packages\playwright\driver\package\.local-browsers
+
 REM 启动服务器
 echo 启动服务器...
 python douyin_signature_server.py

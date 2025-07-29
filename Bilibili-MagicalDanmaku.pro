@@ -46,7 +46,7 @@ contains(DEFINES, ENABLE_TEXTTOSPEECH) {
 
 # 自动检查模块是否存在
 qtHaveModule(webenginewidgets) {
-    DEFINES += ENABLE_WEBENGINE
+    # DEFINES += ENABLE_WEBENGINE
 }
 contains(DEFINES, ENABLE_WEBENGINE) {
 #Win的minGW版不支持 QtWebEngine，但是 MSVC版、Mac、Linux 默认就支持的
