@@ -317,8 +317,8 @@ void CodeGUIEditor::loadScriptDefinitionsTree()
     QJsonArray macroArray = json.a("macros");
 
     variableTree->setHeaderLabels({"名称", "描述"});
-    functionTree->setHeaderLabels({"名称", "参数", "描述"});
-    commandTree->setHeaderLabels({"名称", "参数", "描述"});
+    functionTree->setHeaderLabels({"名称", "描述"});
+    commandTree->setHeaderLabels({"名称", "描述"});
     macroTree->setHeaderLabels({"名称", "描述"});
 
     // 让第一列（名称）自适应内容宽度
@@ -327,8 +327,8 @@ void CodeGUIEditor::loadScriptDefinitionsTree()
     commandTree->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     macroTree->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
-    QStringList catalogEnList = {"user", "live", "gift", "program", "time", "game", "greet", "song", "pk", "file", "string","AI", "math", "network", "other"};
-    QStringList catalogCnList = {"用户", "直播", "礼物", "程序", "时间", "游戏", "问候", "音乐", "PK", "文件", "字符串", "AI", "数学", "网络", "其他"};
+    QStringList catalogEnList = {"user", "live", "gift", "program", "time", "game", "greet", "song", "pk", "file", "string","AI", "math", "network", "statistic", "other"};
+    QStringList catalogCnList = {"用户", "直播", "礼物", "程序", "时间", "游戏", "问候", "音乐", "PK", "文件", "字符串", "AI", "数学", "网络", "统计", "其他"};
 
     // 变量
     // 按分类放入TreeWidget中
