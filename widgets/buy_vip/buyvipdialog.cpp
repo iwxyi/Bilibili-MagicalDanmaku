@@ -408,7 +408,7 @@ void BuyVIPDialog::on_payButton_clicked()
          "room_title", roomTitle, "up_name", upName, "username", username,
          "vip_type", snum(vipType), "vip_level", snum(vipLevel),
          "month", snum(vipMonth), "coupon", couponCode,
-         "app_id", APP_ID, "app_verion", APP_VERSION },
+         "app_id", APP_ID, "live_platform", snum(rt->livePlatform) ,"app_verion", APP_VERSION },
         [=](MyJson json){
 
         QString html = json.s("data");

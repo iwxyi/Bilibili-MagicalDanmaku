@@ -11,7 +11,7 @@ import logging
 import time
 import os
 import sys
-from datetime import datetime, time as dt_time
+from datetime import datetime, time as dt_time, timedelta
 from typing import Optional
 
 import aiohttp
@@ -213,7 +213,7 @@ class DouyinSignatureServer:
             
             # 如果今天已经过了2点，就等到明天2点
             if now.time() >= dt_time(2, 0):
-                target_time = target_time.replace(day=target_time.day + 1)
+                target_time = target_time + timedelta(days=1)
             
             # 计算等待时间
             wait_seconds = (target_time - now).total_seconds()
