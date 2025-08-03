@@ -15,7 +15,6 @@
 #include <QBitmap>
 #include <QtMath>
 #include <QSvgRenderer>
-#include <QPainterPath>
 
 #define PI 3.1415926
 #define GOLDEN_RATIO 0.618
@@ -222,7 +221,7 @@ public:
     void hideForeground();
     void delayShowed(int time, QPoint point = QPoint(0, 0));
 
-    QString getText() const;
+    QString getText();
     void setMenu(QMenu *menu);
     void adjustMinimumSize();
     void setState(bool s = true);

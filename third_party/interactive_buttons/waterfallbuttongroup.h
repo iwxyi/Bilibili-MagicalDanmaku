@@ -21,7 +21,6 @@ public:
 
     void setColors(QColor normal_bg, QColor hover_bg, QColor press_bg, QColor selected_bg, QColor normal_ft, QColor selected_ft = Qt::transparent);
     void setSelectedColor(QColor color);
-    void setMouseColor(QColor hover_bg, QColor press_bg);
     void updateBtnColors();
 
     int count() const;
