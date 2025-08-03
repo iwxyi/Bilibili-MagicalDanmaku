@@ -2451,6 +2451,11 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QString text = caps.at(1);
             QString uname = caps.at(2);
             qInfo() << "执行命令：" << caps;
+            if (!ui->DiangeAutoCopyCheck->isChecked())
+            {
+                qInfo() << "点歌总开关已关闭";
+                return true;
+            }
             if (!musicWindow)
                 on_actionShow_Order_Player_Window_triggered();
             musicWindow->slotSearchAndAutoAppend(text, uname);
