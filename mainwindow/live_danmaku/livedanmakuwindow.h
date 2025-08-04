@@ -36,6 +36,8 @@
 #include <QNetworkCookie>
 #include <QFontDialog>
 #include <QTextBrowser>
+#include <QPlainTextEdit>
+#include <QSplitter>
 #include "runtimeinfo.h"
 #include "usersettings.h"
 #include "accountinfo.h"
@@ -91,18 +93,19 @@ protected:
 signals:
     void signalSendMsg(QString msg);
     void signalSendMsgToPk(QString msg);
-    void signalMarkUser(QString uid);
-    void signalAddBlockUser(QString uid, int hour, QString msg);
-    void signalDelBlockUser(QString uid);
-    void signalEternalBlockUser(QString uid, QString uname, QString msg);
-    void signalCancelEternalBlockUser(QString uid);
+    void signalMarkUser(UIDT uid);
+    void signalAddBlockUser(UIDT uid, int hour, QString msg);
+    void signalDelBlockUser(UIDT uid);
+    void signalEternalBlockUser(UIDT uid, QString uname, QString msg);
+    void signalCancelEternalBlockUser(UIDT uid);
     void signalChangeWindowMode();
     void signalAIReplyed(QString msg, LiveDanmaku danmaku);
     void signalShowPkVideo();
     void signalTransMouse(bool enabled);
     void signalAddCloudShieldKeyword(QString text);
-    void signalAppointAdmin(QString uid);
-    void signalDismissAdmin(QString uid);
+    void signalAppointAdmin(UIDT uid);
+    void signalDismissAdmin(UIDT uid);
+    void signalCurrentUidChanged(UIDT uid);
 
 public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
@@ -152,9 +155,9 @@ private:
     QLabel *getItemWidgetLabel(QListWidgetItem *item);
     void adjustItemTextDynamic(QListWidgetItem* item);
     void getUserInfo(LiveDanmaku danmaku, QListWidgetItem *item);
-    void getUserHeadPortrait(QString uid, QString url, QListWidgetItem *item);
-    QString headPath(QString uid) const;
-    void showUserMsgHistory(QString uid, QString title);
+    void getUserHeadPortrait(UIDT uid, QString url, QListWidgetItem *item);
+    QString headPath(UIDT uid) const;
+    void showUserMsgHistory(UIDT uid, QString title);
     QString getPinyin(QString text);
     QVariant getCookies();
     void selectBgPicture();
@@ -170,8 +173,14 @@ private:
 
 private:
     QWidget* moveBar;
+    QHBoxLayout* mainLayout;
+    QSplitter* splitter;
+    QWidget* leftWidget;
     QListWidget* listWidget;
     TransparentEdit* lineEdit;
+    QListView* fansHistoryList = nullptr;
+    QPlainTextEdit* fansArchiveEdit = nullptr;
+
 #if defined(ENABLE_SHORTCUT)
     QxtGlobalShortcut* editShortcut;
 #endif

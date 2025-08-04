@@ -838,10 +838,12 @@ void MainWindow::initLiveService()
     case Bilibili:
         liveService = new BiliLiveService(this);
         ui->platformButton->setIcon(QIcon(":/icons/platform/bilibili"));
+        pl->coinToRMB = 1000; // 硬币比例
         break;
     case Douyin:
         liveService = new DouyinLiveService(this);
         ui->platformButton->setIcon(QIcon(":/icons/platform/douyin"));
+        pl->coinToRMB = 10; // 抖币比例
         break;
     default:
         QMessageBox::critical(this, "直播服务", "当前平台暂不支持，使用默认的【哔哩哔哩】");
@@ -5292,8 +5294,11 @@ void MainWindow::setRoomThemeByCover(double val)
     ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(fg).toString()+"}");
     roomIdBgWidget->setStyleSheet("#roomIdBgWidget{ background: " + QVariant(themeSbg).toString() + "; border-radius: " + snum(roomIdBgWidget->height()/2) + "px; }");
     sideButtonList.at(ui->stackedWidget->currentIndex())->setNormalColor(sbg);
-    ui->tagsButtonGroup->setMouseColor([=]{QColor c = themeSbg; c.setAlpha(127); return c;}(),
-                                       [=]{QColor c = themeSbg; c.setAlpha(255); return c;}());
+    ui->tagsButtonGroup->setColors(Qt::lightGray,
+                [=]{QColor c = themeSbg; c.setAlpha(127); return c;}(),
+                [=]{QColor c = themeSbg; c.setAlpha(255); return c;}(),
+                [=]{QColor c = themeSbg; c.setAlpha(127); return c;}(),
+                Qt::black);
     thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(sbg);
     thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(sfg);
     dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setNormalColor(sbg);
