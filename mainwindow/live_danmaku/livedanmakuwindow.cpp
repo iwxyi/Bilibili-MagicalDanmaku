@@ -104,6 +104,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     
     fansHistoryList->setVisible(us->value("livedanmakuwindow/fansHistory", false).toBool());
     fansArchiveEdit->setVisible(us->value("livedanmakuwindow/fansArchive", false).toBool());
+    realTimeRefreshUserInfo = us->value("livedanmakuwindow/realTimeRefreshUserInfo", realTimeRefreshUserInfo).toBool();
     fansHistoryList->setStyleSheet("QListView { background: transparent; border: none; }");
     fansArchiveEdit->setStyleSheet("QPlainTextEdit { background: transparent; border: none; }");
 
@@ -687,6 +688,17 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     if (scrollEnd)
     {
         listWidget->scrollToBottom();
+    }
+
+    if (realTimeRefreshUserInfo)
+    {
+
+        if (listWidget->count() == 1 // 只有一个，就是新添加的
+            || (listWidget->count() >= 2 && listWidget->item(listWidget->count() - 2) == listWidget->currentItem())) // 判断当前item是否是最后第二个（最后一个是新添加的）
+        {
+            listWidget->setCurrentRow(listWidget->count() - 1);
+            loadUserInfo(danmaku);
+        }
     }
 }
 
@@ -1565,6 +1577,21 @@ void LiveDanmakuWindow::showMenu()
     })->disable(danmaku.getTextColor().isEmpty())
         ->text(ignoreDanmakuColors.contains(danmaku.getTextColor()), "恢复颜色");
     
+    menu->split()->addAction(QIcon(":/icons/big_data"), "显示历史弹幕列", [=]{
+        fansHistoryList->setVisible(!fansHistoryList->isVisible());
+        us->setValue("livedanmakuwindow/fansHistory", fansHistoryList->isVisible());
+    })->check(fansHistoryList->isVisible());
+
+    menu->addAction(QIcon(":/icons/fans"), "显示粉丝档案列", [=]{
+        fansArchiveEdit->setVisible(!fansArchiveEdit->isVisible());
+        us->setValue("livedanmakuwindow/fansArchive", fansArchiveEdit->isVisible());
+    })->check(fansArchiveEdit->isVisible());
+
+    menu->addAction(QIcon(":/icons/big_data"), "实时刷新记录", [=]{
+        realTimeRefreshUserInfo = !realTimeRefreshUserInfo;
+        us->setValue("livedanmakuwindow/realTimeRefreshUserInfo", realTimeRefreshUserInfo);
+    })->check(realTimeRefreshUserInfo)->tooltip("聚焦在最后一条消息时，自动刷新最新一条消息所属粉丝的信息");
+    
     auto settingMenu = menu->split()->addMenu(QIcon(":/danmaku/settings"), "设置");
     
     settingMenu->addAction("昵称颜色", [=]{
@@ -1828,16 +1855,6 @@ void LiveDanmakuWindow::showMenu()
             us->setValue("ask/transMouse", false);
         }
     })->setChecked(us->value("livedanmakuwindow/transMouse", false).toBool());
-    
-    menu->split()->addAction(QIcon(":/icons/big_data"), "显示历史弹幕列", [=]{
-        fansHistoryList->setVisible(!fansHistoryList->isVisible());
-        us->setValue("livedanmakuwindow/fansHistory", fansHistoryList->isVisible());
-    })->check(fansHistoryList->isVisible());
-
-    menu->addAction(QIcon(":/icons/fans"), "显示粉丝档案列", [=]{
-        fansArchiveEdit->setVisible(!fansArchiveEdit->isVisible());
-        us->setValue("livedanmakuwindow/fansArchive", fansArchiveEdit->isVisible());
-    })->check(fansArchiveEdit->isVisible());
 
     menu->split()->addAction(QIcon(":/danmaku/delete"), "删除", [=]{
         //        if (item->data(DANMAKU_STRING_ROLE).toString().isEmpty())

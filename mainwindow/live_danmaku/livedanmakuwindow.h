@@ -220,6 +220,7 @@ private:
     bool blockCommonNotice = true; // 屏蔽常见通知（尤其是大乱斗那些）
     bool hideGiftPrice = false; // 隐藏礼物价格
     QStringList blockedTexts;
+    bool realTimeRefreshUserInfo = true;
 
     QString headDir; // 头像保存的路径/ (带/)
     bool headerApiIsBanned = false;
