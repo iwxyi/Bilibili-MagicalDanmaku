@@ -93,6 +93,7 @@ protected:
     void resizeEvent(QResizeEvent *) override;
     void paintEvent(QPaintEvent *) override;
     void keyPressEvent(QKeyEvent *event) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 signals:
     void signalSendMsg(QString msg);
@@ -122,6 +123,7 @@ public slots:
     void resetItemsStyleSheet();
     void mergeGift(const LiveDanmaku &danmaku, int delayTime);
     void removeAll();
+    void adjustListWidgetItemsWidth();
 
     void showMenu();
     void showEditMenu();

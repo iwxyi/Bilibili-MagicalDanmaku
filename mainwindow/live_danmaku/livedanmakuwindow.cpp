@@ -256,11 +256,32 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
         auto danmaku = current ? LiveDanmaku::fromDanmakuJson(current->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
         loadUserInfo(danmaku);
     });
+    
+    // 监听 listWidget 的 resize 事件
+    listWidget->installEventFilter(this);
 }
 
 LiveDanmakuWindow::~LiveDanmakuWindow()
 {
     us->setValue("livedanmakuwindow/geometry", this->saveGeometry());
+}
+
+bool LiveDanmakuWindow::eventFilter(QObject *watched, QEvent *event)
+{
+    if (watched == listWidget && event->type() == QEvent::Resize)
+    {
+        // 处理 listWidget 的 resize 事件
+        QResizeEvent *resizeEvent = static_cast<QResizeEvent*>(event);
+        
+        // 在这里添加你的 resize 处理逻辑
+        adjustListWidgetItemsWidth();
+        
+        // 调用基类的 eventFilter 继续处理事件
+        return QWidget::eventFilter(watched, event);
+    }
+    
+    // 对于其他事件，调用基类的 eventFilter
+    return QWidget::eventFilter(watched, event);
 }
 
 void LiveDanmakuWindow::setLiveService(LiveServiceBase *service)
@@ -373,6 +394,24 @@ void LiveDanmakuWindow::resizeEvent(QResizeEvent *)
     moveBar->move((this->width() - moveBar->width()) / 2, (boundaryWidth - moveBar->height()) / 2);
     moveBar->setFixedWidth(qMax(boundaryWidth * 3, this->width() / 6));
 
+    // adjustListWidgetItemsWidth();
+
+    if (statusLabel && !statusLabel->isHidden())
+        statusLabel->move(width() - statusLabel->width(), 0);
+
+    if (!originPixmap.isNull())
+    {
+        bgPixmap = originPixmap.scaled(this->size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    }
+}
+
+void LiveDanmakuWindow::adjustListWidgetItemsWidth()
+{
+    static int prevWidth = 0;
+    if (prevWidth == listWidget->contentsRect().width())
+        return;
+    prevWidth = listWidget->contentsRect().width();
+
     int w = listWidget->contentsRect().width();
     for (int i = 0; i < listWidget->count(); i++)
     {
@@ -397,14 +436,6 @@ void LiveDanmakuWindow::resizeEvent(QResizeEvent *)
         } catch (...) {
             qDebug() << "resizeEvent错误";
         }
-    }
-
-    if (statusLabel && !statusLabel->isHidden())
-        statusLabel->move(width() - statusLabel->width(), 0);
-
-    if (!originPixmap.isNull())
-    {
-        bgPixmap = originPixmap.scaled(this->size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
     }
 }
 
