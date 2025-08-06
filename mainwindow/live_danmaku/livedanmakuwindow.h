@@ -50,6 +50,8 @@
 #include "portraitlabel.h"
 #include "externalblockdialog.h"
 #include "chat_service/chatservice.h"
+#include "fansarchivesservice.h"
+#include "sqlservice.h"
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
@@ -79,6 +81,8 @@ public:
 
     void setLiveService(LiveServiceBase *service);
     void setChatService(ChatService* service);
+    void setSqlService(SqlService* service);
+    void setFansArchivesService(FansArchivesService* service);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -148,6 +152,9 @@ public slots:
 
     void addBlockText(QString text);
     void removeBlockText(QString text);
+
+    void loadUserInfo(const LiveDanmaku& danmaku);
+    void refreshUserInfoText();
 
 private:
     bool isItemExist(QListWidgetItem *item);
@@ -246,6 +253,8 @@ private:
 
     LiveServiceBase *liveService = nullptr;
     ChatService* chatService = nullptr;
+    SqlService* sqlService = nullptr;
+    FansArchivesService* fansArchivesService = nullptr;
 
     FuncJudgeTextType hasReply = nullptr;
     FuncJudgeDanmakuType rejectReply = nullptr; // 弹幕是否触发AI回复

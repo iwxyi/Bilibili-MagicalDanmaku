@@ -91,14 +91,6 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     listWidget->setWordWrap(true);
     listWidget->setSpacing(0);
     listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
-    connect(listWidget, &QListWidget::itemDoubleClicked, this, [=](QListWidgetItem *item){
-        auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
-        UIDT uid = danmaku.getUid();
-        if (!uid.isEmpty())
-        {
-            showUserMsgHistory(uid, danmaku.getNickname());
-        }
-    });
 
     // 粉丝档案和历史记录
     fansHistoryList = new QListView(this);
@@ -110,16 +102,19 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     fansArchiveEdit = new QPlainTextEdit(this);
     fansArchiveEdit->setReadOnly(true);
     
-    fansHistoryList->setVisible(us->value("livedanmakuwindow/fansHistory", true).toBool());
-    fansArchiveEdit->setVisible(us->value("livedanmakuwindow/fansArchive", true).toBool());
+    fansHistoryList->setVisible(us->value("livedanmakuwindow/fansHistory", false).toBool());
+    fansArchiveEdit->setVisible(us->value("livedanmakuwindow/fansArchive", false).toBool());
+    fansHistoryList->setStyleSheet("QListView { background: transparent; border: none; }");
+    fansArchiveEdit->setStyleSheet("QPlainTextEdit { background: transparent; border: none; }");
 
+    // 布局
     mainLayout = new QHBoxLayout(this);
     QSplitter* splitter = new QSplitter(this);
     leftWidget = new QWidget(this);
     leftWidget->setLayout(layout);
     splitter->addWidget(leftWidget);
-    splitter->addWidget(fansArchiveEdit);
     splitter->addWidget(fansHistoryList);
+    splitter->addWidget(fansArchiveEdit);
     mainLayout->addWidget(splitter);
 
     // 发送消息后返回原窗口
@@ -241,6 +236,26 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     statusLabel->setStyleSheet("color:" + QVariant(msgColor).toString() + ";");
     statusLabel->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(statusLabel, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showPkMenu()));
+
+    // 双击弹幕，显示历史记录
+    connect(listWidget, &QListWidget::itemDoubleClicked, this, [=](QListWidgetItem *item){
+        auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
+        UIDT uid = danmaku.getUid();
+        if (!uid.isEmpty())
+        {
+            showUserMsgHistory(uid, danmaku.getNickname());
+        }
+    });
+    connect(listWidget, &QListWidget::currentItemChanged, this, [=](QListWidgetItem *current, QListWidgetItem *previous){
+        if (!current)
+        {
+            loadUserInfo(LiveDanmaku());
+            return;
+        }
+
+        auto danmaku = current ? LiveDanmaku::fromDanmakuJson(current->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
+        loadUserInfo(danmaku);
+    });
 }
 
 LiveDanmakuWindow::~LiveDanmakuWindow()
@@ -251,11 +266,37 @@ LiveDanmakuWindow::~LiveDanmakuWindow()
 void LiveDanmakuWindow::setLiveService(LiveServiceBase *service)
 {
     this->liveService = service;
+    if (service == nullptr)
+    {
+        qWarning() << "LiveDanmakuWindow.LiveService == null";
+    }
 }
 
 void LiveDanmakuWindow::setChatService(ChatService *service)
 {
     this->chatService = service;
+    if (service == nullptr)
+    {
+        qWarning() << "LiveDanmakuWindow.ChatService == null";
+    }
+}
+
+void LiveDanmakuWindow::setSqlService(SqlService* service)
+{
+    this->sqlService = service;
+    if (service == nullptr)
+    {
+        qWarning() << "LiveDanmakuWindow.SqlService == null";
+    }
+}
+
+void LiveDanmakuWindow::setFansArchivesService(FansArchivesService *service)
+{
+    this->fansArchivesService = service;
+    if (service == nullptr)
+    {
+        qWarning() << "LiveDanmakuWindow.FansArchivesService == null";
+    }
 }
 
 void LiveDanmakuWindow::showEvent(QShowEvent *event)
@@ -1147,17 +1188,17 @@ void LiveDanmakuWindow::showMenu()
     
     menu->addAction(QIcon(":/icons/code"), "复制UID", [=]{
         QApplication::clipboard()->setText(uid);
-    })->disable(!hasUid);
+        })->disable(!hasUid)->text(hasUid, "复制UID：" + uid);
     
     menu->addAction(QIcon(":/icons/at"), "@TA", [=]{
         lineEdit->setText(lineEdit->text() + "@" + uid + " ");
         lineEdit->setFocus();
-    })->disable(!hasUid);
+        })->disable(!hasUid)->text(!danmaku.getNickname().isEmpty(), "@" + danmaku.getNickname());
     
     menu->addAction(QIcon(":/danmaku/medal"), "粉丝勋章", [=]{
         QDesktopServices::openUrl(QUrl(liveService->getApiUrl(ApiType::RoomPage, danmaku.getAnchorRoomid())));
     })->disable(!hasUid || danmaku.getAnchorRoomid().isEmpty())
-        ->text(danmaku.getMedalName().isEmpty(), danmaku.getMedalName() + " " + snum(danmaku.getMedalLevel()))
+        ->text(!danmaku.getMedalName().isEmpty(), danmaku.getMedalName() + " " + snum(danmaku.getMedalLevel()))
         ->text(danmaku.is(MSG_WELCOME_GUARD), "船员数量：" + snum(ac->currentGuards.size()));
     
     menu->addAction(QIcon(":/icons/code"), "礼物ID", [=]{
@@ -1404,7 +1445,7 @@ void LiveDanmakuWindow::showMenu()
         foreach (UIDT uid, us->notWelcomeUsers)
             ress << uid;
         us->setValue("danmaku/notWelcomeUsers", ress.join(";"));
-    })->disable(!hasUid);
+    })->disable(!hasUid)->check(us->notWelcomeUsers.contains(uid));
     
     userMenu->addAction(QIcon(":/danmaku/reply"), "不AI回复", [=]{
         if (us->notReplyUsers.contains(uid))
@@ -1416,7 +1457,7 @@ void LiveDanmakuWindow::showMenu()
         foreach (UIDT uid, us->notReplyUsers)
             ress << uid;
         us->setValue("danmaku/notReplyUsers", ress.join(";"));
-    })->disable(!hasUid);
+    })->disable(!hasUid)->check(us->notReplyUsers.contains(uid));
     
     auto textMenu = menu->addMenu(QIcon(":/danmaku/word"), "文字");
     
@@ -1757,7 +1798,17 @@ void LiveDanmakuWindow::showMenu()
         }
     })->setChecked(us->value("livedanmakuwindow/transMouse", false).toBool());
     
-    menu->addAction(QIcon(":/danmaku/delete"), "删除", [=]{
+    menu->split()->addAction(QIcon(":/icons/big_data"), "显示历史弹幕列", [=]{
+        fansHistoryList->setVisible(!fansHistoryList->isVisible());
+        us->setValue("livedanmakuwindow/fansHistory", fansHistoryList->isVisible());
+    })->check(fansHistoryList->isVisible());
+
+    menu->addAction(QIcon(":/icons/fans"), "显示粉丝档案列", [=]{
+        fansArchiveEdit->setVisible(!fansArchiveEdit->isVisible());
+        us->setValue("livedanmakuwindow/fansArchive", fansArchiveEdit->isVisible());
+    })->check(fansArchiveEdit->isVisible());
+
+    menu->split()->addAction(QIcon(":/danmaku/delete"), "删除", [=]{
         //        if (item->data(DANMAKU_STRING_ROLE).toString().isEmpty())
         {
             // 强制删除
@@ -3490,3 +3541,80 @@ int LiveDanmakuWindow::getPrevAlpha() const
     return prevAlpha;
 }
 
+/// 加载用户信息
+/// 包括：历史弹幕、粉丝档案、关注量、浏览量等等
+void LiveDanmakuWindow::loadUserInfo(const LiveDanmaku& danmaku)
+{
+    /// 清空
+    fansHistoryList->setModel(nullptr);
+    fansArchiveEdit->clear();
+
+    /// 没有用户，则只是置空
+    if (danmaku.getUid() == 0) {
+        return ;
+    }
+
+    /// 有用户，获取历史弹幕
+    UIDT uid = danmaku.getUid();
+    qDebug() << "加载粉丝信息：" << uid << danmaku.getNickname();
+    
+    if (fansHistoryList->isVisible() && sqlService->isOpen())
+    {
+        QStringList sl;
+        QList<MyJson> danmakuList = sqlService->getUserDanmakuList(uid, 0, 1000);
+        QList<MyJson> giftList = sqlService->getUserGiftList(uid, 0, 1000);
+
+        // 按时间融合两者，并进行排序
+        QList<MyJson> list = danmakuList;
+        list.append(giftList);
+        std::sort(list.begin(), list.end(), [](const MyJson& a, const MyJson& b){
+            return a.s("create_time") > b.s("create_time");
+        });
+
+        auto toTimeStr = [](const QString& str) -> QString {
+            QDateTime time = QDateTime::fromString(str, Qt::ISODate); // 指定 ISO 格式解析
+            if (!time.isValid()) {
+                qWarning() << "Invalid datetime string:" << str;
+                return "Invalid Time";
+            }
+            return time.toString("MM-dd hh:mm"); // 输出 "08-06 23:25"
+        };
+
+        foreach (MyJson item, list)
+        {
+            if (item.contains("gift_name"))
+            {
+                sl.append(toTimeStr(item.s("create_time")) + "  => " + item.s("gift_name") + " x " + snum(item.i("number")));
+            }
+            else
+            {
+                sl.append(toTimeStr(item.s("create_time")) + "  " + item.s("msg"));
+            }
+        }
+
+        fansHistoryList->setModel(new QStringListModel(sl));
+    }
+
+    /// 获取用户档案
+    if (fansArchiveEdit->isVisible() && sqlService->isOpen() && fansArchivesService)
+    {
+        QString archive = fansArchivesService->getFansArchives(uid);
+        if (!archive.isEmpty())
+        {
+            fansArchiveEdit->setPlainText(archive);
+        }
+        else
+        {
+            fansArchiveEdit->setPlainText("【暂无档案】");
+        }
+    }
+
+    /// 联网获取用户信息
+    
+}
+
+/// TODO: 粉丝数、浏览量等异步数据，每次有刷新后更新
+void LiveDanmakuWindow::refreshUserInfoText()
+{
+
+}

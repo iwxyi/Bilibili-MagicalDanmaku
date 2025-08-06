@@ -5011,201 +5011,255 @@ void BiliLiveService::pullLiveDanmaku()
     });
 }
 
-void BiliLiveService::showFollowCountInAction(QString uid, QLabel* statusLabel, QAction *action, QAction *action2) const
+QFuture<std::tuple<QString, int, int>> BiliLiveService::getFollowCountByUID(UIDT uid) const
 {
-    QString url = "https://api.bilibili.com/x/relation/stat?vmid=" + uid;
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent().toLocal8Bit());
-    connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
+    return QtConcurrent::run([=]() {
+        QString url = "https://api.bilibili.com/x/relation/stat?vmid=" + uid;
+        QNetworkAccessManager manager;
+        QNetworkRequest request(url);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+        request.setHeader(QNetworkRequest::UserAgentHeader, getUserAgent().toLocal8Bit());
+
+        QNetworkReply* reply = manager.get(request);
+        QEventLoop loop;
+        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        loop.exec(); // 阻塞等待请求完成
+
         QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
         reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << "获取粉丝失败：" << error.errorString();
-            return ;
+        if (error.error != QJsonParseError::NoError) {
+            return std::make_tuple(QString("JSON解析错误: ") + error.errorString(), 0, 0);
         }
-        QJsonObject json = document.object();
 
+        QJsonObject json = document.object();
         int code = json.value("code").toInt();
-        if (code != 0)
-        {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
-            return ;
+        if (code != 0) {
+            QString message = json.value("message").toString();
+            if (message.isEmpty() && code == 403) {
+                message = "您没有权限";
+            }
+            return std::make_tuple(message, 0, 0);
         }
+
         QJsonObject obj = json.value("data").toObject();
-        QString following = TO_SIMPLE_NUMBER(obj.value("following").toInt()); // 关注
-        QString follower = TO_SIMPLE_NUMBER(obj.value("follower").toInt()); // 粉丝
-        // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
-        // int black = obj.value("black").toInt(); // 黑名单（自己登录）
-        if (!action2)
-        {
-            action->setText(QString("关注:%1,粉丝:%2").arg(following).arg(follower));
+        int following = obj.value("following").toInt(); // 关注数
+        int follower = obj.value("follower").toInt();   // 粉丝数
+        return std::make_tuple(QString(), following, follower);
+    });
+}
+
+QFuture<std::tuple<QString, int, int, int>> BiliLiveService::getViewCountByUID(UIDT uid) const
+{
+    return QtConcurrent::run([=]() {
+        QString url = "https://api.bilibili.com/x/space/upstat?mid=" + uid;
+        QNetworkAccessManager manager;
+        QNetworkRequest request(url);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+        request.setHeader(QNetworkRequest::UserAgentHeader, getUserAgent().toLocal8Bit());
+
+        QNetworkReply* reply = manager.get(request);
+        QEventLoop loop;
+        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        loop.exec(); // 阻塞等待请求完成
+
+        QByteArray data = reply->readAll();
+        reply->deleteLater();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError) {
+            return std::make_tuple(QString("JSON解析错误: ") + error.errorString(), 0, 0, 0);
         }
-        else
-        {
-            action->setText(QString("关注数:%1").arg(following));
-            action2->setText(QString("粉丝数:%1").arg(follower));
+
+        QJsonObject json = document.object();
+        int code = json.value("code").toInt();
+        if (code != 0) {
+            return std::make_tuple(json.value("message").toString(), 0, 0, 0);
+        }
+
+        QJsonObject obj = json.value("data").toObject();
+        int achive_view = obj.value("archive").toObject().value("view").toInt();
+        int article_view = obj.value("article").toObject().value("view").toInt();
+        int article_like = obj.value("article").toObject().value("like").toInt();
+        return std::make_tuple(QString(), achive_view, article_view, article_like);
+    });
+}
+
+QFuture<std::tuple<QString, int>> BiliLiveService::getGuardCountByRoomId(qint64 roomId, UIDT uid) const
+{
+    return QtConcurrent::run([=]() {
+        QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?roomid="
+            +snum(roomId)+"&page=1&ruid="+uid;
+        QNetworkAccessManager manager;
+        QNetworkRequest request(url);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+        request.setHeader(QNetworkRequest::UserAgentHeader, getUserAgent().toLocal8Bit());
+
+        QNetworkReply* reply = manager.get(request);
+        QEventLoop loop;
+        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        loop.exec(); // 阻塞等待请求完成
+
+        QByteArray data = reply->readAll();
+        reply->deleteLater();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError) {
+            return std::make_tuple(QString("JSON解析错误: ") + error.errorString(), 0);
+        }
+
+        QJsonObject json = document.object();
+        int code = json.value("code").toInt();
+        if (code != 0) {
+            return std::make_tuple(json.value("message").toString(), 0);
+        }
+
+        QJsonObject obj = json.value("data").toObject();
+        QJsonObject info = obj.value("info").toObject();
+        int num = info.value("num").toInt();
+        return std::make_tuple(QString(), num);
+    });
+}
+
+QFuture<std::tuple<QString, QString, QString>> BiliLiveService::getPkLevelInfoByRoomId(qint64 roomId) const
+{
+    return QtConcurrent::run([=]() {
+        QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id="+snum(roomId);
+        QNetworkAccessManager manager;
+        QNetworkRequest request(url);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+        request.setHeader(QNetworkRequest::UserAgentHeader, getUserAgent().toLocal8Bit());
+
+        QNetworkReply* reply = manager.get(request);
+        QEventLoop loop;
+        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        loop.exec(); // 阻塞等待请求完成
+
+        QByteArray data = reply->readAll();
+        reply->deleteLater();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError) {
+            return std::make_tuple(QString("JSON解析错误: ") + error.errorString(), QString(), QString());
+        }
+
+        QJsonObject json = document.object();
+        int code = json.value("code").toInt();
+        if (code != 0) {
+            return std::make_tuple(json.value("message").toString(), QString(), QString());
+        }
+
+        QJsonObject obj = json.value("data").toObject();
+        QJsonObject anchor = obj.value("anchor_info").toObject();
+        QString uname = anchor.value("base_info").toObject().value("uname").toString();
+        int level = anchor.value("live_info").toObject().value("level").toInt();
+
+        QJsonObject battle = obj.value("battle_rank_entry_info").toObject();
+        QString rankName = battle.value("rank_name").toString();
+        return std::make_tuple(QString(), uname + " " + snum(level), rankName);
+    });
+}
+
+
+void BiliLiveService::showFollowCountInAction(QString uid, QLabel* statusLabel, QAction *action, QAction *action2) const
+{
+    QFuture<std::tuple<QString, int, int>> future = getFollowCountByUID(uid);
+    auto* watcher = new QFutureWatcher<std::tuple<QString, int, int>>();
+
+    // 连接信号槽，处理异步结果
+    connect(watcher, &QFutureWatcher<std::tuple<QString, int, int>>::finished, [=]() {
+        watcher->deleteLater(); // 清理 watcher
+        auto [status, following, follower] = watcher->result();
+
+        if (!status.isEmpty()) {
+            statusLabel->setText(status); // 显示错误信息
+            return;
+        }
+
+        // 更新 QAction 文本
+        QString followingStr = TO_SIMPLE_NUMBER(following);
+        QString followerStr = TO_SIMPLE_NUMBER(follower);
+        if (!action2) {
+            action->setText(QString("关注:%1, 粉丝:%2").arg(followingStr).arg(followerStr));
+        } else {
+            action->setText(QString("关注数:%1").arg(followingStr));
+            action2->setText(QString("粉丝数:%2").arg(followerStr));
         }
     });
-    manager->get(*request);
+
+    watcher->setFuture(future); // 开始监听 Future
 }
 
 void BiliLiveService::showViewCountInAction(QString uid, QLabel* statusLabel, QAction *action, QAction *action2, QAction *action3) const
 {
-    QString url = "https://api.bilibili.com/x/space/upstat?mid=" + uid;
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent().toLocal8Bit());
-    connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
-        QByteArray ba = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
+    QFuture<std::tuple<QString, int, int, int>> future = getViewCountByUID(uid);
+    auto* watcher = new QFutureWatcher<std::tuple<QString, int, int, int>>();
 
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << "获取播放量失败：" << error.errorString();
-            return ;
+    // 连接信号槽，处理异步结果
+    connect(watcher, &QFutureWatcher<std::tuple<QString, int, int, int>>::finished, [=]() {
+        watcher->deleteLater(); // 清理 watcher
+        auto [status, achive_view, article_view, article_like] = watcher->result();
+        if (!status.isEmpty()) {
+            statusLabel->setText(status); // 显示错误信息
+            return;
         }
-        QJsonObject json = document.object();
-//        qDebug() << url;
-//        qDebug() << json;
 
-        int code = json.value("code").toInt();
-        if (code != 0)
-        {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
-            return ;
-        }
-        QJsonObject data = json.value("data").toObject();
-        int achive_view = data.value("archive").toObject().value("view").toInt();
-        int article_view = data.value("article").toObject().value("view").toInt();
-        int article_like = data.value("likes").toInt();
-
-        if (!action2 && !action3)
-        {
-            QStringList sl;
-            if (achive_view)
-                sl << "播放:" + TO_SIMPLE_NUMBER(achive_view);
-            if (article_view)
-                sl << "阅读:" + TO_SIMPLE_NUMBER(article_view);
-            if (article_like)
-                sl << "点赞:" + TO_SIMPLE_NUMBER(article_like);
-
-            if (sl.size())
-                action->setText(sl.join(","));
-            else
-                action->setText("没有投稿");
-        }
-        else
-        {
-            action->setText("播放数:" + TO_SIMPLE_NUMBER(achive_view));
-            if (action2)
-                action2->setText("阅读数:" + TO_SIMPLE_NUMBER(article_view));
-            if (action3)
-                action3->setText("获赞数:" + TO_SIMPLE_NUMBER(article_like));
+        // 更新 QAction 文本
+        QString achive_viewStr = TO_SIMPLE_NUMBER(achive_view);
+        QString article_viewStr = TO_SIMPLE_NUMBER(article_view);
+        QString article_likeStr = TO_SIMPLE_NUMBER(article_like);
+        if (!action2) {
+            action->setText(QString("视频播放量:%1, 专栏阅读量:%2, 专栏点赞数:%3").arg(achive_viewStr).arg(article_viewStr).arg(article_likeStr));
+        } else {
+            action->setText(QString("视频播放量:%1").arg(achive_viewStr));
+            action2->setText(QString("专栏阅读量:%2").arg(article_viewStr));
+            action3->setText(QString("专栏点赞数:%3").arg(article_likeStr));
         }
     });
-    manager->get(*request);
+
+    watcher->setFuture(future); // 开始监听 Future
 }
 
 void BiliLiveService::showGuardInAction(qint64 roomId, QString uid, QLabel* statusLabel, QAction *action) const
 {
-    QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?roomid="
-            +snum(roomId)+"&page=1&ruid="+uid;
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent().toLocal8Bit());
-    connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
-        QByteArray ba = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
+    QFuture<std::tuple<QString, int>> future = getGuardCountByRoomId(roomId, uid);
+    auto* watcher = new QFutureWatcher<std::tuple<QString, int>>();
 
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << "获取舰长失败：" << error.errorString();
-            return ;
+    // 连接信号槽，处理异步结果
+    connect(watcher, &QFutureWatcher<std::tuple<QString, int>>::finished, [=]() {
+        watcher->deleteLater(); // 清理 watcher
+        auto [status, num] = watcher->result();
+        if (!status.isEmpty()) {
+            statusLabel->setText(status); // 显示错误信息
+            return;
         }
-        QJsonObject json = document.object();
-
-        int code = json.value("code").toInt();
-        if (code != 0)
-        {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
-            return ;
-        }
-        QJsonObject data = json.value("data").toObject();
-        QJsonObject info = data.value("info").toObject();
-        int num = info.value("num").toInt();
-        action->setText("船员数:" + snum(num));
+        action->setText(QString("舰队数:%1").arg(num));
     });
-    manager->get(*request);
+    watcher->setFuture(future); // 开始监听 Future
 }
 
 void BiliLiveService::showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction *actionUser, QAction *actionRank) const
 {
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id="+snum(roomId);
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent().toLocal8Bit());
-    connect(manager, &QNetworkAccessManager::finished, actionUser, [=](QNetworkReply* reply){
-        QByteArray ba = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
+    QFuture<std::tuple<QString, QString, QString>> future = getPkLevelInfoByRoomId(roomId);
+    auto* watcher = new QFutureWatcher<std::tuple<QString, QString, QString>>();
 
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << "获取PK等级失败：" << error.errorString();
-            return ;
+    // 连接信号槽，处理异步结果
+    connect(watcher, &QFutureWatcher<std::tuple<QString, QString, QString>>::finished, [=]() {
+        watcher->deleteLater(); // 清理 watcher
+        auto [status, uname, rankName] = watcher->result();
+        if (!status.isEmpty()) {
+            statusLabel->setText(status); // 显示错误信息
+            return;
         }
-        QJsonObject json = document.object();
-
-        int code = json.value("code").toInt();
-        if (code != 0)
-        {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
-            return ;
-        }
-        QJsonObject data = json.value("data").toObject();
-        QJsonObject anchor = data.value("anchor_info").toObject();
-        QString uname = anchor.value("base_info").toObject().value("uname").toString();
-        int level = anchor.value("live_info").toObject().value("level").toInt();
-        actionUser->setText(uname + " " + snum(level));
-
-        QJsonObject battle = data.value("battle_rank_entry_info").toObject();
-        QString rankName = battle.value("rank_name").toString();
+        actionUser->setText(uname);
         actionRank->setText(rankName);
     });
-    manager->get(*request);
+    watcher->setFuture(future); // 开始监听 Future
 }
 
 void BiliLiveService::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs)

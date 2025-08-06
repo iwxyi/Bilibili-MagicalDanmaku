@@ -2048,6 +2048,8 @@ void MainWindow::initDanmakuWindow()
     rt->danmakuWindow = danmakuWindow;
     danmakuWindow->setLiveService(this->liveService);
     danmakuWindow->setChatService(this->chatService);
+    danmakuWindow->setSqlService(&this->sqlService);
+    danmakuWindow->setFansArchivesService(this->fansArchivesService);
     danmakuWindow->hasReply = [=](const QString& text) { return hasReply(text); };
     danmakuWindow->rejectReply = [=](const LiveDanmaku& danmaku) { return cr->isFilterRejected("FILTER_AI_REPLY", danmaku); };
 
@@ -8708,6 +8710,8 @@ void MainWindow::initFansArchivesService()
     }
     qInfo() << "初始化粉丝档案服务";
     fansArchivesService = new FansArchivesService(&sqlService, this);
+    if (this->danmakuWindow)
+        danmakuWindow->setFansArchivesService(fansArchivesService);
 
     // 连接信号
     connect(fansArchivesService, &FansArchivesService::signalFansArchivesLoadingStatusChanged, this, [=](const QString& status){

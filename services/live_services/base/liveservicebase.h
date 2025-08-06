@@ -6,6 +6,8 @@
 #include <QObjectCleanupHandler>
 #include <QDesktopServices>
 #include <QAction>
+#include <QFuture>
+#include <tuple>
 #include "widgets/netinterface.h"
 #include "livestatisticservice.h"
 #include "entities.h"
@@ -357,6 +359,10 @@ public:
     virtual bool isPositiveVote() const { return false; }
 
     /// 动作项
+    virtual QFuture<std::tuple<QString, int, int>> getFollowCountByUID(UIDT uid) const { return QFuture<std::tuple<QString, int, int>>(); }
+    virtual QFuture<std::tuple<QString, int, int, int>> getViewCountByUID(UIDT uid) const { return QFuture<std::tuple<QString, int, int, int>>(); }
+    virtual QFuture<std::tuple<QString, int>> getGuardCountByRoomId(qint64 roomId, UIDT uid) const { return QFuture<std::tuple<QString, int>>(); }
+    virtual QFuture<std::tuple<QString, QString, QString>> getPkLevelInfoByRoomId(qint64 roomId) const { return QFuture<std::tuple<QString, QString, QString>>(); }
     virtual void showFollowCountInAction(UIDT uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const {}
     virtual void showViewCountInAction(UIDT uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const {}
     virtual void showGuardInAction(qint64 roomId, UIDT uid, QLabel* statusLabel, QAction* action) const {}
