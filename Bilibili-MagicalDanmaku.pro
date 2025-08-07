@@ -139,6 +139,7 @@ SOURCES += \
     services/live_services/douyin/douyin_liveservice.cpp \
     services/live_services/base/liveservicebase.cpp \
     services/live_services/base/livestatisticservice.cpp \
+    services/live_services/douyin/douyinsignatureabogus.cpp \
     services/live_services/douyin/douyinsignaturehelper.cpp \
     services/live_services/douyin/protobuf/douyin.pb.c \
     services/sql_service/sqlservice.cpp \
@@ -306,6 +307,7 @@ HEADERS += \
     services/live_services/base/livestatisticservice.h \
     services/live_services/base/api_type.h \
     services/live_services/douyin/douyinackgenerator.h \
+    services/live_services/douyin/douyinsignatureabogus.h \
     services/live_services/douyin/douyinsignaturehelper.h \
     services/live_services/douyin/protobuf/douyin.pb.h \
     services/live_services/douyin/silentwebenginepage.h \

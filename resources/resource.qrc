@@ -222,4 +222,7 @@
         <file alias="douyin">icons/platform/douyin.png</file>
         <file alias="bilibili">icons/platform/bilibili.png</file>
     </qresource>
+    <qresource prefix="/scripts">
+        <file alias="douyin_signature">scripts/douyin_signature.js</file>
+    </qresource>
 </RCC>

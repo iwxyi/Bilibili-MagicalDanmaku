@@ -72,6 +72,37 @@ int main(int argc, char *argv[])
     pl = new PlatformInfo;
     cr = new CodeRunner;
 
+    QString text = "这是一直重复的吗";
+
+    // 方案1
+    QByteArray utf8Bytes = text.toUtf8();
+    QByteArray encoded1 = QUrl::toPercentEncoding(utf8Bytes);
+    qDebug() << "方案1结果:" << encoded1;
+
+    // 方案2
+    QUrl url;
+    url.setPath(text);
+    QString encoded2 = url.toString(QUrl::PrettyDecoded);
+    qDebug() << "方案2结果:" << encoded2;
+
+    // 方案3
+    QUrlQuery query;
+    query.addQueryItem("text", text);
+    QString encoded3 = query.toString(QUrl::PrettyDecoded);
+    qDebug() << "方案3结果:" << encoded3;
+
+    // 方案4 - 手动编码
+    QString encoded4;
+    for (int i = 0; i < utf8Bytes.size(); ++i) {
+        unsigned char byte = utf8Bytes.at(i);
+        if (byte >= 32 && byte <= 126 && byte != '%') {
+            encoded4 += QChar(byte);
+        } else {
+            encoded4 += QString("%%1").arg(byte, 2, 16, QChar('0')).toUpper();
+        }
+    }
+    qDebug() << "方案4结果:" << encoded4;
+
     MainWindow w;
     if (w.getSettings()->value("debug/logFile", false).toBool())
         qInstallMessageHandler(myMsgOutput);

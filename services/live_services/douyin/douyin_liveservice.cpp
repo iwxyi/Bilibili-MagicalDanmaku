@@ -2,6 +2,7 @@
 #include "fileutil.h"
 #include "stringutil.h"
 #include "douyinsignaturehelper.h"
+#include "douyinsignatureabogus.h"
 
 DouyinLiveService::DouyinLiveService(QObject *parent) : LiveServiceBase(parent)
 {
@@ -492,12 +493,11 @@ void DouyinLiveService::sendMsg(const QString &msg, const QString &cookie)
 }
 
 /// 发送弹幕
+/// !目前发送都是403，且会掉该Cookie登录的账号，需要重新登录
 void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const QString &cookie)
 {
-    // TODO: 发送抖音弹幕
-    return;
-    // 获取两个动态参数
-    QString msToken = ""; // 从Cookie中获取
+    qsrand(QTime::currentTime().msec());
+    QString msToken = getRandomKey(120); // xxx
     
     QStringList params{
         "aid", "6383",
@@ -508,6 +508,7 @@ void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const Q
         "browser_version", "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
         "cookie_enabled", "true",
         "device_platform", "web",
+        "enter_from", "web_live",
         "language", "zh-CN",
         "live_id", "1",
         "live_reason", "",
@@ -516,25 +517,35 @@ void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const Q
         "room_id", roomRid,
         "type", "0",
         "rtf_content", "",
-        "content", urlEncode(msg),
-        "msToken", msToken
+        "content", (msg),
+        "msToken", (msToken)
     };
 
     QString paramsStr;
     for (int i = 0; i < params.size(); i += 2)
     {
-        paramsStr += params[i] + "=" + urlDecode(params[i + 1]) + "&";
+        paramsStr += params[i] + "=";
+        paramsStr += urlEncodePercent(params[i + 1]);
+        paramsStr += "&";
     }
     paramsStr.chop(1);
 
+
+    DouyinSignatureAbogus signer;
+    QString xBogus = signer.signDetail(paramsStr, getUserAgent());
+
     QString url = "https://live.douyin.com/webcast/room/chat/?" + paramsStr;
-    DouyinSignatureHelper helper;
-    QString xBogus; // TODO: 获取a_bogus
-    url += "&a_bogus=" + xBogus;
+    url += "&a_bogus=" + urlEncodePercent(xBogus);
     qDebug() << "发送弹幕：" << url;
     return;
 
-    get(url, [=](MyJson json) {
+    get(url, [=](QString str) {
+        MyJson json(str.toUtf8());
+        if (json.hasError())
+        {
+            qWarning() << "无法解析弹幕返回：" << str;
+            return;
+        }
         if (json.i("status_code") != 0)
         {
             qWarning() << json;
