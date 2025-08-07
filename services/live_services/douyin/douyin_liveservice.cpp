@@ -499,37 +499,8 @@ void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const Q
     qsrand(QTime::currentTime().msec());
     QString msToken = getRandomKey(120); // xxx
     
-    QStringList params{
-        "aid", "6383",
-        "app_name", "douyin_web",
-        "browser_language", "zh-CN",
-        "browser_name", "Mozilla",
-        "browser_platform", "Win32",
-        "browser_version", "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
-        "cookie_enabled", "true",
-        "device_platform", "web",
-        "enter_from", "web_live",
-        "language", "zh-CN",
-        "live_id", "1",
-        "live_reason", "",
-        "screen_height", "1080",
-        "screen_width", "1920",
-        "room_id", roomRid,
-        "type", "0",
-        "rtf_content", "",
-        "content", (msg),
-        "msToken", (msToken)
-    };
-
-    QString paramsStr;
-    for (int i = 0; i < params.size(); i += 2)
-    {
-        paramsStr += params[i] + "=";
-        paramsStr += urlEncodePercent(params[i + 1]);
-        paramsStr += "&";
-    }
-    paramsStr.chop(1);
-
+    QString paramsStr = QString("aid=6383&app_name=douyin_web&live_id=1&device_platform=web&language=zh-CN&enter_from=web_live&cookie_enabled=true&screen_width=1360&screen_height=908&browser_language=zh-CN&browser_platform=MacIntel&browser_name=Chrome&browser_version=137.0.0.0&room_id=%1&content=%2&type=0&rtf_content=&msToken=%3")
+        .arg(roomRid).arg(urlEncodePercent(msg)).arg(urlEncodePercent(getRandomKey(120)));
 
     DouyinSignatureAbogus signer;
     QString xBogus = signer.signDetail(paramsStr, getUserAgent());
@@ -537,7 +508,6 @@ void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const Q
     QString url = "https://live.douyin.com/webcast/room/chat/?" + paramsStr;
     url += "&a_bogus=" + urlEncodePercent(xBogus);
     qDebug() << "发送弹幕：" << url;
-    return;
 
     get(url, [=](QString str) {
         MyJson json(str.toUtf8());
@@ -552,5 +522,49 @@ void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const Q
             QString msg = json.data().s("prompts");
             return showError("发送弹幕失败", "状态不为0：" + snum(json.i("status_code")) + "\n" + msg);
         }
+
+        MyJson data = json.data();
+        // qint64 id = data.l("id"); // =0?
+        qint64 msg_id = data.l("msg_id"); // 唯一ID
+        QString content = data.s("content"); // 发送的消息内容
+
+        MyJson user = data.o("user");
+        qint64 uid = user.l("id");
+        qint64 short_id = user.l("short_id");
+        QString nickname = user.s("nickname");
+        int gender = user.i("gender");
+        QString signature = user.s("signature");
+        int level = user.i("level"); // =0?
+        MyJson avatar_thumb = user.o("avatar_thumb");
+        QString avatar = avatar_thumb.a("url_list").first().toString();
+        bool verified = user.b("verified"); // true
+        QString city = user.s("city");
+        int status = user.i("status"); // 1
+        qint64 create_time = user.l("create_time"); // =0
+        qint64 modify_time = user.l("modify_time"); // 10位时间戳
+        QString display_id = user.s("display_id"); // 自定义的用户ID，可以是英文、下划线等
+        QString sec_uid = user.s("sec_uid");
+        int authorization_info = user.i("authorization_info"); // 3?
+        QString location_city = user.s("location_city"); // 实际地址
+        QString remark_name = user.s("remark_name"); // 空的
+        int mystery_man = user.i("mystery_man"); // 1?
+        QString webcast_uid = user.s("webcast_uid");
+
+        MyJson follow_info = user.o("follow_info");
+        int following_count = follow_info.i("following_count");
+        int follower_count = follow_info.i("follower_count");
+
+        MyJson pay_grade = user.o("pay_grade");
+        int pay_level = pay_grade.i("level"); // 荣耀等级
+
+        MyJson fans_club = user.o("fans_club").data(); // 因为我没加，这里是空数据
+
+        LiveDanmaku danmaku(nickname, content, uid, pay_level, QDateTime::fromSecsSinceEpoch(modify_time), "", "");
+        danmaku.setFromRoomId(ac->roomId);
+        danmaku.setLogId(snum(msg_id));
+        danmaku.setFaceUrl(avatar);
+        danmaku.with(data);
+        danmaku.setNoReply();
+        receiveDanmaku(danmaku);
     });
 }
