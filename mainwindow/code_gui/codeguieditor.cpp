@@ -190,7 +190,7 @@ void CodeGUIEditor::fromString(const QString &_code)
     if (firstLine.contains(":")) // 例如：`py:`
     {
         QString lang = firstLine.split(":").first().toLower();
-        if (lang.contains(QRegularExpression("^var|js|javascript|py|python|py3|python3|lua|exec$")))
+        if (lang.contains(QRegularExpression("^var|js|javascript|py|python|py3|python3|lua|exec|qml$")))
         {
             isLanguage = true;
         }

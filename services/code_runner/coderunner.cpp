@@ -58,6 +58,15 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
     connect(pythonEngine, &PythonEngine::signalLog, this, [=](const QString& log){
         localNotify(log);
     });
+
+    qmlEngine = new QmlEngine(this);
+    qmlEngine->setHeaps(heaps);
+    connect(qmlEngine, &QmlEngine::signalError, this, [=](const QString& err){
+        emit signalShowError("QML引擎", err);
+    });
+    connect(qmlEngine, &QmlEngine::signalLog, this, [=](const QString& log){
+        localNotify(log);
+    });
 }
 
 void CodeRunner::setLiveService(LiveServiceBase *service)
@@ -735,6 +744,12 @@ QString CodeRunner::replaceCodeLanguage(QString code, const LiveDanmaku& danmaku
         exePath.replace("<codes>", rt->dataPath + "codes");
         QString code = msg.mid(match.capturedLength());
         QString result = pythonEngine->runCode(danmaku, exePath, code);
+        return result;
+    }
+    else if (msg.contains(QRegularExpression("^\\s*qml:\\s*", QRegularExpression::CaseInsensitiveOption), &match))
+    {
+        QString code = msg.mid(match.capturedLength());
+        QString result = qmlEngine->runCode(danmaku, code);
         return result;
     }
 

@@ -13,6 +13,7 @@
 #include "jsengine.h"
 #include "luaengine.h"
 #include "pythonengine.h"
+#include "qmlengine.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -195,6 +196,7 @@ public:
     JSEngine* jsEngine;
     LuaEngine* luaEngine;
     PythonEngine* pythonEngine;
+    QmlEngine* qmlEngine;
 };
 
 extern CodeRunner* cr;
