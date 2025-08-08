@@ -221,7 +221,7 @@ public:
     void hideForeground();
     void delayShowed(int time, QPoint point = QPoint(0, 0));
 
-    QString getText();
+    QString getText() const;
     void setMenu(QMenu *menu);
     void adjustMinimumSize();
     void setState(bool s = true);

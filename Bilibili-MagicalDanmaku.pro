@@ -177,7 +177,7 @@ SOURCES += \
     third_party/brotli/enc/static_dict.c \
     third_party/brotli/enc/utf8_util.c \
     third_party/color_octree/coloroctree.cpp \
-    third_party/color_octree/coloroctreeutil.cpp \
+    third_party/color_octree/imageutil.cpp \
     third_party/cron/cronparser.cpp \
     third_party/cron/crontimer.cpp \
     third_party/facile_menu/facilemenu.cpp \
@@ -378,7 +378,7 @@ HEADERS += \
     third_party/calculator/func_define.h \
     third_party/calculator/function.h \
     third_party/color_octree/coloroctree.h \
-    third_party/color_octree/coloroctreeutil.h \
+    third_party/color_octree/imageutil.h \
     third_party/cron/cronparser.h \
     third_party/cron/crontimer.h \
     third_party/facile_menu/facilemenu.h \

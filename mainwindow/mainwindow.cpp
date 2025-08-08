@@ -5239,8 +5239,8 @@ void MainWindow::setRoomCover(const QPixmap& pixmap)
 
     // 设置程序主题
     QColor bg, fg, sbg, sfg;
-    auto colors = ColorOctreeUtil::extractImageThemeColors(liveService->roomCover.toImage(), 7);
-    ColorOctreeUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
+    auto colors = ImageUtil::extractImageThemeColors(liveService->roomCover.toImage(), 7);
+    ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
     prevPa = BFSColor::fromPalette(palette());
     currentPa = BFSColor(QList<QColor>{bg, fg, sbg, sfg});
     QPropertyAnimation* ani = new QPropertyAnimation(this, "paletteProg");
