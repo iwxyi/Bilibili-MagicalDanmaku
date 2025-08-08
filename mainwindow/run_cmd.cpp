@@ -348,7 +348,8 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
     {
         // {key} = val
         // {key} += val
-        QRegularExpression re("^\\s*\\{(.+?)\\}\\s*(.?)=\\s*(.*)\\s*$");
+        // {key} + val
+        QRegularExpression re("^\\s*\\{(.+?)\\}\\s*([\\+\\-\\*/%=]+)\\s*(.*)\\s*$");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QString key = match.captured(1);
@@ -356,7 +357,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QString val = match.captured(3);
             if (!key.contains("/"))
                 key = "heaps/" + key;
-            if (ope.isEmpty())
+            if (ope.isEmpty() || ope == "=")
             {
                 cr->heaps->setValue(key, val);
                 qInfo() << "set value" << key << "=" << val;
@@ -365,13 +366,13 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             {
                 qint64 v = cr->heaps->value(key).toLongLong();
                 qint64 x = val.toLongLong();
-                if (ope == "+")
+                if (ope == "+" || ope == "+=")
                     v += x;
-                else if (ope == "-")
+                else if (ope == "-" || ope == "-=")
                     v -= x;
-                else if (ope == "*")
+                else if (ope == "*" || ope == "*=")
                     v *= x;
-                else if (ope == "/")
+                else if (ope == "/" || ope == "/=")
                 {
                     if (x == 0)
                     {
@@ -380,7 +381,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                     }
                     v /= x;
                 }
-                else if (ope == "%")
+                else if (ope == "%" || ope == "%=")
                 {
                     if (x == 0)
                     {
