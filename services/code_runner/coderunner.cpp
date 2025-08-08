@@ -985,6 +985,54 @@ QString CodeRunner::processDanmakuVariants(QString msg, const LiveDanmaku& danma
             matchPos += rpls.length();
             find = true;
         }
+
+        // 简单的JS执行
+        re = QRegularExpression("%<(.*?)>%");
+        matchPos = 0;
+        while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
+        {
+            QString code = match.captured(1);
+            if (!code.contains(QRegularExpression("\\breturn\\b", QRegularExpression::CaseInsensitiveOption)))
+            {
+                // 如果有分号，则在最后一个;但后面还有代码的地方加return
+                bool addReturn = false;
+                if (code.contains(";"))
+                {
+                    int pos = code.lastIndexOf(";");
+                    if (pos > -1)
+                    {
+                        QString codeL = code.left(pos); // 最后一个分号前面的代码
+                        QString codeR = code.mid(pos + 1).trimmed(); // 最后一个分号后面的代码，要考虑可能是最后一个分号
+                        if (!codeR.isEmpty() && !codeR.startsWith("//")) // 不是空且不是注释
+                        {
+                            code = codeL + "; return " + codeR;
+                            addReturn = true;
+                        }
+                        else // 加在倒数第二个分号后面
+                        {
+                            int pos2 = codeL.lastIndexOf(";");
+                            if (pos2 > -1)
+                            {
+                                code = codeL.left(pos2) + "; return " + codeL.mid(pos2 + 1) + ";" + codeR;
+                                addReturn = true;
+                            }
+                            else // 添加失败，使用默认的
+                            {}
+                        }
+                    }
+                }
+                if (!addReturn)
+                {
+                    // 如果没有分号，则直接在最后加return
+                    code = "return " + code;
+                }
+            }
+            QString rpls = jsEngine->runCode(danmaku, code);
+            qDebug() << "JS执行结果：" << code << "   =>   " << rpls;
+            msg.replace(match.captured(0), rpls);
+            matchPos += rpls.length();
+            find = true;
+        }
     }
 
     // 无奈的替换
