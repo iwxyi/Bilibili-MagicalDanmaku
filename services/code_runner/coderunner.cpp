@@ -26,7 +26,7 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
 
     // 发送队列
     autoMsgTimer = new QTimer(this) ;
-    autoMsgTimer->setInterval(1500); // 1.5秒发一次弹幕
+    autoMsgTimer->setInterval(AUTO_MSG_CD); // 1.5秒发一次弹幕
     connect(autoMsgTimer, &QTimer::timeout, this, [=]{
         slotSendAutoMsg(true);
     });
@@ -67,6 +67,9 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
     connect(qmlEngine, &QmlEngine::signalLog, this, [=](const QString& log){
         localNotify(log);
     });
+    connect(qmlEngine, &QmlEngine::signalCmd, this, [=](const QString& cmd){
+        sendAutoMsg(cmd, LiveDanmaku());
+    });
 }
 
 void CodeRunner::setLiveService(LiveServiceBase *service)
@@ -74,12 +77,14 @@ void CodeRunner::setLiveService(LiveServiceBase *service)
     this->liveService = service;
 }
 
+/// 这里才是真正设置heaps的地方
 void CodeRunner::setHeaps(MySettings *heaps)
 {
     this->heaps = heaps;
     jsEngine->setHeaps(heaps);
     luaEngine->setHeaps(heaps);
     pythonEngine->setHeaps(heaps);
+    qmlEngine->setHeaps(heaps);
 }
 
 void CodeRunner::setMainUI(Ui::MainWindow *ui)
@@ -750,7 +755,7 @@ QString CodeRunner::replaceCodeLanguage(QString code, const LiveDanmaku& danmaku
     {
         QString code = msg.mid(match.capturedLength());
         QString result = qmlEngine->runCode(danmaku, code);
-        return result;
+        return "";
     }
 
     *ok = false;
