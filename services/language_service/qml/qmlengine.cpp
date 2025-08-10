@@ -57,9 +57,18 @@ QString QmlEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
     if (!qmlCode.contains("import QtQuick"))
         qmlCode = QString(R"(
 import QtQuick 2.12
+import QtQuick.Window 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
-import QtQuick.Window 2.12
+import QtQuick.Shapes 1.12
+import QtGraphicalEffects 1.0
+import Qt.labs.settings 1.0
+import Qt.labs.platform 1.1
+import QtQuick.LocalStorage 2.0
+import Qt.labs.folderlistmodel 2.12
+import QtMultimedia 5.12
+import QtWebSockets 1.12
+import QtQuick.Dialogs 1.3
 
 ApplicationWindow {
     id: window
