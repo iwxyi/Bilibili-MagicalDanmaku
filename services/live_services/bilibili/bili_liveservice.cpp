@@ -4665,12 +4665,6 @@ void BiliLiveService::processNewDayData()
  */
 void BiliLiveService::sendMsg(const QString& msg, const QString& cookie)
 {
-    if (us->localMode)
-    {
-        localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
-        return ;
-    }
-
     sendRoomMsg(ac->roomId, msg, cookie);
 }
 
@@ -4679,6 +4673,11 @@ void BiliLiveService::sendMsg(const QString& msg, const QString& cookie)
  */
 void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg, const QString& cookie)
 {
+    if (us->localMode)
+    {
+        localNotify("发送弹幕 -> " + _msg + "  (" + snum(msg.length()) + ")");
+        return ;
+    }
     if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
     {
         showError("发送弹幕", "机器人账号未登录");

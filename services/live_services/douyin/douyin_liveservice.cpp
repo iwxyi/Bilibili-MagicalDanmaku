@@ -496,6 +496,12 @@ void DouyinLiveService::sendMsg(const QString &msg, const QString &cookie)
 /// !目前发送都是403，且会掉该Cookie登录的账号，需要重新登录
 void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const QString &cookie)
 {
+    if (us->localMode)
+    {
+        localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
+        return ;
+    }
+
     qsrand(QTime::currentTime().msec());
     QString msToken = getRandomKey(120); // xxx
     
