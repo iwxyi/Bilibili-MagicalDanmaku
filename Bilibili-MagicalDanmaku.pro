@@ -1,4 +1,4 @@
-QT       += core gui network websockets multimedia multimediawidgets sql svg qml
+QT       += core gui network websockets multimedia multimediawidgets sql svg qml quick quickcontrols2
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -130,6 +130,7 @@ SOURCES += \
     services/language_service/js/networkwrapper.cpp \
     services/language_service/lua/luaengine.cpp \
     services/language_service/python/pythonengine.cpp \
+    services/language_service/qml/qmlengine.cpp \
     services/live_services/bilibili/bili_livecmds.cpp \
     services/live_services/bilibili/bili_liveopen_cmds.cpp \
     services/live_services/bilibili/bili_liveopenservice.cpp \
@@ -178,7 +179,7 @@ SOURCES += \
     third_party/brotli/enc/static_dict.c \
     third_party/brotli/enc/utf8_util.c \
     third_party/color_octree/coloroctree.cpp \
-    third_party/color_octree/coloroctreeutil.cpp \
+    third_party/color_octree/imageutil.cpp \
     third_party/cron/cronparser.cpp \
     third_party/cron/crontimer.cpp \
     third_party/facile_menu/facilemenu.cpp \
@@ -290,6 +291,7 @@ HEADERS += \
     services/ai_analysis_service/fansarchivesservice.h \
     services/language_service/js/networkwrapper.h \
     services/language_service/python/pythonengine.h \
+    services/language_service/qml/qmlengine.h \
     services/language_service/wrapper/danmakuwrapper.h \
     services/language_service/js/jsconsole.h \
     services/language_service/js/jsengine.h \
@@ -380,7 +382,7 @@ HEADERS += \
     third_party/calculator/func_define.h \
     third_party/calculator/function.h \
     third_party/color_octree/coloroctree.h \
-    third_party/color_octree/coloroctreeutil.h \
+    third_party/color_octree/imageutil.h \
     third_party/cron/cronparser.h \
     third_party/cron/crontimer.h \
     third_party/facile_menu/facilemenu.h \

@@ -1,3 +1,16 @@
+### v5.5.1 [实时档案、语法增强](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.5.1)
+
+- 新增抖音发送弹幕（测试）
+- 新增弹幕姬显示粉丝的历史弹幕、档案
+- 新增新的语言框架：QML，可自定义显示界面
+- 新增实时显示最新一条弹幕的用户档案
+- 新增简单计算的JS语法，示例：`%<var a = 10, b = 12; a + b>%`
+- 优化语法糖字符串运算符，示例：重复2次 `{字符串值} * 2`
+
+
+
+
+
 ### v5.5.0 [抖音弹幕、代码可视化编辑器](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.5.0)
 
 - 新增支持直播平台：抖音，已实现部分功能。

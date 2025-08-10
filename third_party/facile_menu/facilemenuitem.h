@@ -33,6 +33,9 @@ public:
     bool isLinger() const;
     FacileMenuItem* setData(QVariant data);
     QVariant getData();
+    FacileMenuItem *setDynamicCreate(bool dynamic = true);
+    void setDynamicCreateState(short state);
+    short getDynamicCreateState() const;
 
     FacileMenuItem* tip(QString sc);
     FacileMenuItem* tip(bool exp, QString sc);
@@ -96,6 +99,7 @@ private:
     int switch_value = 0; // switcher的值，用来和caser比较（不需要breaker……）
     bool switch_matched = true;
     QVariant data;
+    short dynamic_create_state = 0; // -1未触发，0未启用，1已出发
 };
 
 #endif // FACILEMENUITEM_H

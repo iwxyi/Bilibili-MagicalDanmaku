@@ -75,6 +75,7 @@ public:
     void exec(QPoint pos = QPoint(-1, -1));
     void exec(QRect expt, bool vertical = false, QPoint pos = QPoint(-1, -1));
     void execute();
+    void getBackgroupPixmap();
     void toHide(int focusIndex = -1);
     void toClose();
     bool isClosedByClick() const;
@@ -95,6 +96,9 @@ public:
     FacileMenu* setTipArea(QString longestTip);
     FacileMenu* setSplitInRow(bool split = true);
     FacileMenu* setBorderRadius(int r);
+    FacileMenu* setItemsHoverColor(QColor c);
+    FacileMenu* setItemsPressColor(QColor c);
+    FacileMenu* setItemsTextColor(QColor c);
 
     FacileMenu* setAppearAnimation(bool en);
     FacileMenu* setDisappearAnimation(bool en);
@@ -102,6 +106,7 @@ public:
 
 signals:
     void signalActionTriggered(FacileMenuItem* action);
+    void signalDynamicMenuTriggered(FacileMenuItem* item);
     void signalHidden(); // 只是隐藏了自己
 
 private slots:
@@ -134,6 +139,9 @@ public:
     static QColor text_fg;   // 字体/变色图标颜色
     static int blur_bg_alpha; // 背景图显示程度，0禁用，1~100为模糊透明度
     static QEasingCurve easing_curve; // 出现的动画曲线
+    static bool auto_dark_mode; // 是否自动根据系统设置调整颜色
+    static bool auto_theme_by_bg; // 是否根据背景颜色自动调整主题
+    static bool all_menu_same_color; // 所有菜单统一颜色（子菜单可以是不同颜色）
 
 private:
     QList<FacileMenuItem*> items;
@@ -172,6 +180,11 @@ private:
     bool enable_appear_animation = true;
     bool enable_disappear_animation = true;
     bool sub_menu_show_on_cursor = true; // 子菜单跟随鼠标出现还是在主菜单边缘
+
+    // 一些动画优化
+    QTimer* frame_timer = nullptr;
+    QColor m_bg_color;
+    QColor m_text_color;
 };
 
 #endif // FACILEMENU_H

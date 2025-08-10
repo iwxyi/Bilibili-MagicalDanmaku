@@ -17,8 +17,11 @@
 ## 为什么选择神奇弹幕？
 
 ✅ 更高效：自动化处理琐事，让你专心直播内容
+
 ✅ 更亲密：记住每个老粉的喜好，让互动更有温度
+
 ✅ 更智能：AI规划你的直播路线，越用越懂你
+
 ✅ 更自由：支持自定义规则，满足各种创意需求
 
 适合这样的你：
@@ -2861,7 +2864,7 @@ String getFaceUrl() // 头像URL
 | 2    | 送礼       |
 | 3    | 欢迎       |
 | 4    | 点歌       |
-| 5    | 上船       |
+| 5    | 购买大航海 |
 | 6    | 欢迎舰长   |
 | 7    | 粉丝       |
 | 8    | 关注       |
@@ -3119,6 +3122,92 @@ exec:<codes>/venv/bin/python:
 import sys
 print(">localNotify(111111)")
 ```
+
+#### QML
+
+前缀为 `qml:`，允许用户使用 QML 代码来创建自定义的**用户界面**，从而进行更简单的交互动作。
+
+##### 交互指令
+
+- `sendCmd(text)`：发送指令给主程序，可以是弹幕、命令等所有主程序内可以使用的代码
+- `closeDialog()`：关闭子窗口
+
+##### 示例：显示弹幕
+
+```qml
+qml:
+// 窗口属性
+width: 600
+height: 400
+title: "弹幕处理界面"
+
+// 主布局容器
+ColumnLayout {
+    id: mainLayout
+    anchors.fill: parent
+    anchors.margins: 20
+    spacing: 10
+
+    // 默认显示弹幕信息（如果用户没有自定义）
+    Text {
+        id: defaultTitle
+        text: "弹幕信息"
+        font.pixelSize: 18
+        font.bold: true
+    }
+
+    Text {
+        id: defaultNickname
+        text: "用户: " + danmaku.getNickname()
+        font.pixelSize: 14
+    }
+
+    Text {
+        id: defaultText
+        text: "内容: " + danmaku.getText()
+        font.pixelSize: 14
+    }
+
+    Text {
+        id: defaultLevel
+        text: "等级: " + danmaku.getLevel()
+        font.pixelSize: 14
+    }
+
+    Item {
+        Layout.fillHeight: true
+    }
+
+    RowLayout {
+        id: defaultButtons
+        Layout.fillWidth: true
+
+        Item {
+            Layout.fillWidth: true
+        }
+
+        Button {
+            text: "确定"
+            onClicked: {
+                sendCmd("用户点击了确定")
+                closeDialog()
+            }
+        }
+
+        Button {
+            text: "取消"
+            onClicked: {
+                sendCmd("用户点击了取消")
+                closeDialog()
+            }
+        }
+    }
+}
+```
+
+> 特殊规则：本程序中的默认 QML 窗口框架以 `ApplicationWindow` 包裹，但是当用户写的代码以 `import QtQuick x.x` 开头时，将不使用该结构，界面、信号、动作等全权交由用户指定。
+
+
 
 #### 从代码文件导入
 

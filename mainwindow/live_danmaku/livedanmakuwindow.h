@@ -36,6 +36,8 @@
 #include <QNetworkCookie>
 #include <QFontDialog>
 #include <QTextBrowser>
+#include <QPlainTextEdit>
+#include <QSplitter>
 #include "runtimeinfo.h"
 #include "usersettings.h"
 #include "accountinfo.h"
@@ -48,6 +50,8 @@
 #include "portraitlabel.h"
 #include "externalblockdialog.h"
 #include "chat_service/chatservice.h"
+#include "fansarchivesservice.h"
+#include "sqlservice.h"
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
@@ -77,6 +81,8 @@ public:
 
     void setLiveService(LiveServiceBase *service);
     void setChatService(ChatService* service);
+    void setSqlService(SqlService* service);
+    void setFansArchivesService(FansArchivesService* service);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -87,22 +93,24 @@ protected:
     void resizeEvent(QResizeEvent *) override;
     void paintEvent(QPaintEvent *) override;
     void keyPressEvent(QKeyEvent *event) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 signals:
     void signalSendMsg(QString msg);
     void signalSendMsgToPk(QString msg);
-    void signalMarkUser(QString uid);
-    void signalAddBlockUser(QString uid, int hour, QString msg);
-    void signalDelBlockUser(QString uid);
-    void signalEternalBlockUser(QString uid, QString uname, QString msg);
-    void signalCancelEternalBlockUser(QString uid);
+    void signalMarkUser(UIDT uid);
+    void signalAddBlockUser(UIDT uid, int hour, QString msg);
+    void signalDelBlockUser(UIDT uid);
+    void signalEternalBlockUser(UIDT uid, QString uname, QString msg);
+    void signalCancelEternalBlockUser(UIDT uid);
     void signalChangeWindowMode();
     void signalAIReplyed(QString msg, LiveDanmaku danmaku);
     void signalShowPkVideo();
     void signalTransMouse(bool enabled);
     void signalAddCloudShieldKeyword(QString text);
-    void signalAppointAdmin(QString uid);
-    void signalDismissAdmin(QString uid);
+    void signalAppointAdmin(UIDT uid);
+    void signalDismissAdmin(UIDT uid);
+    void signalCurrentUidChanged(UIDT uid);
 
 public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
@@ -115,6 +123,7 @@ public slots:
     void resetItemsStyleSheet();
     void mergeGift(const LiveDanmaku &danmaku, int delayTime);
     void removeAll();
+    void adjustListWidgetItemsWidth();
 
     void showMenu();
     void showEditMenu();
@@ -146,15 +155,18 @@ public slots:
     void addBlockText(QString text);
     void removeBlockText(QString text);
 
+    void loadUserInfo(const LiveDanmaku& danmaku);
+    void refreshUserInfoText();
+
 private:
     bool isItemExist(QListWidgetItem *item);
     PortraitLabel* getItemWidgetPortrait(QListWidgetItem *item);
     QLabel *getItemWidgetLabel(QListWidgetItem *item);
     void adjustItemTextDynamic(QListWidgetItem* item);
     void getUserInfo(LiveDanmaku danmaku, QListWidgetItem *item);
-    void getUserHeadPortrait(QString uid, QString url, QListWidgetItem *item);
-    QString headPath(QString uid) const;
-    void showUserMsgHistory(QString uid, QString title);
+    void getUserHeadPortrait(UIDT uid, QString url, QListWidgetItem *item);
+    QString headPath(UIDT uid) const;
+    void showUserMsgHistory(UIDT uid, QString title);
     QString getPinyin(QString text);
     QVariant getCookies();
     void selectBgPicture();
@@ -170,8 +182,14 @@ private:
 
 private:
     QWidget* moveBar;
+    QHBoxLayout* mainLayout;
+    QSplitter* splitter;
+    QWidget* leftWidget;
     QListWidget* listWidget;
     TransparentEdit* lineEdit;
+    QListView* fansHistoryList = nullptr;
+    QPlainTextEdit* fansArchiveEdit = nullptr;
+
 #if defined(ENABLE_SHORTCUT)
     QxtGlobalShortcut* editShortcut;
 #endif
@@ -202,6 +220,7 @@ private:
     bool blockCommonNotice = true; // 屏蔽常见通知（尤其是大乱斗那些）
     bool hideGiftPrice = false; // 隐藏礼物价格
     QStringList blockedTexts;
+    bool realTimeRefreshUserInfo = true;
 
     QString headDir; // 头像保存的路径/ (带/)
     bool headerApiIsBanned = false;
@@ -237,6 +256,8 @@ private:
 
     LiveServiceBase *liveService = nullptr;
     ChatService* chatService = nullptr;
+    SqlService* sqlService = nullptr;
+    FansArchivesService* fansArchivesService = nullptr;
 
     FuncJudgeTextType hasReply = nullptr;
     FuncJudgeDanmakuType rejectReply = nullptr; // 弹幕是否触发AI回复

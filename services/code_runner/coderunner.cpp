@@ -26,7 +26,7 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
 
     // 发送队列
     autoMsgTimer = new QTimer(this) ;
-    autoMsgTimer->setInterval(1500); // 1.5秒发一次弹幕
+    autoMsgTimer->setInterval(AUTO_MSG_CD); // 1.5秒发一次弹幕
     connect(autoMsgTimer, &QTimer::timeout, this, [=]{
         slotSendAutoMsg(true);
     });
@@ -58,6 +58,18 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
     connect(pythonEngine, &PythonEngine::signalLog, this, [=](const QString& log){
         localNotify(log);
     });
+
+    qmlEngine = new QmlEngine(this);
+    qmlEngine->setHeaps(heaps);
+    connect(qmlEngine, &QmlEngine::signalError, this, [=](const QString& err){
+        emit signalShowError("QML引擎", err);
+    });
+    connect(qmlEngine, &QmlEngine::signalLog, this, [=](const QString& log){
+        localNotify(log);
+    });
+    connect(qmlEngine, &QmlEngine::signalCmd, this, [=](const QString& cmd){
+        sendAutoMsg(cmd, LiveDanmaku());
+    });
 }
 
 void CodeRunner::setLiveService(LiveServiceBase *service)
@@ -65,12 +77,14 @@ void CodeRunner::setLiveService(LiveServiceBase *service)
     this->liveService = service;
 }
 
+/// 这里才是真正设置heaps的地方
 void CodeRunner::setHeaps(MySettings *heaps)
 {
     this->heaps = heaps;
     jsEngine->setHeaps(heaps);
     luaEngine->setHeaps(heaps);
     pythonEngine->setHeaps(heaps);
+    qmlEngine->setHeaps(heaps);
 }
 
 void CodeRunner::setMainUI(Ui::MainWindow *ui)
@@ -737,6 +751,12 @@ QString CodeRunner::replaceCodeLanguage(QString code, const LiveDanmaku& danmaku
         QString result = pythonEngine->runCode(danmaku, exePath, code);
         return result;
     }
+    else if (msg.contains(QRegularExpression("^\\s*qml:\\s*", QRegularExpression::CaseInsensitiveOption), &match))
+    {
+        QString code = msg.mid(match.capturedLength());
+        QString result = qmlEngine->runCode(danmaku, code);
+        return "";
+    }
 
     *ok = false;
     return msg;
@@ -981,6 +1001,54 @@ QString CodeRunner::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
         {
             QString rpls = replaceDynamicVariants(match.captured(1), match.captured(2), danmaku);
+            msg.replace(match.captured(0), rpls);
+            matchPos += rpls.length();
+            find = true;
+        }
+
+        // 简单的JS执行
+        re = QRegularExpression("%<(.*?)>%");
+        matchPos = 0;
+        while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
+        {
+            QString code = match.captured(1);
+            if (!code.contains(QRegularExpression("\\breturn\\b", QRegularExpression::CaseInsensitiveOption)))
+            {
+                // 如果有分号，则在最后一个;但后面还有代码的地方加return
+                bool addReturn = false;
+                if (code.contains(";"))
+                {
+                    int pos = code.lastIndexOf(";");
+                    if (pos > -1)
+                    {
+                        QString codeL = code.left(pos); // 最后一个分号前面的代码
+                        QString codeR = code.mid(pos + 1).trimmed(); // 最后一个分号后面的代码，要考虑可能是最后一个分号
+                        if (!codeR.isEmpty() && !codeR.startsWith("//")) // 不是空且不是注释
+                        {
+                            code = codeL + "; return " + codeR;
+                            addReturn = true;
+                        }
+                        else // 加在倒数第二个分号后面
+                        {
+                            int pos2 = codeL.lastIndexOf(";");
+                            if (pos2 > -1)
+                            {
+                                code = codeL.left(pos2) + "; return " + codeL.mid(pos2 + 1) + ";" + codeR;
+                                addReturn = true;
+                            }
+                            else // 添加失败，使用默认的
+                            {}
+                        }
+                    }
+                }
+                if (!addReturn)
+                {
+                    // 如果没有分号，则直接在最后加return
+                    code = "return " + code;
+                }
+            }
+            QString rpls = jsEngine->runCode(danmaku, code);
+            qDebug() << "JS执行结果：" << code << "   =>   " << rpls;
             msg.replace(match.captured(0), rpls);
             matchPos += rpls.length();
             find = true;

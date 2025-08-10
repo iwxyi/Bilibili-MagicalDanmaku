@@ -97,6 +97,25 @@ QVariant FacileMenuItem::getData()
     return data;
 }
 
+FacileMenuItem* FacileMenuItem::setDynamicCreate(bool dynamic)
+{
+    if (dynamic)
+        setDynamicCreateState(-1);
+    else
+        setDynamicCreateState(0);
+    return this;
+}
+
+void FacileMenuItem::setDynamicCreateState(short state)
+{
+    this->dynamic_create_state = state;
+}
+
+short FacileMenuItem::getDynamicCreateState() const
+{
+    return dynamic_create_state;
+}
+
 FacileMenuItem *FacileMenuItem::tip(QString sc)
 {
     shortcut_tip = sc;

@@ -134,10 +134,14 @@ public:
     int getPositiveVoteCount() const override;
     bool isPositiveVote() const override;
 
-    void showFollowCountInAction(UIDT uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const override;
-    void showViewCountInAction(UIDT uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const override;
-    void showGuardInAction(qint64 roomId, UIDT uid, QLabel* statusLabel, QAction* action) const override;
-    void showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction* actionUser, QAction* actionRank) const override;
+    virtual QFuture<std::tuple<QString, int, int>> getFollowCountByUID(UIDT uid) const override;
+    virtual QFuture<std::tuple<QString, int, int, int>> getViewCountByUID(UIDT uid) const override;
+    virtual QFuture<std::tuple<QString, int>> getGuardCountByRoomId(qint64 roomId, UIDT uid) const override;
+    virtual QFuture<std::tuple<QString, QString, QString>> getPkLevelInfoByRoomId(qint64 roomId) const override;
+    virtual void showFollowCountInAction(UIDT uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const override;
+    virtual void showViewCountInAction(UIDT uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const override;
+    virtual void showGuardInAction(qint64 roomId, UIDT uid, QLabel* statusLabel, QAction* action) const override;
+    virtual void showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction* actionUser, QAction* actionRank) const override;
 
     void judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;
     void judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;

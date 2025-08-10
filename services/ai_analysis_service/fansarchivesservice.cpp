@@ -23,6 +23,15 @@ void FansArchivesService::start()
     timer->start();
 }
 
+QString FansArchivesService::getFansArchives(const QString& uid)
+{
+    MyJson json = sqlService->getFansArchives(uid);
+    if (!json.isEmpty()) {
+        return json.value("archive").toString();
+    }
+    return QString();
+}
+
 void FansArchivesService::onTimer()
 {
     if (!sqlService || !sqlService->isOpen())

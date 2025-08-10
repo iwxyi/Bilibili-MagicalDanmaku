@@ -348,7 +348,13 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
     {
         // {key} = val
         // {key} += val
-        QRegularExpression re("^\\s*\\{(.+?)\\}\\s*(.?)=\\s*(.*)\\s*$");
+        // {key} + val
+        auto isPureNumber = [=](QString s) -> bool {
+            bool ok;
+            s.toInt(&ok);
+            return ok;
+        };
+        QRegularExpression re("^\\s*\\{(.+?)\\}\\s*([\\+\\-\\*/%=]+)\\s*(.*)\\s*$");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QString key = match.captured(1);
@@ -356,22 +362,88 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QString val = match.captured(3);
             if (!key.contains("/"))
                 key = "heaps/" + key;
-            if (ope.isEmpty())
+            QString keyS = cr->heaps->value(key).toString();
+            if (ope.isEmpty() || ope == "=")
             {
                 cr->heaps->setValue(key, val);
                 qInfo() << "set value" << key << "=" << val;
+            }
+            else if (!isPureNumber(keyS) || !isPureNumber(val)) // 字符串操作
+            {
+                if (ope == "+" || ope == "+=")
+                    keyS += val;
+                else if (ope == "-" || ope == "-=")
+                {
+                    if (isPureNumber(val))
+                    {
+                        keyS += val;
+                    }
+                    else // 字符串查找并减去
+                    {
+                        int pos = keyS.indexOf(val);
+                        if (pos > -1)
+                            keyS = keyS.left(pos) + keyS.mid(pos + val.length());
+                        else
+                            showError("字符串查找失败", keyS + "中没有" + val);
+                    }
+                }
+                else if (ope == "*" || ope == "*=")
+                {
+                    if (isPureNumber(val)) // keyS重复val次
+                    {
+                        int n = val.toInt();
+                        if (n > 0)
+                        {
+                            keyS = keyS.repeated(n);
+                        }
+                        else
+                        {
+                            showError("重复次数小于1", msg);
+                        }
+                    }
+                    else
+                    {
+                        showError("不支持的字符串*运算", msg);
+                    }
+                }
+                else if (ope == "/" || ope == "/=")
+                {
+                    if (isPureNumber(val)) // 长度除以N
+                    {
+                        int n = val.toInt();
+                        if (n > 0)
+                        {
+                            keyS = keyS.left(keyS.length() / n);
+                        }
+                        else
+                        {
+                            showError("除数小于1", msg);
+                        }
+                    }
+                    else // 除去里面所有val
+                    {
+                        QStringList list = keyS.split(val);
+                        keyS = list.join("");
+                    }
+                }
+                else
+                {
+                    qWarning() << "不支持的操作符：" << ope;
+                }
+                cr->heaps->setValue(key, keyS);
+                qInfo() << "set value" << key << "=" << keyS;
             }
             else // 数值运算
             {
                 qint64 v = cr->heaps->value(key).toLongLong();
                 qint64 x = val.toLongLong();
-                if (ope == "+")
+                if (ope == "+" || ope == "+=")
                     v += x;
-                else if (ope == "-")
+                else if (ope == "-" || ope == "-=")
                     v -= x;
-                else if (ope == "*")
+                else if (ope == "*" || ope == "*=")
                     v *= x;
-                else if (ope == "/")
+                else if (ope == "/" || ope == "/=")
                 {
                     if (x == 0)
                     {
@@ -380,7 +452,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                     }
                     v /= x;
                 }
-                else if (ope == "%")
+                else if (ope == "%" || ope == "%=")
                 {
                     if (x == 0)
                     {
@@ -2451,6 +2523,11 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QString text = caps.at(1);
             QString uname = caps.at(2);
             qInfo() << "执行命令：" << caps;
+            if (!ui->DiangeAutoCopyCheck->isChecked())
+            {
+                qInfo() << "点歌总开关已关闭";
+                return true;
+            }
             if (!musicWindow)
                 on_actionShow_Order_Player_Window_triggered();
             musicWindow->slotSearchAndAutoAppend(text, uname);
