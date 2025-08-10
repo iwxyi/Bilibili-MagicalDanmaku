@@ -40,6 +40,7 @@ QString removeBlank(QString s, bool start = true, bool end = true); // 同trim�
 QString simplifyChapter(QString chpt); // 去首尾空白，留下第一段空白缩进
 
 QString urlEncode(QString s);
+QString urlEncodePercent(QString s);
 QString urlDecode(QString s);
 bool canBeNickname(QString s);
 
