@@ -1841,7 +1841,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                                 {
                                     QString _var = match2.captured(0);
                                     QString text = match2.captured(1);
-                                    text = snum(ConditionUtil::calcIntExpression(text));
+                                    text = snum(CalculatorUtil::calcIntExpression(text));
                                     newValue.replace(_var, text); // 默认使用变量类型吧
                                 }
                             }

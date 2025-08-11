@@ -1,6 +1,5 @@
 #include "coderunner.h"
 #include "conditionutil.h"
-#include "calculator/calculator_util.h"
 #include "ui_mainwindow.h"
 #ifdef Q_OS_WIN
 #include "widgets/windowshwnd.h"
@@ -980,17 +979,14 @@ QString CodeRunner::processDanmakuVariants(QString msg, const LiveDanmaku& danma
 
         // 进行数学计算的变量
         if (!us->complexCalc)
-            re = QRegularExpression("%\\[([\\d\\+\\-\\*/% \\(\\)]*?)\\]%"); // 纯数字+运算符+括号
+            re = QRegularExpression(R"(%\[([\d\+\-\*/%^\s\(\)]*?)\]%)"); // 纯数字+运算符+括号
         else
-            re = QRegularExpression("%\\[([^(%(\\{|\\[|>))]*?)\\]%"); // 允许里面带点字母，用来扩展函数
+            re = QRegularExpression(R"(%\[(?!.*%(?:\(|\{|\[|<)).*?\]%)"); // 允许里面带点字母，用来扩展函数
         while (msg.indexOf(re, 0, &match) > -1)
         {
             QString _var = match.captured(0);
             QString text = match.captured(1);
-            if (!us->complexCalc)
-                text = QString::number(ConditionUtil::calcIntExpression(text));
-            else
-                text = QString::number(CalculatorUtil::calculate(text.toStdString().c_str()));
+            text = QString::number(CalculatorUtil::calcIntExpression(text));
             msg.replace(_var, text); // 默认使用变量类型吧
             find = true;
         }

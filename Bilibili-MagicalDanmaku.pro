@@ -214,6 +214,7 @@ SOURCES += \
     third_party/notification/tipcard.cpp \
     third_party/qss_editor/qsseditdialog.cpp \
     third_party/qss_editor/qsshighlighteditor.cpp \
+    third_party/utils/calculatorutil.cpp \
     third_party/utils/httpuploader.cpp \
     third_party/utils/microsofttts.cpp \
     third_party/utils/rsautil.cpp \
@@ -377,10 +378,6 @@ HEADERS += \
     third_party/brotli/include/brotli/port.h \
     third_party/brotli/include/brotli/shared_dictionary.h \
     third_party/brotli/include/brotli/types.h \
-    third_party/calculator/Digit.h \
-    third_party/calculator/calculator_util.h \
-    third_party/calculator/func_define.h \
-    third_party/calculator/function.h \
     third_party/color_octree/coloroctree.h \
     third_party/color_octree/imageutil.h \
     third_party/cron/cronparser.h \
@@ -424,6 +421,7 @@ HEADERS += \
     third_party/qss_editor/qsshighlighteditor.h \
     third_party/utils/ImageSimilarityUtil.h \
     third_party/utils/bili_api_util.h \
+    third_party/utils/calculatorutil.h \
     third_party/utils/chatgptutil.h \
     third_party/utils/conditionutil.h \
     third_party/utils/emailutil.h \

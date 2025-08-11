@@ -1888,8 +1888,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>974</width>
-             <height>1765</height>
+             <width>972</width>
+             <height>1731</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -11420,7 +11420,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1054</width>
-     <height>26</height>
+     <height>37</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

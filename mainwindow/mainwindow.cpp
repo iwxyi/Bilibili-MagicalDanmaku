@@ -10997,7 +10997,7 @@ void MainWindow::on_forumButton_clicked()
 
 void MainWindow::on_complexCalcCheck_clicked()
 {
-    us->setValue("programming/compexCalc", us->complexCalc = ui->complexCalcCheck->isChecked());
+    us->setValue("programming/complexCalc", us->complexCalc = ui->complexCalcCheck->isChecked());
 }
 
 /**
