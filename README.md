@@ -3484,7 +3484,7 @@ JSON 格式：
 
 实现了一些简单的接口，便于使用：
 
-- 用户头像：`/api/header?uid=123456`，可直接用于 `<img>` 标签
+- 用户头像（已失效）：`/api/header?uid=123456`，可直接用于 `<img>` 标签
 
   ```html
   <img src="http://__DOMAIN__:__PORT__/api/header?uid=123456" />
@@ -3509,6 +3509,48 @@ JSON 格式：
   - 获取所有配置：`/api/readConfig`，返回 `settings.ini` 文件内容。如果带有参数`format=json`则以JSON格式返回，否则返回纯INI文本；如果带有参数`key`则读取指定配置，返回纯字符串
   - 设置单个值：`/api/setConfig?key=xxx&value=xxx&reload=1`，当`reload`不为空时自动重新加载所有配置
   - 主程序重新加载所有配置：`/api/reloadConfig`
+
+### 默认WS工具
+
+在 "www/js" 文件夹下内置了 `magical_danmaku.js`，使用之后，可以更简单地连接主程序的 WebSocket，您只需要关注 Web 应用的实现。
+
+```html
+<script src="../js/magical_danmaku.js"></script>
+```
+
+以下是一些示例：
+
+```js
+// 全局变量，直接覆盖即可
+// 需要使用的 cmd 类型，可以是多个，为空则表示所有（影响性能）
+usedMsgType = ["DANMU_MSG", "SEND_GIFT"];
+// 解析CMD，自动调用
+function parseCmd(cmd, data) {
+    if (cmd == "DANMU_MSG") { /* ... */ }
+}
+
+// 配置分组，建议每个小程序一个分组
+configGroup = "danmu";
+// 如果分组非空，连接后自动获取一次该分组下的所有配置
+function readConfig(data) {
+	if (data['count'] == 3) { /* ... */ }
+}
+
+// WebSocket连接成功后的自定义操作，可以获取一些数据
+function socketInited() {
+    // 这里是获取房间号 %room_id% 的值，放在键 current_room_id 中
+    var json = {
+        cmd: "GET_INFO",
+        data: { current_room_id: "%room_id%" }
+    }
+    appWs.send(JSON.stringify(json));
+}
+// 返回上面需要获取的数据，自动调用
+function readInfo(data) {
+    currentRoomId = data['current_room_id'];
+}
+```
+
 
 
 ### 网页程序打包
