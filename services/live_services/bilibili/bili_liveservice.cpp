@@ -4675,7 +4675,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg, const QSt
 {
     if (us->localMode)
     {
-        localNotify("发送弹幕 -> " + _msg + "  (" + snum(msg.length()) + ")");
+        localNotify("发送弹幕 -> " + _msg + "  (" + snum(_msg.length()) + ")");
         return ;
     }
     if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())

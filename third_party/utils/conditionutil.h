@@ -147,92 +147,23 @@ public:
 
     /**
      * 计算纯int、运算符组成的表达式
-     * 不支持括号、优先级判断
+     * 支持嵌套括号、运算符优先级、负数
      * 1 + 2 + 3
      * 1 + 2 * 3 / 4
+     * (1 + 2) * 3
+     * -5 + 3 * (2 - 1)
      */
     static qint64 calcIntExpression(QString exp)
     {
-        exp = exp.replace(QRegularExpression("\\s*"), ""); // 去掉所有空白
-        QRegularExpression opRe("[\\+\\-\\*/%]");
-
-        // 获取所有整型数值
-        QStringList valss = exp.split(opRe); // 如果是-开头，那么会当做 0-x
-        if (valss.size() == 0)
-            return 0;
-        QList<qint64> vals;
-        foreach (QString val, valss)
-        {
-            bool ok = true;
-            qint64 ll = val.toLongLong(&ok);
-            if (!ok && !val.isEmpty())
-            {
-                qWarning() << "转换整数值失败：" << exp;
-                qDebug() << "exp:" << exp << exp.startsWith("\"") << ll;
-                if (val.length() > 18) // 19位数字，超出了ll的范围
-                    ll = val.right(18).toLongLong();
-            }
-            vals << ll;
-        }
-
-        // 获取所有运算符
-        QStringList ops;
-        QRegularExpressionMatchIterator i = opRe.globalMatch(exp);
-        while (i.hasNext())
-        {
-            ops << i.next().captured(0);
-        }
-        if (valss.size() != ops.size() + 1)
-        {
-            qCritical() << "错误的表达式：" << valss << ops << exp;
+        // 去掉所有空白字符
+        exp.remove(QRegularExpression("\\s"));
+        
+        if (exp.isEmpty()) {
+            qWarning() << "表达式为空，返回0";
             return 0;
         }
-
-        // 入栈：* / %
-        for (int i = 0; i < ops.size(); i++)
-        {
-            // op[i] 操作 vals[i] x vals[i+1]
-            if (ops[i] == "*")
-            {
-                vals[i] *= vals[i+1];
-            }
-            else if (ops[i] == "/")
-            {
-                // qDebug() << "除法" << ops << vals;
-                if (vals[i+1] == 0)
-                {
-                    qWarning() << "!!!被除数是0 ：" << exp;
-                    vals[i+1] = 1;
-                }
-                vals[i] /= vals[i+1];
-            }
-            else if (ops[i] == "%")
-            {
-                if (vals[i+1] == 0)
-                {
-                    qWarning() << "!!!被模数是0 ：" << exp;
-                    vals[i+1] = 1;
-                }
-                vals[i] %= vals[i+1];
-            }
-            else
-                continue;
-            vals.removeAt(i+1);
-            ops.removeAt(i);
-            i--;
-        }
-
-        // 顺序计算：+ -
-        qint64 val = vals.first();
-        for (int i = 0; i < ops.size(); i++)
-        {
-            if (ops[i] == "-")
-                val -= vals[i+1];
-            else if (ops[i] == "+")
-                val += vals[i+1];
-        }
-
-        return val;
+        
+        return parseExpression(exp);
     }
 
     template<typename T>
@@ -252,6 +183,171 @@ public:
             return a <= b;
         qWarning() << "无法识别的比较模板类型：" << a << op << b;
         return false;
+    }
+
+private:
+    /**
+     * 解析表达式（处理加减）
+     */
+    static qint64 parseExpression(QString& exp)
+    {
+        if (exp.isEmpty()) {
+            return 0;
+        }
+        
+        qint64 left = parseTerm(exp);
+        
+        while (!exp.isEmpty()) {
+            QChar ch = exp[0];
+            if (ch != '+' && ch != '-') break;
+            
+            char op = ch.toLatin1();
+            exp = exp.mid(1);
+            
+            if (exp.isEmpty()) {
+                qWarning() << "运算符后缺少操作数，默认为0：" << op;
+                return left;
+            }
+            
+            qint64 right = parseTerm(exp);
+            
+            if (op == '+')
+                left += right;
+            else
+                left -= right;
+        }
+        
+        return left;
+    }
+    
+    /**
+     * 解析项（处理乘除模）
+     */
+    static qint64 parseTerm(QString& exp)
+    {
+        if (exp.isEmpty()) {
+            return 0;
+        }
+        
+        qint64 left = parseFactor(exp);
+        
+        while (!exp.isEmpty()) {
+            QChar ch = exp[0];
+            if (ch != '*' && ch != '/' && ch != '%') break;
+            
+            char op = ch.toLatin1();
+            exp = exp.mid(1);
+            
+            if (exp.isEmpty()) {
+                qWarning() << "运算符后缺少操作数，默认为1：" << op;
+                if (op == '/') left /= 1;
+                else if (op == '%') left %= 1;
+                else left *= 1;
+                return left;
+            }
+            
+            qint64 right = parseFactor(exp);
+            
+            if (op == '*')
+                left *= right;
+            else if (op == '/')
+            {
+                if (right == 0)
+                {
+                    qWarning() << "!!!被除数是0，使用1代替：" << exp;
+                    right = 1;
+                }
+                left /= right;
+            }
+            else if (op == '%')
+            {
+                if (right == 0)
+                {
+                    qWarning() << "!!!被模数是0，使用1代替：" << exp;
+                    right = 1;
+                }
+                left %= right;
+            }
+        }
+        
+        return left;
+    }
+    
+    /**
+     * 解析因子（处理数字、括号、负数）
+     */
+    static qint64 parseFactor(QString& exp)
+    {
+        if (exp.isEmpty()) {
+            return 0;
+        }
+        
+        QChar ch = exp[0];
+        
+        // 处理负数
+        if (ch == '-')
+        {
+            exp = exp.mid(1);
+            if (exp.isEmpty()) {
+                qWarning() << "负号后缺少数字，默认为0";
+                return 0;
+            }
+            return -parseFactor(exp);
+        }
+        
+        // 处理正数符号（可选）
+        if (ch == '+')
+        {
+            exp = exp.mid(1);
+            if (exp.isEmpty()) {
+                qWarning() << "正号后缺少数字，默认为0";
+                return 0;
+            }
+        }
+        
+        // 处理括号
+        if (ch == '(')
+        {
+            exp = exp.mid(1); // 跳过左括号
+            qint64 result = parseExpression(exp);
+            
+            if (!exp.isEmpty() && exp[0] == ')')
+            {
+                exp = exp.mid(1); // 跳过右括号
+                return result;
+            }
+            else
+            {
+                qWarning() << "缺少右括号，自动补全：" << exp;
+                return result;
+            }
+        }
+        
+        // 处理数字 - 使用手动解析替代正则表达式
+        if (ch.isDigit())
+        {
+            qint64 num = 0;
+            int startPos = 0;
+            int len = exp.length();
+            
+            // 手动解析数字，避免正则表达式开销
+            while (startPos < len && exp[startPos].isDigit()) {
+                num = num * 10 + (exp[startPos].digitValue());
+                startPos++;
+            }
+            
+            exp = exp.mid(startPos);
+            return num;
+        }
+        
+        // 处理其他无法识别的字符
+        qWarning() << "无法解析的表达式，跳过第一个字符：" << exp;
+        if (!exp.isEmpty()) {
+            exp = exp.mid(1);
+            return parseFactor(exp); // 递归尝试解析剩余部分
+        }
+        
+        return 0;
     }
 };
 
