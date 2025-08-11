@@ -2593,7 +2593,7 @@ tips：
 | FILTER_DANMAKU_NOTICE    | 阻止普通通知(Common Notice)显示在弹幕姬上                    |
 | FILTER_KEYWORD_BLOCK     | 阻止关键词自动禁言                                           |
 | FILTER_API_EVENT         | 阻止HTTP触发事件的接口，`%text%`获取事件名字                 |
-| FILTER_AI_REPLY          | 阻止触发AI回复，`%text%` 获取弹幕<br />避免不必要的回复可节约消耗，提升性能 |
+| FILTER_AI_REPLY          | 阻止触发AI回复，`%text%` 获取弹幕。但是在弹幕姬菜单手动点击“AI回复”会进行强制回复。<br />避免不必要的回复可节约token消耗，提升性能 |
 | FILTER_AI_REPLY_MSG      | 阻止AI回复发送弹幕，`%text%` 获取弹幕，`%reply%` 获取回复内容 |
 
 若有多个相同过滤器，只要**任意其中一个**包括 `>reject()` 命令，则本操作不允许。

@@ -104,7 +104,6 @@ signals:
     void signalEternalBlockUser(UIDT uid, QString uname, QString msg);
     void signalCancelEternalBlockUser(UIDT uid);
     void signalChangeWindowMode();
-    void signalAIReplyed(QString msg, LiveDanmaku danmaku);
     void signalShowPkVideo();
     void signalTransMouse(bool enabled);
     void signalAddCloudShieldKeyword(QString text);
@@ -131,8 +130,7 @@ public slots:
 
     void setAutoTranslate(bool trans);
     void startTranslate(QListWidgetItem* item);
-    void setAIReply(bool reply);
-    void startReply(QListWidgetItem* item, bool manual = false);
+    void setItemReply(const LiveDanmaku& danmaku, const QString& reply);
     void setEnableBlock(bool enable);
     void setListWidgetItemSpacing(int x);
     void setNewbieTip(bool tip);
@@ -208,7 +206,6 @@ private:
     QColor hlColor;
     QFont danmakuFont;
     bool autoTrans = false;
-    bool aiReply = false;
     bool enableBlock = false;
     bool simpleMode = false; // 简约模式：不显示头像
     bool chatMode = false; // 聊天模式：只显示弹幕，并且不使用彩色

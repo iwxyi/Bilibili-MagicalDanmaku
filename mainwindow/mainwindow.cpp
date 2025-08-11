@@ -1503,6 +1503,7 @@ void MainWindow::readConfig()
     ui->AIReplyCheck->setChecked(us->AIReplyMsgLocal);
     ui->AIReplyMsgCheck->setCheckState(static_cast<Qt::CheckState>(us->AIReplyMsgSend));
     ui->AIReplyMsgCheck->setEnabled(us->AIReplyMsgLocal);
+    ui->GPTAnalysisCheck->setEnabled(us->AIReplyMsgLocal);
     ui->AIReplySelfCheck->setChecked(us->AIReplySelf);
 
     // 黑名单管理
@@ -2084,7 +2085,6 @@ void MainWindow::initDanmakuWindow()
     connect(danmakuWindow, SIGNAL(signalDelBlockUser(QString)), liveService, SLOT(delBlockUser(QString)));
     connect(danmakuWindow, SIGNAL(signalEternalBlockUser(QString,QString,QString)), this, SLOT(eternalBlockUser(QString,QString,QString)));
     connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(QString)), this, SLOT(cancelEternalBlockUser(QString)));
-    connect(danmakuWindow, SIGNAL(signalAIReplyed(QString, LiveDanmaku)), this, SLOT(slotAIReplyed(QString, LiveDanmaku)));
     connect(danmakuWindow, SIGNAL(signalShowPkVideo()), this, SLOT(on_actionShow_PK_Video_triggered()));
     connect(danmakuWindow, &LiveDanmakuWindow::signalChangeWindowMode, this, [=]{
         danmakuWindow->deleteLater();
@@ -2140,7 +2140,6 @@ void MainWindow::initDanmakuWindow()
             liveService->pullLiveDanmaku();
         }
         danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
-        danmakuWindow->setAIReply(us->AIReplyMsgLocal);
 
         if (liveService->pking)
         {
@@ -2155,6 +2154,9 @@ void MainWindow::initEvent()
 
     // 点歌
     connect(liveService, SIGNAL(signalNewDanmaku(const LiveDanmaku&)), this, SLOT(slotDiange(const LiveDanmaku&)));
+
+    // AI回复
+    connect(liveService, SIGNAL(signalNewDanmaku(const LiveDanmaku&)), this, SLOT(slotAIReply(const LiveDanmaku&)));
 
     // 滚屏
     connect(liveService, &LiveServiceBase::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
@@ -3936,10 +3938,9 @@ void MainWindow::on_AIReplyCheck_stateChanged(int)
 {
     us->AIReplyMsgLocal = ui->AIReplyCheck->isChecked();
     us->setValue("danmaku/aiReply", us->AIReplyMsgLocal);
-    if (danmakuWindow)
-        danmakuWindow->setAIReply(us->AIReplyMsgLocal);
 
     ui->AIReplyMsgCheck->setEnabled(us->AIReplyMsgLocal);
+    ui->GPTAnalysisCheck->setEnabled(us->AIReplyMsgLocal);
 }
 
 void MainWindow::on_testDanmakuEdit_returnPressed()
@@ -5035,6 +5036,101 @@ void MainWindow::slotDiange(const LiveDanmaku &danmaku)
         cr->addNoReplyDanmakuText(danmaku.getText()); // 点歌回复
         QTimer::singleShot(10, [=]{
             liveService->appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
+        });
+    }
+}
+
+void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
+{
+    // 无效消息
+    if (danmaku.getUid().isEmpty() || danmaku.getText().isEmpty())
+        return;
+    //  不能回复的消息
+    if (!danmaku.is(MSG_DANMAKU) || danmaku.isPkLink())
+        return;
+    // 无需回复的消息
+    if (!manual && (us->notReplyUsers.contains(danmaku.getUid()) || danmaku.isNoReply()))
+        return;
+    // 不回复自己的消息
+    if (!us->AIReplySelf && danmaku.getUid() == ac->cookieUid)
+        return;
+
+    QString msg = danmaku.getText();
+    if (!manual)
+    {
+        // 判断过滤器
+        if (cr->isFilterRejected("FILTER_AI_REPLY", danmaku))
+        {
+            qInfo() << "不自动回复弹幕：" << danmaku.getText();
+            return;
+        }
+
+        // 判断重复文本
+        // 过滤重复消息
+        bool repeat = false;
+        int count = us->danmuSimilarJudgeCount;
+        for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
+        {
+            const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
+            if (!danmaku.is(MessageType::MSG_DANMAKU))
+                continue;
+            if (!us->useStringSimilar)
+            {
+                if (danmaku.getText() == msg)
+                {
+                    repeat = true;
+                    break;
+                }
+            }
+            else
+            {
+                double similar = StringDistanceUtil::getSimilarity(danmaku.getText(), msg);
+                if (similar >= us->stringSimilarThreshold)
+                {
+                    qInfo() << "相似度：" << similar << " 相对于 “" << danmaku.getText() << "”";
+                    repeat = true;
+                    break;
+                }
+            }
+            if (--count <= 0)
+                break;
+        }
+
+        if (repeat)
+        {
+            qInfo() << "AI回复：忽略重复的弹幕";
+            return;
+        }
+
+        // 【自动回复】功能中已经有针对该功能的回复了，比如签到等
+        if (hasReply(msg))
+        {
+            qInfo() << "AI回复：忽略指定处理的回复";
+            return;
+        }
+    }
+
+    // 开始回复
+    if (us->chatgpt_analysis) // 功能型AI
+    {
+
+    }
+    else // 单纯的聊天
+    {
+        chatService->chat(danmaku.getUid(), msg, [=](QString answer){
+            if (answer.isEmpty())
+                return ;
+
+            qInfo() << "回复：" << msg << " => " << answer;
+            slotAIReplyed(answer, danmaku);
+
+            if (us->AIReplyMsgSend) // 要回复了，不需要再本地显示
+                return ;
+            
+            if (danmakuWindow && !danmakuWindow->isHidden())
+            {
+                danmakuWindow->setItemReply(danmaku, answer);
+            }
         });
     }
 }

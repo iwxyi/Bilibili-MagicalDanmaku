@@ -649,12 +649,6 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
                     }
                 }
             }
-
-            // AI回复
-            if (aiReply)
-            {
-                startReply(item);
-            }
         }
     }
     else if (msgType == MSG_DIANGE
@@ -1555,8 +1549,8 @@ void LiveDanmakuWindow::showMenu()
     textMenu->addAction("AI回复", [=]{
         if (listWidget->currentItem() != item) // 当前项变更
             return ;
-        // 翻译
-        startReply(item, true);
+
+        // startReply(item, true);
     });
     
     textMenu->split()->addAction("忽视颜色", [=]{
@@ -2952,108 +2946,22 @@ void LiveDanmakuWindow::startTranslate(QListWidgetItem *item)
     });
 }
 
-void LiveDanmakuWindow::setAIReply(bool reply)
+void LiveDanmakuWindow::setItemReply(const LiveDanmaku& danmaku, const QString& reply)
 {
-    this->aiReply = reply;
-    // qInfo() << "智能闲聊开关：" << reply;
-}
-
-void LiveDanmakuWindow::startReply(QListWidgetItem *item, bool manual)
-{
-    auto danmaku = LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
-    UIDT uid = danmaku.getUid();
-    // 无需回复的消息
-    if (uid.isEmpty() || us->notReplyUsers.contains(uid) || danmaku.isNoReply())
-        return ;
-    // 不回复自己的消息
-    if (!us->AIReplySelf && danmaku.getUid() == ac->cookieUid)
-        return;
-
-    QString msg = danmaku.getText();
-    if (msg.isEmpty())
-        return ;
-
-    // 判断是否需要回复
-    if (!manual)
+    for (int i = listWidget->count() - 1; i >= 0; i--)
     {
-        // 判断过滤器
-        if (rejectReply && rejectReply(danmaku))
+        auto item = listWidget->item(i);
+        if (!item)
+            continue;
+        auto danmaku2 = LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
+        if (danmaku2.getUid() == danmaku.getUid()
+            && danmaku2.getText() == danmaku.getText())
         {
-            qInfo() << "不自动回复弹幕：" << danmaku.getText();
-            return;
-        }
-
-        // 判断重复文本
-        // 过滤重复消息
-        bool repeat = false;
-        int count = us->danmuSimilarJudgeCount;
-        for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
-        {
-            const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
-            if (!danmaku.is(MessageType::MSG_DANMAKU))
-                continue;
-            if (!us->useStringSimilar)
-            {
-                if (danmaku.getText() == msg)
-                {
-                    repeat = true;
-                    break;
-                }
-            }
-            else
-            {
-                double similar = StringDistanceUtil::getSimilarity(danmaku.getText(), msg);
-                if (similar >= us->stringSimilarThreshold)
-                {
-                    qInfo() << "相似度：" << similar << " 相对于 “" << danmaku.getText() << "”";
-                    repeat = true;
-                    break;
-                }
-            }
-            if (--count <= 0)
-                break;
-        }
-
-        if (repeat)
-        {
-            qInfo() << "AI回复：忽略重复的弹幕";
-            return;
-        }
-
-        // 判断是否不回复
-        if (hasReply)
-        {
-            if (hasReply(msg))
-            {
-                qInfo() << "AI回复：忽略指定处理的回复";
-                return;
-            }
-        }
-        else
-        {
-            qWarning() << "未设置HasReply回调";
+            item->setData(DANMAKU_REPLY_ROLE, reply);
+            adjustItemTextDynamic(item);
+            break;
         }
     }
-
-    // 优化消息文本
-    // msg.replace(QRegularExpression("\\s+"), "，");
-
-    chatService->chat(uid, msg, [=](QString answer){
-        if (answer.isEmpty())
-            return ;
-
-        emit signalAIReplyed(answer, danmaku);
-
-        if (us->AIReplyMsgSend) // 要回复了，不需要再本地显示
-            return ;
-        if (!isItemExist(item))
-            return ;
-
-        qInfo() << "回复：" << msg << " => " << answer;
-        item->setData(DANMAKU_REPLY_ROLE, answer);
-
-        adjustItemTextDynamic(item);
-    });
 }
 
 void LiveDanmakuWindow::setEnableBlock(bool enable)
@@ -3604,10 +3512,11 @@ void LiveDanmakuWindow::loadUserInfo(const LiveDanmaku& danmaku)
 
     /// 有用户，获取历史弹幕
     UIDT uid = danmaku.getUid();
-    qDebug() << "加载粉丝信息：" << uid << danmaku.getNickname();
     
     if (fansHistoryList->isVisible() && sqlService->isOpen())
     {
+        qDebug() << "加载粉丝信息：" << uid << danmaku.getNickname();
+
         QStringList sl;
         QList<MyJson> danmakuList = sqlService->getUserDanmakuList(uid, 0, 1000);
         QList<MyJson> giftList = sqlService->getUserGiftList(uid, 0, 1000);
@@ -3646,6 +3555,8 @@ void LiveDanmakuWindow::loadUserInfo(const LiveDanmaku& danmaku)
     /// 获取用户档案
     if (fansArchiveEdit->isVisible() && sqlService->isOpen() && fansArchivesService)
     {
+        qDebug() << "加载用户档案：" << uid << danmaku.getNickname();
+
         QString archive = fansArchivesService->getFansArchives(uid);
         if (!archive.isEmpty())
         {

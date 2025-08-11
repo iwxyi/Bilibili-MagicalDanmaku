@@ -163,6 +163,7 @@ private slots:
     void addListItemOnCurrentPage();
 
     void slotDiange(const LiveDanmaku &danmaku);
+    void slotAIReply(const LiveDanmaku &danmaku, bool manual = false);
 
     void slotComboSend();
 
