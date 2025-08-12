@@ -10,55 +10,138 @@ class ConditionUtil
 {
 public:
     /**
-     * 判断条件表达式是否为真
-     * 支持多种比较操作符：==, !=, <>, >, >=, <, <=
-     * 支持嵌套括号、运算符优先级
-     * 
-     * 示例：
-     * 1 == 2          -> false
-     * 1 != 2          -> true
-     * 1 > 0           -> true
-     * (1 + 2) * 3 > 8 -> true
-     * 1 + 2 * 3 > 8   -> false (因为 2*3=6, 1+6=7 < 8)
+     * 判断逻辑条件是否成立
+     * @param exprs exp1, exp2; exp3
      */
     static bool judgeCondition(QString exprs)
     {
-        try {
-            // 去掉所有空白字符
-            exprs = exprs.replace(QRegularExpression("\\s*"), "");
-            if (exprs.isEmpty()) {
-                qWarning() << "条件表达式为空，返回false";
-                return false;
+        CALC_DEB << "判断表达式：" << exprs;
+        QStringList orExps = exprs.split(QRegularExpression("(;|\\|\\|)"), QString::SkipEmptyParts);
+        bool isTrue = false;
+        QRegularExpression compRe("^\\s*([^<>=!]*?)\\s*([<>=!~]{1,2})\\s*([^<>=!]*?)\\s*$");
+        QRegularExpression intRe("^[\\d\\+\\-\\*\\/% \\(\\)]+$");
+        // QRegularExpression overlayIntRe("\\d{11,}");
+        QRegularExpressionMatch match;
+        foreach (QString orExp, orExps)
+        {
+            isTrue = true;
+            QStringList andExps = orExp.split(QRegularExpression("(,|&&)"), QString::SkipEmptyParts);
+            CALC_DEB << "表达式or内：" << andExps;
+            foreach (QString exp, andExps)
+            {
+                CALC_DEB << "表达式and内：" << exp;
+                exp = exp.trimmed();
+                if (exp.indexOf(compRe, 0, &match) == -1         // 非比较
+                    || (match.captured(1).isEmpty() && match.captured(2) == "!"))    // 取反类型
+                {
+                    bool notTrue = exp.startsWith("!"); // 与否取反
+                    if (notTrue) // 取反……
+                    {
+                        exp = exp.right(exp.length() - 1);
+                    }
+                    if (exp.isEmpty() || exp == "0" || exp.toLower() == "false") // false
+                    {
+                        if (!notTrue)
+                        {
+                            isTrue = false;
+                            break;
+                        }
+                        else // 取反
+                        {
+                            isTrue = true;
+                            break;
+                        }
+                    }
+                    else // true
+                    {
+                        if (notTrue)
+                        {
+                            isTrue = false;
+                            break;
+                        }
+                    }
+                    continue;
+                }
+
+                // 比较类型
+                QStringList caps = match.capturedTexts();
+                QString s1 = caps.at(1);
+                QString op = caps.at(2);
+                QString s2 = caps.at(3);
+                CALC_DEB << "比较：" << s1 << op << s2;
+                if (s1.contains(intRe) && s2.contains(intRe) // 都是整数
+                    && QStringList{">", "<", "=", ">=", "<=", "==", "!="}.contains(op)) // 是这个运算符
+                // && !s1.contains(overlayIntRe) && !s2.contains(overlayIntRe)) // 没有溢出
+                {
+                    qint64 i1 = CalculatorUtil::calcIntExpression(s1);
+                    qint64 i2 = CalculatorUtil::calcIntExpression(s2);
+                    CALC_DEB << "比较整数" << i1 << op << i2;
+                    if (!isConditionTrue<qint64>(i1, i2, op))
+                    {
+                        isTrue = false;
+                        break;
+                    }
+                }
+                else/* if (s1.startsWith("\"") || s1.endsWith("\"") || s1.startsWith("'") || s1.endsWith("'")
+                        || s2.startsWith("\"") || s2.startsWith("\"") || s2.startsWith("'") || s2.startsWith("'")) // 都是字符串*/
+                {
+                    auto removeQuote = [=](QString s) -> QString{
+                        if (s.startsWith("\"") && s.endsWith("\""))
+                            return s.mid(1, s.length()-2);
+                        if (s.startsWith("'") && s.endsWith("'"))
+                            return s.mid(1, s.length()-2);
+                        return s;
+                    };
+                    s1 = removeQuote(s1);
+                    s2 = removeQuote(s2);
+                    CALC_DEB << "比较字符串" << s1 << op << s2;
+                    if (op == "~")
+                    {
+                        // qDebug() << "比较正则表达式：" << s1 << op << s2;
+                        if (s2.contains("~") && !s2.endsWith("~")) // 特殊格式判断：文字1~文字2 ~ 文字3 [\u4e00-\u9fa5]+[\w]{3}
+                        {
+                            QString full = caps.at(0);
+                            QRegularExpression re("^\\s*(.*)\\s*(~)\\s*([^~]*?)\\s*$");
+                            if (!re.isValid())
+                                qWarning() << "错误的正则表达式1：" << re.errorString();
+                            if (full.indexOf(re, 0, &match) == -1)
+                            {
+                                qWarning() << "错误的~运算：" << full;
+                                isTrue = false;
+                                break;
+                            }
+                            caps = match.capturedTexts();
+                            s1 = caps.at(1);
+                            s2 = caps.at(3);
+                            CALC_DEB << "纠正运算：" << s1 << "~" << s2;
+                            // qWarning() << "错误的~表达式：" << s2;
+                        }
+
+                        QRegularExpression re(s2);
+                        if (!re.isValid())
+                            qWarning() << "错误的正则表达式2：" << re.errorString();
+                        if (!s1.contains(QRegularExpression(s2)))
+                        {
+                            isTrue = false;
+                            break;
+                        }
+                    }
+                    else if (!isConditionTrue<QString>(s1, s2, op))
+                    {
+                        isTrue = false;
+                        break;
+                    }
+                }
+                /*else
+                {
+                    qCritical() << "error: 无法比较的表达式:" << match.capturedTexts().first();
+                    qCritical() << "    原始语句：" << msg;
+                }*/
             }
-            
-            // 查找比较操作符
-            QString op = findOperator(exprs);
-            if (op.isEmpty()) {
-                qWarning() << "未找到有效的比较操作符：" << exprs;
-                return false;
-            }
-            
-            // 分割左右操作数
-            int opIndex = exprs.indexOf(op);
-            QString leftExpr = exprs.left(opIndex);
-            QString rightExpr = exprs.mid(opIndex + op.length());
-            
-            if (leftExpr.isEmpty() || rightExpr.isEmpty()) {
-                qWarning() << "操作数不完整：" << exprs;
-                return false;
-            }
-            
-            // 计算左右操作数的值
-            qint64 leftValue = CalculatorUtil::calcIntExpression(leftExpr);
-            qint64 rightValue = CalculatorUtil::calcIntExpression(rightExpr);
-            
-            // 执行比较
-            return isConditionTrue(leftValue, rightValue, op);
-            
-        } catch (...) {
-            qWarning() << "判断条件时发生异常：" << exprs;
-            return false;
+            if (isTrue)
+                break;
         }
+        return isTrue;
     }
 
 private:

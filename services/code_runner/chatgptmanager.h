@@ -18,13 +18,18 @@ public:
 
     void chat(UIDT uid, QString text, NetStringFunc func);
 
+    void analyze(QStringList texts, NetStringFunc func);
+
     void clear();
 
     void localNotify(const QString& text);
 
+    bool isAnalyzing() const;
+
 private:
     LiveServiceBase* liveService = nullptr;
     QMap<UIDT, QList<ChatBean>> usersChats;
+    bool _isAnalyzing = false;
 };
 
 #endif // CHATGPTMANAGER_H

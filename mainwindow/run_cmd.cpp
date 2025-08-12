@@ -2330,35 +2330,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
 
             chatService->chatgpt->chat(uid, text, [=](QString result){
                 // 处理代码
-                if (us->chatgpt_analysis)
-                {
-                    // 如果开启了功能型GPT，那么回复会是JSON格式
-                    QString reply = result;
-                    if (!reply.startsWith("{"))
-                    {
-                        int index = reply.indexOf("{");
-                        if (index > -1)
-                        {
-                            reply = reply.right(reply.length() - index);
-                        }
-                    }
-                    if (!reply.endsWith("}"))
-                    {
-                        int index = reply.lastIndexOf("}");
-                        if (index > -1)
-                        {
-                            reply = reply.left(index + 1);
-                        }
-                    }
-                    MyJson json(reply.toUtf8());
-                    if (json.isEmpty())
-                    {
-                        qWarning() << "无法解析的GPT回复格式：" << reply;
-                        return;
-                    }
-                    result = json.value("msg").toString();
-                }
-                else
+                // if (!us->chatgpt_analysis)
                 {
                     // 过滤回复后的内容
                     LiveDanmaku dmk = danmaku;

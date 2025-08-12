@@ -502,7 +502,6 @@ void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const Q
         return ;
     }
 
-    qsrand(QTime::currentTime().msec());
     QString msToken = getRandomKey(120); // xxx
     
     QString paramsStr = QString("aid=6383&app_name=douyin_web&live_id=1&device_platform=web&language=zh-CN&enter_from=web_live&cookie_enabled=true&screen_width=1360&screen_height=908&browser_language=zh-CN&browser_platform=MacIntel&browser_name=Chrome&browser_version=137.0.0.0&room_id=%1&content=%2&type=0&rtf_content=&msToken=%3")

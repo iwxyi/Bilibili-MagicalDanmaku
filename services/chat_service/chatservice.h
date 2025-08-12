@@ -19,10 +19,13 @@ public:
 
     void setLiveService(LiveServiceBase* service);
 
+    bool isAnalyzing() const;
+
 signals:
 
 public slots:
     void chat(UIDT uid, QString text, NetStringFunc func);
+    void analyze(QStringList texts, NetStringFunc func);
     void clear();
 
 public:

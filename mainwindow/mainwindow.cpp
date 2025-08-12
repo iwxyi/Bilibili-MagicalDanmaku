@@ -51,6 +51,8 @@ MainWindow::MainWindow(QWidget *parent)
     rt->mainwindow = this;
     cr->setMainUI(ui);
 
+    qsrand(QTime::currentTime().msec());
+
     initView();
     initStyle();
 
@@ -5042,94 +5044,273 @@ void MainWindow::slotDiange(const LiveDanmaku &danmaku)
 
 void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
 {
-    // 无效消息
-    if (danmaku.getUid().isEmpty() || danmaku.getText().isEmpty())
-        return;
-    //  不能回复的消息
-    if (!danmaku.is(MSG_DANMAKU) || danmaku.isPkLink())
-        return;
-    // 无需回复的消息
-    if (!manual && (us->notReplyUsers.contains(danmaku.getUid()) || danmaku.isNoReply()))
-        return;
-    // 不回复自己的消息
-    if (!us->AIReplySelf && danmaku.getUid() == ac->cookieUid)
-        return;
-
-    QString msg = danmaku.getText();
-    if (!manual)
-    {
-        // 判断过滤器
-        if (cr->isFilterRejected("FILTER_AI_REPLY", danmaku))
+    if (rt->justStart)
+        return ;
+    
+    const auto isValidDanmaku = [=](const LiveDanmaku& danmaku, int similarIndex) -> bool{
+        Q_ASSERT(similarIndex >= 0);
+        // 无效消息
+        if (danmaku.getUid().isEmpty() || danmaku.getText().isEmpty())
+            return false;
+        //  不能回复的消息
+        if (!danmaku.is(MSG_DANMAKU) || danmaku.isPkLink())
+            return false;
+        // 无需回复的消息
+        if (!manual && (us->notReplyUsers.contains(danmaku.getUid()) || danmaku.isNoReply()))
+            return false;
+        // 不回复自己的消息
+        if (!us->AIReplySelf && danmaku.getUid() == ac->cookieUid)
+            return false;
+        
+        // 判断内容
+        QString msg = danmaku.getText();
+        if (!manual)
         {
-            qInfo() << "不自动回复弹幕：" << danmaku.getText();
-            return;
+            // 判断过滤器
+            if (cr->isFilterRejected("FILTER_AI_REPLY", danmaku))
+            {
+                qInfo() << "不自动回复弹幕：" << danmaku.getText();
+                return false;
+            }
+
+            if (similarIndex > 0)
+            {
+                // 过滤重复消息
+                bool repeat = false;
+                int count = us->danmuSimilarJudgeCount;
+                for (int i = rt->allDanmakus.size() - similarIndex; i >= 0; i--)
+                {
+                    const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
+                    if (!danmaku.is(MessageType::MSG_DANMAKU))
+                        continue;
+                    if (!us->useStringSimilar)
+                    {
+                        if (danmaku.getText() == msg)
+                        {
+                            repeat = true;
+                            qDebug() << "重复弹幕：" << danmaku.getText();
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        double similar = StringDistanceUtil::getSimilarity(danmaku.getText(), msg);
+                        if (similar >= us->stringSimilarThreshold)
+                        {
+                            qInfo() << "相似度：" << similar << " 相对于 “" << danmaku.getText() << "”";
+                            repeat = true;
+                            break;
+                        }
+                    }
+                    if (--count <= 0)
+                        break;
+                }
+
+                if (repeat)
+                {
+                    qInfo() << "AI回复：忽略重复的弹幕";
+                    return false;
+                }
+            }
+
+            // 【自动回复】功能中已经有针对该功能的回复了，比如签到等
+            if (hasReply(msg))
+            {
+                qInfo() << "AI回复：忽略指定处理的回复";
+                return false;
+            }
         }
 
-        // 判断重复文本
-        // 过滤重复消息
-        bool repeat = false;
-        int count = us->danmuSimilarJudgeCount;
-        for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
+        return true;
+    };
+
+    // 开始回复
+    if (us->chatgpt_analysis) // AI分析
+    {
+        static const int ANALYZE_MAX_COUNT = 100;
+        static qint64 lastTime = 0;
+        static LiveDanmaku lastDanmaku;
+        static LiveDanmaku waitDanmaku;
+        static bool waiting = false;
+
+        // 等待机制
+        if (chatService->isAnalyzing())
         {
-            const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
-            if (!danmaku.is(MessageType::MSG_DANMAKU))
+            if (isValidDanmaku(danmaku, 0))
+            {
+                qDebug() << "AI分析：等待中" << danmaku.toString();
+                waiting = true;
+                waitDanmaku = danmaku;
+            }
+            return;
+        }
+        waiting = false;
+        waitDanmaku = LiveDanmaku();
+
+        // 获取上次分析之后的弹幕
+        QStringList args;
+        QList<LiveDanmaku> targetDanmakus;
+        for (int i = rt->allDanmakus.size() - 1; i >= 0; i--)
+        {
+            const LiveDanmaku& dmk = rt->allDanmakus.at(i);
+            qint64 tm = dmk.getTimeline().toSecsSinceEpoch();
+            if (tm != 0 && tm < lastTime)
+                break;
+            if (dmk == lastDanmaku)
                 continue;
-            if (!us->useStringSimilar)
-            {
-                if (danmaku.getText() == msg)
-                {
-                    repeat = true;
-                    break;
-                }
-            }
-            else
-            {
-                double similar = StringDistanceUtil::getSimilarity(danmaku.getText(), msg);
-                if (similar >= us->stringSimilarThreshold)
-                {
-                    qInfo() << "相似度：" << similar << " 相对于 “" << danmaku.getText() << "”";
-                    repeat = true;
-                    break;
-                }
-            }
-            if (--count <= 0)
+            if (!dmk.is(MessageType::MSG_DANMAKU))
+                continue;
+            if (!isValidDanmaku(dmk, 0))
+                continue;
+            args.append(QString("%1: %2").arg(dmk.getNickname()).arg(dmk.getText()));
+            targetDanmakus.append(dmk);
+            if (lastTime < tm)
+                lastTime = tm;
+            if (args.size() >= ANALYZE_MAX_COUNT)
                 break;
         }
 
-        if (repeat)
+        if (args.isEmpty())
         {
-            qInfo() << "AI回复：忽略重复的弹幕";
+            qWarning() << "AI分析：没有可分析的弹幕";
             return;
         }
+        qDebug() << "AI分析：" << args;
+        
+        // AI
+        chatService->analyze(args, [=](QString answer){
+            if (answer.isEmpty())
+            {
+                qWarning() << "AI分析回答为空";
+                return ;
+            }
 
-        // 【自动回复】功能中已经有针对该功能的回复了，比如签到等
-        if (hasReply(msg))
-        {
-            qInfo() << "AI回复：忽略指定处理的回复";
-            return;
-        }
-    }
+            /// 解析JSON
+            if (!answer.startsWith("{") && !answer.startsWith("["))
+            {
+                QRegularExpression leftRe("\\[|\\{");
+                int index = answer.indexOf(leftRe);
+                if (index > -1)
+                {
+                    answer = answer.right(answer.length() - index);
+                }
+                else
+                {
+                    qWarning() << "无法确定JSON数据开头：" << answer;
+                }
+            }
+            if (!answer.endsWith("]") && !answer.endsWith("}"))
+            {
+                QRegularExpression rightRe("\\}|\\]");
+                int index = answer.lastIndexOf(rightRe);
+                if (index > -1)
+                {
+                    answer = answer.left(index + 1);
+                }
+                else
+                {
+                    qWarning() << "无法确定JSON数据结尾：" << answer;
+                }
+            }
 
-    // 开始回复
-    if (us->chatgpt_analysis) // 功能型AI
-    {
+            // 处理结果
+            auto processOne = [=](const MyJson& json, const LiveDanmaku& targetDanmaku){
+                qDebug() << "AI分析：" << targetDanmaku.toString() << json;
+                // 内置的一些AI功能
+                // 主播正在做什么。如果有多条，那么后面的会覆盖前面的
+                if (json.contains("live_content"))
+                {
+                    liveService->setLiveContent(json["live_content"].toString());
+                }
+                
+                // 使用用户自定义的AI回复
+                LiveDanmaku dmk = targetDanmaku;
+                dmk.setAIReply(answer);
+                triggerCmdEvent(GPT_TASK_RESPONSE_EVENT, dmk.with(json));
+            };
+            
+            if (answer.startsWith("["))
+            {
+                QJsonArray array = QJsonDocument::fromJson(answer.toUtf8()).array();
+                if (array.isEmpty())
+                {
+                    qWarning() << "无法解析的GPT分析数组：" << answer;
+                    return;
+                }
+                int minCount = qMin(array.size(), targetDanmakus.size());
+                if (array.size() != targetDanmakus.size())
+                {
+                    qWarning() << "GPT分析数组与弹幕数量不符：回复" << array.size() << " != 目标" << targetDanmakus.size();
+                    return;
+                }
+                for (int i = 0; i < minCount; i++)
+                {
+                    processOne(array[i].toObject(), targetDanmakus.at(i));
+                }
+            }
+            else if (answer.startsWith("{"))
+            {
+                MyJson json(answer.toUtf8());
+                if (json.isEmpty())
+                {
+                    qWarning() << "无法解析的GPT分析对象：" << answer;
+                    return;
+                }
+                processOne(json, danmaku);
+            }
 
+            // 继续下一波分析
+            QTimer::singleShot(1000, this, [=]{
+                if (waiting && !chatService->isAnalyzing())
+                {
+                    qDebug() << "AI分析：继续下一波  " << waitDanmaku.toString() ;
+                    slotAIReply(waitDanmaku, manual);
+                }
+            });
+        });
     }
     else // 单纯的聊天
     {
-        chatService->chat(danmaku.getUid(), msg, [=](QString answer){
+        if (!isValidDanmaku(danmaku, 2))
+            return;
+        
+        chatService->chat(danmaku.getUid(), danmaku.getText(), [=](QString answer){
             if (answer.isEmpty())
                 return ;
 
-            qInfo() << "回复：" << msg << " => " << answer;
-            slotAIReplyed(answer, danmaku);
+            qInfo() << "回复：" << danmaku.getText() << " => " << answer;
 
-            if (us->AIReplyMsgSend) // 要回复了，不需要再本地显示
-                return ;
-            
-            if (danmakuWindow && !danmakuWindow->isHidden())
+            if (us->AIReplyMsgSend) // 发送弹幕
             {
-                danmakuWindow->setItemReply(danmaku, answer);
+                UIDT uid = danmaku.getUid();
+                // 机器人自动发送的不回复（不然自己和自己打起来了）
+                if (uid == ac->cookieUid && cr->noReplyMsgs.contains(answer))
+                    return ;
+
+                // 过滤器
+                LiveDanmaku dmk = danmaku;
+                dmk.setAIReply(answer);
+                if (cr->isFilterRejected("FILTER_AI_REPLY_MSG", dmk))
+                {
+                    qInfo() << "过滤器已阻止AI回复：" << dmk.getText() << dmk.getAIReply();
+                    return;
+                }
+
+                // AI回复长度上限，以及过滤
+                if (us->AIReplyMsgSend == 1 && answer.length() > ac->danmuLongest)
+                    return ;
+
+                // 自动断句
+                qInfo() << "发送AI回复：" << answer;
+                QStringList sl = liveService->splitLongDanmu(answer, ac->danmuLongest);
+                cr->sendAutoMsg(sl.join("\\n"), danmaku);
+            }
+            else // 本地显示
+            {
+                if (danmakuWindow && !danmakuWindow->isHidden())
+                {
+                    danmakuWindow->setItemReply(danmaku, answer);
+                }                
             }
         });
     }
@@ -9678,72 +9859,6 @@ void MainWindow::on_AIReplySelfCheck_clicked()
     us->setValue("danmaku/aiReplySelf", check);
 }
 
-void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
-{
-    if (!us->AIReplyMsgSend)
-        return ;
-
-    UIDT uid = danmaku.getUid();
-    // 机器人自动发送的不回复（不然自己和自己打起来了）
-    if (uid == ac->cookieUid && cr->noReplyMsgs.contains(reply))
-        return ;
-
-    // 过滤器
-    danmaku.setAIReply(reply);
-    if (cr->isFilterRejected("FILTER_AI_REPLY_MSG", danmaku))
-    {
-        qInfo() << "过滤器已阻止AI回复：" << danmaku.getText() << danmaku.getAIReply();
-        return;
-    }
-
-    if (us->chatgpt_analysis)
-    {
-        /// 解析JSON
-        if (!reply.startsWith("{"))
-        {
-            int index = reply.indexOf("{");
-            if (index > -1)
-            {
-                reply = reply.right(reply.length() - index);
-            }
-        }
-        if (!reply.endsWith("}"))
-        {
-            int index = reply.lastIndexOf("}");
-            if (index > -1)
-            {
-                reply = reply.left(index + 1);
-            }
-        }
-        MyJson json(reply.toUtf8());
-        if (json.isEmpty())
-        {
-            qWarning() << "无法解析的GPT回复格式：" << reply;
-            return;
-        }
-        
-        // 内置的一些AI功能
-        if (json.contains("live_content")) // 主播正在做什么
-        {
-            liveService->setLiveContent(json["live_content"].toString());
-        }
-        
-        // 使用用户自定义的AI回复
-        triggerCmdEvent(GPT_TASK_RESPONSE_EVENT, danmaku.with(json));
-    }
-    else
-    {
-        // AI回复长度上限，以及过滤
-        if (us->AIReplyMsgSend == 1 && reply.length() > ac->danmuLongest)
-            return ;
-
-        // 自动断句
-        qInfo() << "发送AI回复：" << reply;
-        QStringList sl = liveService->splitLongDanmu(reply, ac->danmuLongest);
-        cr->sendAutoMsg(sl.join("\\n"), danmaku);
-    }
-}
-
 void MainWindow::on_danmuLongestSpin_editingFinished()
 {
     ac->danmuLongest = ui->danmuLongestSpin->value();
@@ -11493,7 +11608,7 @@ void MainWindow::on_GPTAnalysisFormatButton_clicked()
 
 void MainWindow::on_GPTAnalysisDefaultButton_clicked()
 {
-    if (QMessageBox::question(this, "提示", "确定要恢复【功能型AI】默认设置吗？\n提示词和事件都会重置", QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes)
+    if (QMessageBox::question(this, "提示", "确定要恢复【AI分析】默认设置吗？\n提示词和事件都会重置", QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes)
     {
         return;
     }

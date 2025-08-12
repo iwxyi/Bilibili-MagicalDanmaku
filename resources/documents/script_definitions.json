@@ -2681,7 +2681,7 @@
             "name": "ChatGPT",
             "zh_name": "GPT聊天",
             "catalog": "AI",
-            "description": "调用ChatGPT闲聊，同上。\\n如果开启了“功能型GPT”，那么%text%会是对应的\"msg\"字段",
+            "description": "调用ChatGPT闲聊，同上。",
             "parameters": [
                 {
                     "name": "uid",

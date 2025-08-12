@@ -157,6 +157,8 @@ public:
     static LiveDanmaku fromDanmakuJson(QJsonObject object)
     {
         LiveDanmaku danmaku;
+        if (object.contains("_id"))
+            danmaku._id = static_cast<qint64>(object.value("uid").toDouble());
         danmaku.text = object.value("text").toString();
         if (object.value("uid").isString())
             danmaku.uid = object.value("uid").toString();
@@ -234,6 +236,7 @@ public:
     QJsonObject toJson() const
     {
         QJsonObject object;
+        object.insert("_id", _id);
         object.insert("nickname", nickname);
         object.insert("uid", uid);
         if (msgType == MSG_DANMAKU || msgType == MSG_SUPER_CHAT)
@@ -455,6 +458,11 @@ public:
                     .arg(text);
         }
         return "未知消息类型";
+    }
+
+    bool operator==(const LiveDanmaku& other) const
+    {
+        return this->_id == other._id;
     }
 
     bool is(MessageType type) const
@@ -1085,6 +1093,7 @@ public:
     }
 
 protected:
+    qint64 _id = QDateTime::currentMSecsSinceEpoch() * 1000 + (100 + qrand() % 900);
     MessageType msgType = MSG_DANMAKU;
 
     QString text;

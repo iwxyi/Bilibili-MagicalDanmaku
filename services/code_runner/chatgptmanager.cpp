@@ -47,7 +47,7 @@ void ChatGPTManager::chat(UIDT uid, QString text, NetStringFunc func)
 
     QList<ChatBean> chats;
     // 提示词
-    if (us->chatgpt_analysis)
+    /*if (us->chatgpt_analysis)
     {
         if (!us->chatgpt_analysis_prompt.isEmpty())
         {
@@ -56,7 +56,7 @@ void ChatGPTManager::chat(UIDT uid, QString text, NetStringFunc func)
             chats.append(ChatBean("system", rep));
         }
     }
-    else
+    else*/
     {
         if (!us->chatgpt_prompt.isEmpty())
         {
@@ -86,6 +86,7 @@ void ChatGPTManager::chat(UIDT uid, QString text, NetStringFunc func)
         chats.insert(0, userChats.at(i));
     }
 
+    // AI分析修改最后一条弹幕的格式
     if (us->chatgpt_analysis && !us->chatgpt_analysis_format.isEmpty())
         chats.last().message = us->chatgpt_analysis_format + "\n" + chats.last().message;
 
@@ -101,6 +102,56 @@ void ChatGPTManager::chat(UIDT uid, QString text, NetStringFunc func)
         uidChats.removeFirst();
 }
 
+void ChatGPTManager::analyze(QStringList texts, NetStringFunc func)
+{
+    if (_isAnalyzing)
+        return;
+    _isAnalyzing = true;
+
+    /// 初始化ChatGPT
+    ChatGPTUtil* chatgpt = new ChatGPTUtil(this);
+    chatgpt->setStream(false);
+    QString label = "ChatGPT弹幕版";
+
+    connect(chatgpt, &ChatGPTUtil::signalResponseError, this, [=](const QByteArray& ba) {
+        qCritical() << QString(ba);
+    });
+
+    connect(chatgpt, &ChatGPTUtil::signalRequestStarted, this, [=]{
+
+    });
+    connect(chatgpt, &ChatGPTUtil::signalResponseFinished, this, [=]{
+
+    });
+    connect(chatgpt, &ChatGPTUtil::finished, this, [=]{
+        chatgpt->deleteLater();
+        _isAnalyzing = false;
+    });
+    connect(chatgpt, &ChatGPTUtil::signalResponseText, this, [=](const QString& text) {
+        func(text);
+    });
+    connect(chatgpt, &ChatGPTUtil::signalStreamText, this, [=](const QString& text) {
+
+    });
+
+    /// 获取上下文
+    QList<ChatBean> userChats;
+    userChats.append(ChatBean("user", texts.join("\n")));
+
+    QList<ChatBean> chats;
+    // 提示词
+    if (!us->chatgpt_analysis_prompt.isEmpty())
+    {
+        QString rep = us->chatgpt_analysis_prompt;
+        rep.replace("%danmu_longest%", snum(ac->danmuLongest));
+        chats.append(ChatBean("system", rep));
+    }
+    else
+        qWarning() << "AI分析提示词为空";
+
+    chatgpt->getResponse(chats);
+}
+
 void ChatGPTManager::clear()
 {
     usersChats.clear();
@@ -109,4 +160,9 @@ void ChatGPTManager::clear()
 void ChatGPTManager::localNotify(const QString &text)
 {
 
+}
+
+bool ChatGPTManager::isAnalyzing() const
+{
+    return _isAnalyzing;
 }

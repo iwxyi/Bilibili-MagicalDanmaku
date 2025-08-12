@@ -24,6 +24,21 @@ void ChatService::chat(UIDT uid, QString text, NetStringFunc func)
     }
 }
 
+void ChatService::analyze(QStringList texts, NetStringFunc func)
+{
+    if (chatPlatform == ChatPlatform::ChatGPT)
+    {
+        chatgpt->analyze(texts, func);
+    }
+}
+
+bool ChatService::isAnalyzing() const
+{
+    if (chatPlatform == ChatPlatform::ChatGPT)
+        return chatgpt->isAnalyzing();
+    return false;
+}
+
 void ChatService::clear()
 {
     chatgpt->clear();

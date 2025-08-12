@@ -1464,7 +1464,7 @@ tips：
 | AIReply(text, maxLen)                              | AI回复           | 调用AI回复某文字，并直接以弹幕的形式发送。maxLen为长度上限，默认单条弹幕，超出则不回复 |
 | AIChat(text, code)                                 | AI聊天           | 调用AI回复文字，若有结果则执行code代码，使用 `\%text\%` 来获取回复结果。具体调用哪个AI，由设置中的选项决定。如果是ChatGPT，UID固定为0 |
 | TXChat(text, code)                                 | 腾讯AI聊天       | 调用腾讯AI闲聊，同上                                         |
-| ChatGPT(uid, text, code)                           | GPT聊天          | 调用ChatGPT闲聊，同上。如果开启了“功能型GPT”，那么`%text%`会是对应的msg |
+| ChatGPT(uid, text, code)                           | GPT聊天          | 调用ChatGPT闲聊，同上。如果开启了“AI分析”，那么`%text%`会是对应的msg |
 | ignoreWelcome(uid)                                 | 不自动欢迎       | 不自动欢迎某用户                                             |
 | setLocalName(uid, name)                            | 设置专属昵称     | 设置用户专属昵称                                             |
 | joinBattle(type)                                   | 开启大乱斗       | 开启大乱斗，1普通，2视频                                     |

@@ -37,6 +37,7 @@ static void initFunctionMap()
 
 qint64 CalculatorUtil::calcIntExpression(QString exp)
 {
+    qDebug() << "调用计算器计算：" << exp;
     // 初始化函数映射表
     initFunctionMap();
     

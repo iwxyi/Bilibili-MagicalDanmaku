@@ -409,8 +409,6 @@ private slots:
 
     void on_AIReplySelfCheck_clicked();
 
-    void slotAIReplyed(QString reply, LiveDanmaku danmaku);
-
     void on_danmuLongestSpin_editingFinished();
 
     void on_startupAnimationCheck_clicked();

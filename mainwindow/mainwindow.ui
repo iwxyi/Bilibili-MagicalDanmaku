@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1054</width>
-    <height>1903</height>
+    <height>2032</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1889,7 +1889,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>972</width>
-             <height>1731</height>
+             <height>1860</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2723,7 +2723,7 @@ QPushButton:pressed
 font-weight: 500;</string>
                </property>
                <property name="text">
-                <string>功能型AI</string>
+                <string>AI分析</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -2836,7 +2836,7 @@ QPushButton:pressed
 </string>
                </property>
                <property name="text">
-                <string>功能提示词</string>
+                <string>分析提示词</string>
                </property>
               </widget>
              </item>
