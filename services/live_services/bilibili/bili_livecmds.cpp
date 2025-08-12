@@ -1772,7 +1772,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             int msgType = iw2.msg_type; // 1是进入
             qint64 roomId = iw2.room_id;
             int guardLevel = iw2.guard_level;
-            qInfo() << "用户进入：" << uname << uid << msgType << roomId << guardLevel << timestamp;
+            qInfo() << "用户进入：" << uname << uid << "类型：" << msgType << guardLevel;
 
             auto fansMedal = iw2.fans_medal;
             auto rankInfo = iw2.rank_info;

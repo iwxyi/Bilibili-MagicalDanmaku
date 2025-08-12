@@ -5133,6 +5133,11 @@ void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
         static LiveDanmaku waitDanmaku;
         static bool waiting = false;
 
+        static auto clearWaiting = [&] {
+            waitDanmaku = LiveDanmaku();
+            waiting = false;
+        };
+
         // 等待机制
         if (chatService->isAnalyzing())
         {
@@ -5147,6 +5152,9 @@ void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
         waiting = false;
         waitDanmaku = LiveDanmaku();
 
+        if (!isValidDanmaku(danmaku, 0))
+            return;
+
         // 获取上次分析之后的弹幕
         QStringList args;
         QList<LiveDanmaku> targetDanmakus;
@@ -5157,7 +5165,7 @@ void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
             if (tm != 0 && tm < lastTime)
                 break;
             if (dmk == lastDanmaku)
-                continue;
+                break;
             if (!dmk.is(MessageType::MSG_DANMAKU))
                 continue;
             if (!isValidDanmaku(dmk, 0))
@@ -5173,6 +5181,7 @@ void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
         if (args.isEmpty())
         {
             qWarning() << "AI分析：没有可分析的弹幕";
+            clearWaiting();
             return;
         }
         qDebug() << "AI分析：" << args;

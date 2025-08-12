@@ -134,10 +134,6 @@ void ChatGPTManager::analyze(QStringList texts, NetStringFunc func)
 
     });
 
-    /// 获取上下文
-    QList<ChatBean> userChats;
-    userChats.append(ChatBean("user", texts.join("\n")));
-
     QList<ChatBean> chats;
     // 提示词
     if (!us->chatgpt_analysis_prompt.isEmpty())
@@ -148,6 +144,7 @@ void ChatGPTManager::analyze(QStringList texts, NetStringFunc func)
     }
     else
         qWarning() << "AI分析提示词为空";
+    chats.append(ChatBean("user", texts.join("\n")));
 
     chatgpt->getResponse(chats);
 }
