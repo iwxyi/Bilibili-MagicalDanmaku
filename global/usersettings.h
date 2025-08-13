@@ -67,7 +67,7 @@ public:
     bool saveCmdToSqlite = false;    // 保存所有CMD命令到数据库
     int judgeRobot = 0;              // 判断机器人：0关，1仅关注，2所有
     int giftComboDelay = 3;          // 礼物连击延迟（秒）
-    bool AIReplyMsgLocal = false;    // AI回复本地显示
+    bool AIReplyMsgEnabled = false;    // AI回复本地显示
     int AIReplyMsgSend = 0;          // AI回复发送弹幕，0关闭，1仅少量，2全部
     bool AIReplySelf = false;        // AI回复自己（避免死循环）
     bool fansArchives = false;       // 是否开启粉丝档案

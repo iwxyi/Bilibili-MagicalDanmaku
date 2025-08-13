@@ -202,8 +202,7 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
             ac->cookieUid = uid;
             ac->cookieSecUid = secUid;
             ac->cookieUname = nickname;
-            qInfo() << "机器人账号：" << nickname << uid;
-            downloadRobotCover(avatarUrl);
+            qInfo() << "访问直播间的机器人账号：" << nickname << uid;
         }
         else
         {
@@ -259,7 +258,14 @@ void DouyinLiveService::autoAddCookie(QList<QNetworkCookie> cookies)
 /// 获取初次连接信息
 void DouyinLiveService::getDanmuInfo()
 {
+    if (this->gettingDanmu)
+    {
+        qDebug() << "正在获取弹幕连接信息中...";
+        return;
+    }
+
     qInfo() << "获取连接信息";
+    this->gettingDanmu = true;
     // QByteArray ba = imFetch(ac->roomRid, ac->cookieUid);
     qint64 timestamp10 = QDateTime::currentSecsSinceEpoch();
     QString cursor = QString("r-7497180536918546638_d-1_u-1_fh-7497179772733760010_t-%1").arg(timestamp10);
@@ -424,10 +430,17 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
     request.setRawHeader("Origin", "https://live.douyin.com");
 
     liveSocket->open(request);
+    gettingDanmu = false;
 }
 
 void DouyinLiveService::getCookieAccount()
 {
+    if (gettingUser)
+    {
+        qDebug() << "正在获取Cookie账号中...";
+        return;
+    }
+    gettingUser = true;
     QStringList params{
         "aid", "6383",
         "app_name", "douyin_web",
@@ -477,9 +490,17 @@ void DouyinLiveService::getCookieAccount()
         ac->cookieUid = snum(id);
         ac->cookieSecUid = sec_uid;
         ac->cookieUname = nickname;
+        qInfo() << "当前登录的Cookie账号：" << id << nickname;
+
+        downloadRobotCover(avatar);
 
         emit signalRobotAccountChanged();
-    });
+
+        // 登录后websocket重新连接
+        getDanmuInfo();
+        }, [=](QString s){
+            gettingUser = false;
+        });
 }
 
 void DouyinLiveService::getAccountInfo(const QString &uid, NetJsonFunc func)
@@ -546,7 +567,10 @@ void DouyinLiveService::sendMsg(const QString &msg, const QString &cookie)
 }
 
 /// 发送弹幕
-/// !目前发送都是403，且会掉该Cookie登录的账号，需要重新登录
+/// !注意点：
+/// - 返回403的情况，会掉该Cookie登录的账号，需要重新登录。
+/// - 1. 可能是编码问题，比如content的中文必须都用百分号的编码，a_bogus计算的参数也是url编码后的，再添加url编码后的a_bogus
+/// - 2. 注意User-Agent，发送弹幕的UA必须和登录的平台一样（浏览器Cookie中拿到），但是params中的browser参数不重要，不会进行判断
 void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const QString &cookie)
 {
     if (us->localMode)
@@ -555,10 +579,28 @@ void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const Q
         return ;
     }
 
-    QString msToken = getRandomKey(120); // xxx
-    
-    QString paramsStr = QString("aid=6383&app_name=douyin_web&live_id=1&device_platform=web&language=zh-CN&enter_from=web_live&cookie_enabled=true&screen_width=1360&screen_height=908&browser_language=zh-CN&browser_platform=MacIntel&browser_name=Chrome&browser_version=137.0.0.0&room_id=%1&content=%2&type=0&rtf_content=&msToken=%3")
-        .arg(roomRid).arg(urlEncodePercent(msg)).arg(urlEncodePercent(getRandomKey(120)));
+    QStringList params{
+        "aid", "6383",
+        "app_name", "douyin_web",
+        "live_id", "1",
+        "device_platform", "web",
+        "language", "zh-CN",
+        "enter_from", "web_live",
+        "cookie_enabled", "true",
+        "screen_width", "1360",
+        "screen_height", "908",
+        "browser_language", "zh-CN",
+        "browser_platform", "Win32",
+        "browser_name", "Mozilla",
+        "browser_version", "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+        "room_id", roomRid,
+        "content", msg,
+        "type", "0",
+        "rtf_content", "",
+        "msToken", getRandomKey(120)
+    };
+
+    QString paramsStr = toUrlParam(params);
 
     DouyinSignatureAbogus signer;
     QString xBogus = signer.signDetail(paramsStr, getUserAgent());
@@ -576,9 +618,9 @@ void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const Q
         }
         if (json.i("status_code") != 0)
         {
-            qWarning() << json;
+            qWarning() << "弹幕发送失败：" << json;
             QString msg = json.data().s("prompts");
-            return showError("发送弹幕失败", "状态不为0：" + snum(json.i("status_code")) + "\n" + msg);
+            return showError("弹幕发送失败", "状态不为0：" + snum(json.i("status_code")) + "\n" + msg);
         }
 
         MyJson data = json.data();
@@ -617,6 +659,7 @@ void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const Q
 
         MyJson fans_club = user.o("fans_club").data(); // 因为我没加，这里是空数据
 
+        // XXX: 实际上并没有发送成功，手动添加
         LiveDanmaku danmaku(nickname, content, uid, pay_level, QDateTime::fromSecsSinceEpoch(modify_time), "", "");
         danmaku.setFromRoomId(ac->roomId);
         danmaku.setLogId(snum(msg_id));

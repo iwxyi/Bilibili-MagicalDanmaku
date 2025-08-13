@@ -137,6 +137,7 @@
         <file alias="code_gui">icons/code_gui.png</file>
         <file alias="add_circle">icons/add_circle.png</file>
         <file alias="x">icons/x.png</file>
+        <file alias="user_agent">icons/user_agent.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>

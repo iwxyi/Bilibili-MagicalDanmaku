@@ -1499,13 +1499,13 @@ void MainWindow::readConfig()
     ui->languageAutoTranslateCheck->setChecked(trans);
 
     // 自动回复
-    us->AIReplyMsgLocal = us->value("danmaku/aiReply", false).toBool();
+    us->AIReplyMsgEnabled = us->value("danmaku/aiReply", false).toBool();
     us->AIReplyMsgSend = us->value("danmaku/aiReplyMsg", 0).toInt();
     us->AIReplySelf = us->value("danmaku/aiReplySelf", false).toBool();
-    ui->AIReplyCheck->setChecked(us->AIReplyMsgLocal);
+    ui->AIReplyCheck->setChecked(us->AIReplyMsgEnabled);
     ui->AIReplyMsgCheck->setCheckState(static_cast<Qt::CheckState>(us->AIReplyMsgSend));
-    ui->AIReplyMsgCheck->setEnabled(us->AIReplyMsgLocal);
-    ui->GPTAnalysisCheck->setEnabled(us->AIReplyMsgLocal);
+    ui->AIReplyMsgCheck->setEnabled(us->AIReplyMsgEnabled);
+    ui->GPTAnalysisCheck->setEnabled(us->AIReplyMsgEnabled);
     ui->AIReplySelfCheck->setChecked(us->AIReplySelf);
 
     // 黑名单管理
@@ -3938,11 +3938,11 @@ void MainWindow::on_SendMsgButton_clicked()
 
 void MainWindow::on_AIReplyCheck_stateChanged(int)
 {
-    us->AIReplyMsgLocal = ui->AIReplyCheck->isChecked();
-    us->setValue("danmaku/aiReply", us->AIReplyMsgLocal);
+    us->AIReplyMsgEnabled = ui->AIReplyCheck->isChecked();
+    us->setValue("danmaku/aiReply", us->AIReplyMsgEnabled);
 
-    ui->AIReplyMsgCheck->setEnabled(us->AIReplyMsgLocal);
-    ui->GPTAnalysisCheck->setEnabled(us->AIReplyMsgLocal);
+    ui->AIReplyMsgCheck->setEnabled(us->AIReplyMsgEnabled);
+    ui->GPTAnalysisCheck->setEnabled(us->AIReplyMsgEnabled);
 }
 
 void MainWindow::on_testDanmakuEdit_returnPressed()
@@ -5045,7 +5045,7 @@ void MainWindow::slotDiange(const LiveDanmaku &danmaku)
 
 void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
 {
-    if (rt->justStart)
+    if (rt->justStart || !us->AIReplyMsgEnabled)
         return ;
     
     const auto isValidDanmaku = [=](const LiveDanmaku& danmaku, int similarIndex) -> bool{
@@ -10418,11 +10418,14 @@ void MainWindow::on_actionAnchor_Case_triggered()
 void MainWindow::on_robotNameButton_clicked()
 {
     newFacileMenu;
-    menu->addAction(ui->actionQRCode_Login);
+    menu->addAction(ui->actionQRCode_Login)->hide(rt->livePlatform != Bilibili);
 #ifdef ENABLE_WEBENGINE
     menu->addAction(ui->actionWebViewLogin);
 #endif
     menu->addAction(ui->actionSet_Cookie);
+    menu->addAction(QIcon(":/icons/user_agent"), "设置UserAgent", [=]{
+        on_UAButton_clicked();
+    })->hide(rt->livePlatform != Douyin);
     menu->addAction(ui->actionSet_Danmaku_Data_Format)->hide(rt->livePlatform != Bilibili);
     menu->split()->addAction(ui->actionLogout)->disable(ac->browserCookie.isEmpty());
     menu->exec();
@@ -11827,7 +11830,7 @@ void MainWindow::on_chatGPTModelNameCombo_editTextChanged(const QString &arg1)
 void MainWindow::on_UAButton_clicked()
 {
     bool ok = false;
-    QString ua = QInputDialog::getText(this, "UA", "请输入UA", QLineEdit::Normal, liveService->getUserAgent(), &ok);
+    QString ua = QInputDialog::getText(this, "UserAgent", "发送弹幕的UA必须和登录账号的平台一致，否则会掉账号登录", QLineEdit::Normal, liveService->getUserAgent(), &ok);
     if (!ok)
         return ;
     liveService->setUserAgent(ua);
