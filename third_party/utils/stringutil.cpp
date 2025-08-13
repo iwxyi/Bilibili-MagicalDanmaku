@@ -235,6 +235,17 @@ QString urlDecode(QString s)
     return QUrl::fromPercentEncoding(s.toUtf8());
 }
 
+QString toUrlParam(const QStringList &params)
+{
+    QString paramsStr;
+    for (int i = 0; i < params.size(); i += 2)
+    {
+        paramsStr += params[i] + "=" + urlDecode(params[i + 1]) + "&";
+    }
+    paramsStr.chop(1);
+    return paramsStr;
+}
+
 bool canBeNickname(QString s)
 {
     QRegExp re("^([\\w@_]|[^\\x00-\\xff]){2,20}$");

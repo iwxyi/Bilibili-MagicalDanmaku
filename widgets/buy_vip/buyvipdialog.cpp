@@ -6,6 +6,7 @@
 #include "ui_buyvipdialog.h"
 #include "clickablewidget.h"
 #include "fileutil.h"
+#include "accountinfo.h"
 
 BuyVIPDialog::BuyVIPDialog(QString dataPath, QString roomId, QString upId, QString userId, QString roomTitle, QString upName, QString username, qint64 deadline, bool *types, QWidget *parent) :
     QDialog(parent), NetInterface(this), ui(new Ui::BuyVIPDialog),
@@ -348,10 +349,11 @@ void BuyVIPDialog::showEvent(QShowEvent *e)
         case Douyin:
         {
             btns[1]->simulateStatePress();
-            btns[0]->setEnabled(false);
-            btns[2]->setEnabled(false);
-            ui->typeRRBgCard->setEnabled(false);
-            ui->typeRobotBgCard->setEnabled(false);
+            bool hasLogin = !ac->cookieSecUid.isEmpty();
+            btns[0]->setEnabled(hasLogin);
+            btns[2]->setEnabled(hasLogin);
+            ui->typeRRBgCard->setEnabled(hasLogin);
+            ui->typeRobotBgCard->setEnabled(hasLogin);
             break;
         }
         default:

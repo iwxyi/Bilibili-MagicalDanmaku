@@ -4666,6 +4666,7 @@ void MainWindow::autoSetCookie(const QString &s)
     if (ac->browserCookie.isEmpty())
     {
         ac->userCookies = QVariant();
+        qInfo() << "清空Cookie";
         return ;
     }
 
@@ -11357,6 +11358,7 @@ void MainWindow::on_actionLogout_triggered()
     ac->userCookies = QVariant();
     ac->csrf_token = "";
     ac->cookieUid = "";
+    ac->cookieSecUid = "";
     ac->cookieUname = "";
     ac->cookieToken = "";
     ac->cookieULevel = 0;

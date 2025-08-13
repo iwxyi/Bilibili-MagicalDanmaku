@@ -50,6 +50,11 @@ void DouyinLiveService::initWS()
     });
 }
 
+QStringList DouyinLiveService::getCommonParams() const
+{
+
+}
+
 void DouyinLiveService::startConnect()
 {
     getRoomInfo(true);
@@ -290,6 +295,7 @@ QString DouyinLiveService::getSignature(QString roomId, QString uniqueId)
     }
 }
 
+/// [废弃，无法使用]
 /// 组建初次连接的信息
 /// 主要是为了获取 cursor、internalExt 这两个值
 /// !返回一直是 json code=0 的返回值，有问题
@@ -351,6 +357,7 @@ QByteArray DouyinLiveService::imFetch(QString roomId, QString uniqueId)
     return ba;
 }
 
+/// 连接直播间WebSocket
 void DouyinLiveService::imPush(QString cursor, QString internalExt)
 {
     QString roomId = ac->roomRid;
@@ -401,12 +408,7 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
         "signature", signature,
     };
 
-    QString paramsStr;
-    for (int i = 0; i < params.size(); i += 2)
-    {
-        paramsStr += params[i] + "=" + urlDecode(params[i + 1]) + "&";
-    }
-    paramsStr.chop(1);
+    QString paramsStr = toUrlParam(params);
 
     // 开始连接
     QString url = serverUrl + "?" + paramsStr;
@@ -422,6 +424,62 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
     request.setRawHeader("Origin", "https://live.douyin.com");
 
     liveSocket->open(request);
+}
+
+void DouyinLiveService::getCookieAccount()
+{
+    QStringList params{
+        "aid", "6383",
+        "app_name", "douyin_web",
+        "browser_language", "zh-CN",
+        "browser_name", "Mozilla",
+        "browser_platform", "Win32",
+        "browser_version", "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+        "cookie_enabled", "true",
+        "device_platform", "web",
+        "language", "zh-CN",
+        "live_id", "1",
+        "live_reason", "",
+        "screen_height", "1080",
+        "screen_width", "1920",
+        "cookir_enabled", "true",
+        "room_id", "0",
+        "msToken", urlEncodePercent(getRandomKey(120))
+    };
+
+    QString paramsStr = toUrlParam(params);
+
+    DouyinSignatureAbogus signer;
+    QString xBogus = signer.signDetail(paramsStr, getUserAgent());
+
+    QString url = "https://live.douyin.com/webcast/user/me/?" + paramsStr;
+    url += "&a_bogus=" + urlEncodePercent(xBogus);
+
+    qInfo() << "获取Cookie账号";
+    get(url, [=](MyJson json) {
+        if (json.i("status_code") != 0)
+        {
+            QString msg = json.data().s("prompts");
+            return showError("获取Cookie账号", "状态不为0：" + snum(json.i("status_code")) + "\n" + msg);
+        }
+
+        MyJson data = json.data();
+        qint64 id = data.l("id");
+        QString sec_uid = data.s("sec_uid");
+        QString webcast_uid = data.s("webcast_uid");
+        qint64 short_id = data.l("short_id");
+        QString display_id = data.s("display_id");
+        QString nickname = data.s("nickname");
+        QString avatar = data.o("avatar_thumb").a("url_list").first().toString();
+        QString signature = data.s("signature");
+        QString location_city = data.s("location_city");
+
+        ac->cookieUid = snum(id);
+        ac->cookieSecUid = sec_uid;
+        ac->cookieUname = nickname;
+
+        emit signalRobotAccountChanged();
+    });
 }
 
 void DouyinLiveService::getAccountInfo(const QString &uid, NetJsonFunc func)
@@ -450,12 +508,7 @@ void DouyinLiveService::getAccountInfo(const QString &uid, NetJsonFunc func)
         "current_room_id", ac->roomId // 哪个ID都行
     };
 
-    QString paramsStr;
-    for (int i = 0; i < params.size(); i += 2)
-    {
-        paramsStr += params[i] + "=" + urlDecode(params[i + 1]) + "&";
-    }
-    paramsStr.chop(1);
+    QString paramsStr = toUrlParam(params);
 
     get("https://live.douyin.com/webcast/user/profile/?" + paramsStr, [=](MyJson json) {
         if (json.i("status_code") != 0)

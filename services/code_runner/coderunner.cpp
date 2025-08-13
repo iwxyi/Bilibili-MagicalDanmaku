@@ -1513,8 +1513,10 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return snum(liveService->getLiveStatus());
     else if (key == "%live_status_str%")
         return liveService->getLiveStatusStr();
-    else if (key == "%room_id%" || key == "%rid%")
+    else if (key == "%room_id%")
         return ac->roomId;
+    else if (key == "%room_rid%")
+        return ac->roomRid;
     else if (key == "%room_name%" || key == "%room_title%")
         return toSingleLine(ac->roomTitle);
     else if (key == "%room_desc%")
@@ -1524,8 +1526,12 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return ac->upName;
     else if (key == "%up_uid%")
         return ac->upUid;
+    else if (key == "%up_sec_uid%")
+        return ac->upSecUid;
     else if (key == "%my_uid%")
         return ac->cookieUid;
+    else if (key == "%my_sec_uid%")
+        return ac->cookieSecUid;
     else if (key == "%my_uname%")
         return ac->cookieUname;
     else if (key == "%area_id%")

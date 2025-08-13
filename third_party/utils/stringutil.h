@@ -42,6 +42,8 @@ QString simplifyChapter(QString chpt); // 去首尾空白，留下第一段空�
 QString urlEncode(QString s);
 QString urlEncodePercent(QString s);
 QString urlDecode(QString s);
+QString toUrlParam(const QStringList& params);
+
 bool canBeNickname(QString s);
 
 QString ArabToCN(int num);

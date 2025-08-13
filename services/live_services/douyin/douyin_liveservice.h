@@ -22,6 +22,7 @@ public:
 
 private:
     void initWS();
+    QStringList getCommonParams() const;
 
 protected:
     void startConnect() override;
@@ -32,6 +33,7 @@ protected:
     QString getSignature(QString roomId, QString uniqueId);
     QByteArray imFetch(QString roomId, QString uniqueId);
     void imPush(QString cursor, QString internalExt);
+    void getCookieAccount() override;
     void getAccountInfo(const UIDT& uid, NetJsonFunc func) override;
     void getRobotInfo() override;
     void getUpInfo() override;

@@ -187,7 +187,6 @@ void BiliLiveService::getCookieAccount()
         if (json.value("code").toInt() != 0)
         {
             showError("登录返回不为0", json.value("message").toString());
-            gettingUser = false;
             if (!gettingRoom)
                 triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
             emit signalUpdatePermission();
@@ -206,6 +205,8 @@ void BiliLiveService::getCookieAccount()
 
         if (!wbiMixinKey.isEmpty())
             getRobotInfo();
+    }, [=](QString s) {
+        gettingUser = false;
     });
 }
 

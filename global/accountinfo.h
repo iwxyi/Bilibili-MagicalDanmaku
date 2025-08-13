@@ -48,9 +48,9 @@ public:
     qint64 liveStartTime = 0; // 开播时间（10位时间戳）
 
     // 主播信息
-    QString upUid;                 // 主播的UID
+    QString upUid;                 // 主播的UID，抖音中的anchor_id
     QString upName;                // 主播昵称
-    QString upSecUid;                // 主播的secUid，抖音加密的UID
+    QString upSecUid;              // 主播的secUid，抖音加密的UID
     QString identityCode;          // 身份码，获取一次应用后才有
     int anchorLiveLevel = 0;       // 主播等级
     qint64 anchorLiveScore = 0;    // 主播积分（金瓜子）
