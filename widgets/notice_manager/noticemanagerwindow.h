@@ -47,6 +47,8 @@ private slots:
 
     void on_filterKeyEdit_editingFinished();
 
+    void on_filterKeyEdit_textChanged(const QString &arg1);
+
 private:
     Ui::NoticeManagerWindow *ui;
 

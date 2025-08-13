@@ -3,6 +3,7 @@
 // #include <QBreakpadHandler.h>
 #include "dlog.h"
 #include "signaltransfer.h"
+#include "debounce.h"
 #ifdef Q_OS_WIN32
 // #include <dbghelp.h>
 /**
@@ -39,6 +40,7 @@ AccountInfo* ac;
 PlatformInfo* pl;
 CodeRunner* cr;
 SignalTransfer* st;
+Debounce* debounce;
 
 int main(int argc, char *argv[])
 {
@@ -73,6 +75,7 @@ int main(int argc, char *argv[])
     ac = new AccountInfo;
     pl = new PlatformInfo;
     cr = new CodeRunner;
+    debounce = new Debounce;
 
     MainWindow w;
     if (w.getSettings()->value("debug/logFile", false).toBool())

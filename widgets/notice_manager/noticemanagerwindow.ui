@@ -24,13 +24,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="webidLabel">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QLabel" name="label">
        <property name="text">
         <string>截止时间：</string>
@@ -64,6 +57,9 @@
       <widget class="QLineEdit" name="filterKeyEdit">
        <property name="placeholderText">
         <string>关键词/正则表达式</string>
+       </property>
+       <property name="clearButtonEnabled">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

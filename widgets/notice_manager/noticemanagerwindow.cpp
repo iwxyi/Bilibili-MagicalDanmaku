@@ -5,6 +5,7 @@
 #include "usersettings.h"
 #include "douyin_liveservice.h"
 #include "facilemenu.h"
+#include "debounce.h"
 #include <QTableWidget>
 
 NoticeManagerWindow::NoticeManagerWindow(QWidget *parent)
@@ -39,12 +40,37 @@ NoticeManagerWindow::NoticeManagerWindow(QWidget *parent)
     ui->filterKeyEdit->setText(filterKey);
 
     // 设置表头
-    QString headers = "ID,时间,类型,描述,作品,操作";
+    QString headers = "时间,类型,用户,内容,作品,操作";
     ui->noticeTable->setColumnCount(headers.split(",").size());
     ui->noticeTable->setHorizontalHeaderLabels(headers.split(","));
     ui->noticeTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->noticeTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->noticeTable->setSelectionMode(QAbstractItemView::MultiSelection);
+    ui->noticeTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    connect(ui->noticeTable, &QTableWidget::itemDoubleClicked, this, [=](QTableWidgetItem *item){
+        int row = item->row();
+        int column = item->column();
+        if (column == 2) // 用户
+        {
+            ui->filterKeyEdit->setText(filterKey = noticeList[row].user.nickname);
+            filter();
+        }
+        else if (column == 3) // 内容
+        {
+            if (!noticeList[row].comment.text.isEmpty())
+            {
+                ui->filterKeyEdit->setText(filterKey = noticeList[row].comment.text);
+                filter();
+            }
+        }
+        else if (column == 4) // 作品
+        {
+            if (!noticeList[row].aweme.desc.isEmpty())
+            {
+                ui->filterKeyEdit->setText(filterKey = noticeList[row].aweme.desc);
+                filter();
+            }
+        }
+    });
 }
 
 NoticeManagerWindow::~NoticeManagerWindow()
@@ -149,9 +175,9 @@ void NoticeManagerWindow::getNotice(qint64 startTime)
             addTableRow(notice);
         }
 
-        ui->statusLabel->setText("时间：" + QDateTime::fromSecsSinceEpoch(startTime).toString("yyyy-MM-dd HH:mm:ss") + " 之后的通知获取完毕");
+        ui->statusLabel->setText("时间：" + QDateTime::fromSecsSinceEpoch(minTime).toString("yyyy-MM-dd HH:mm:ss") + " 之后的通知获取完毕");
         // 下一页
-        if (minTime > ui->earliestTimeEdit->dateTime().toSecsSinceEpoch())
+        if (minTime >= ui->earliestTimeEdit->dateTime().toSecsSinceEpoch())
         {
             QTimer::singleShot(1000, this, [=]{
                 getNotice(minTime);
@@ -170,10 +196,10 @@ void NoticeManagerWindow::addTableRow(const NoticeInfo &notice)
         QTableWidgetItem *item = new QTableWidgetItem(text.length() > 20 ? text.left(16) + "..." : text);
         ui->noticeTable->setItem(row, column++, item);
     };
-    setItem(QString::number(notice.nid));
-    setItem(QDateTime::fromSecsSinceEpoch(notice.create_time).toString("MM-dd HH:mm:ss"));
+    setItem(QDateTime::fromSecsSinceEpoch(notice.create_time).toString("yyyy-MM-dd HH:mm"));
     setItem(notice.getTypeString());
-    setItem(notice.toString());
+    setItem(notice.user.nickname);
+    setItem(notice.comment.text);
     setItem(notice.aweme.desc);
     setItem("");
 
@@ -193,27 +219,29 @@ void NoticeManagerWindow::clear()
 
 void NoticeManagerWindow::filter()
 {
-    // 全部显示
-    if (filterTypes.isEmpty() && filterKey.isEmpty())
-    {
+    debounce->call("filter"_shash, this, [=]{
+        // 全部显示
+        if (filterTypes.isEmpty() && filterKey.isEmpty())
+        {
+            for (int i = 0; i < ui->noticeTable->rowCount(); i++)
+            {
+                ui->noticeTable->setRowHidden(i, false);
+            }
+            return;
+        }
+
+        // 隐藏没有选中的类型
+        QRegularExpression key(filterKey);
         for (int i = 0; i < ui->noticeTable->rowCount(); i++)
         {
-            ui->noticeTable->setRowHidden(i, false);
+            bool hidden = false;
+            if (!filterTypes.isEmpty())
+                hidden = hidden || !filterTypes.contains(noticeList[i].type);
+            if (!filterKey.isEmpty())
+                hidden = hidden || !noticeList[i].contains(key);
+            ui->noticeTable->setRowHidden(i, hidden);
         }
-        return;
-    }
-
-    // 隐藏没有选中的类型
-    QRegularExpression key(filterKey);
-    for (int i = 0; i < ui->noticeTable->rowCount(); i++)
-    {
-        bool hidden = false;
-        if (!filterTypes.isEmpty())
-            hidden = hidden || !filterTypes.contains(noticeList[i].type);
-        if (!filterKey.isEmpty())
-            hidden = hidden || !noticeList[i].contains(key);
-        ui->noticeTable->setRowHidden(i, hidden);
-    }
+    });
 }
 
 void NoticeManagerWindow::on_filterButton_clicked()
@@ -274,11 +302,20 @@ void NoticeManagerWindow::on_filterButton_clicked()
     menu->exec();
 }
 
-
 void NoticeManagerWindow::on_filterKeyEdit_editingFinished()
 {
     filterKey = ui->filterKeyEdit->text();
     filter();
     us->setValue("notice_manager/filter_key", filterKey);
+}
+
+void NoticeManagerWindow::on_filterKeyEdit_textChanged(const QString &arg1)
+{
+    // 数量不多的时候自动过滤，否则只有等待回车或者其他条件
+    if (noticeList.size() < 1000)
+    {
+        filterKey = ui->filterKeyEdit->text();
+        filter();
+    }
 }
 
