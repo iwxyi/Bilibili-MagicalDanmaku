@@ -687,7 +687,8 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     if (realTimeRefreshUserInfo)
     {
 
-        if (listWidget->count() == 1 // 只有一个，就是新添加的
+        if (!listWidget->currentIndex().isValid() // 没有聚焦
+            || listWidget->count() == 1 // 只有一个，就是新添加的
             || (listWidget->count() >= 2 && listWidget->item(listWidget->count() - 2) == listWidget->currentItem())) // 判断当前item是否是最后第二个（最后一个是新添加的）
         {
             listWidget->setCurrentRow(listWidget->count() - 1);
