@@ -7,6 +7,7 @@
 #include "facilemenu.h"
 #include "debounce.h"
 #include <QTableWidget>
+#include <QScrollBar>
 
 NoticeManagerWindow::NoticeManagerWindow(QWidget *parent)
     : QWidget(parent)
@@ -142,7 +143,7 @@ void NoticeManagerWindow::getWebId()
 void NoticeManagerWindow::getNotice(qint64 startTime)
 {
     qInfo() << "获取通知：startTime=" << startTime;
-    ui->statusLabel->setText("正在获取通知：" + QDateTime::fromSecsSinceEpoch(startTime).toString("yyyy-MM-dd HH:mm:ss"));
+    ui->statusLabel->setText("时间：" + QDateTime::fromSecsSinceEpoch(startTime).toString("yyyy-MM-dd HH:mm:ss") + " 正在获取通知");
     const int count = 10;
     QString url = QString("https://www.douyin.com/aweme/v1/web/notice/?device_platform=webapp&aid=6383&channel=channel_pc_web&is_new_notice=1&is_mark_read=1&notice_group=960&count=%1&min_time=%2&max_time=%3&update_version_code=170400&pc_client_type=1&pc_libra_divert=Mac&support_h265=1&support_dash=1&cpu_core_num=10&version_code=170400&version_name=17.4.0&cookie_enabled=true&screen_width=1512&screen_height=982&browser_language=zh-CN&browser_platform=MacIntel&browser_name=Chrome&browser_version=138.0.0.0&browser_online=true&engine_name=Blink&engine_version=138.0.0.0&os_name=Mac+OS&os_version=10.15.7&device_memory=8&platform=PC&downlink=10&effective_type=4g&round_trip_time=150&webid=" + ac->cookieUniqueId)
                     .arg(count).arg(0).arg(startTime);
@@ -198,16 +199,27 @@ void NoticeManagerWindow::addTableRow(const NoticeInfo &notice)
     };
     setItem(QDateTime::fromSecsSinceEpoch(notice.create_time).toString("yyyy-MM-dd HH:mm"));
     setItem(notice.getTypeString());
-    setItem(notice.user.nickname);
+    QString followStatus;
+    if (notice.user.follow_status == 0)
+        followStatus = "";
+    else if (notice.user.follow_status == 1)
+        followStatus = "[关注] ";
+    else if (notice.user.follow_status == 2)
+        followStatus = "[朋友] ";
+    else if (notice.user.is_block)
+        followStatus = "[拉黑] ";
+    setItem(followStatus + notice.user.nickname);
     setItem(notice.comment.text);
     setItem(notice.aweme.desc);
     setItem("");
 
     // 是否显示
-    if (!filterTypes.isEmpty() && !filterTypes.contains(notice.type))
-    {
-        ui->noticeTable->setRowHidden(row, true);
-    }
+    bool hidden = false;
+    if (!filterTypes.isEmpty())
+        hidden = !filterTypes.contains(notice.type);
+    if (!filterKey.isEmpty())
+        hidden = hidden || !notice.contains(QRegularExpression(filterKey));
+    ui->noticeTable->setRowHidden(row, hidden);
 }
 
 void NoticeManagerWindow::clear()
@@ -227,20 +239,30 @@ void NoticeManagerWindow::filter()
             {
                 ui->noticeTable->setRowHidden(i, false);
             }
-            return;
         }
-
-        // 隐藏没有选中的类型
-        QRegularExpression key(filterKey);
-        for (int i = 0; i < ui->noticeTable->rowCount(); i++)
+        else
         {
-            bool hidden = false;
-            if (!filterTypes.isEmpty())
-                hidden = hidden || !filterTypes.contains(noticeList[i].type);
-            if (!filterKey.isEmpty())
-                hidden = hidden || !noticeList[i].contains(key);
-            ui->noticeTable->setRowHidden(i, hidden);
+            // 隐藏没有选中的类型
+            QRegularExpression key(filterKey);
+            for (int i = 0; i < ui->noticeTable->rowCount(); i++)
+            {
+                bool hidden = false;
+                if (!filterTypes.isEmpty())
+                    hidden = !filterTypes.contains(noticeList[i].type);
+                if (!filterKey.isEmpty())
+                    hidden = hidden || !noticeList[i].contains(key);
+                ui->noticeTable->setRowHidden(i, hidden);
+            }
         }
+        
+        // 设置当前行在滚动区域内可见，并且尽量在中间
+        QTimer::singleShot(10, this, [=]{
+            int currentRow = ui->noticeTable->currentRow();
+            if (currentRow >= 0 && currentRow < ui->noticeTable->rowCount())
+            {
+                ui->noticeTable->scrollTo(ui->noticeTable->model()->index(currentRow, 0));
+            }
+        });
     });
 }
 
@@ -257,6 +279,7 @@ void NoticeManagerWindow::on_filterButton_clicked()
     FacileMenu* menu = new FacileMenu(this);
     menu->addAction("全部", [=]{
         filterTypes.clear();
+        filter();
         saveFilterTypes();
     });
     menu->split()->addAction("评论", [=]{

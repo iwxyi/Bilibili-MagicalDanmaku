@@ -19,6 +19,8 @@ struct UserInfo
     QString nickname;
     QString unique_id;
     QString avatar;
+    int follow_status;
+    bool is_block;
 
     UserInfo(){}
     UserInfo(const MyJson &json)
@@ -26,6 +28,8 @@ struct UserInfo
         uid = json.s("uid");
         unique_id = json.s("unique_id");
         nickname = json.s("nickname");
+        follow_status = json.i("follow_status");
+        is_block = json.b("is_block");
         if (json.contains("avatar_thumb"))
             avatar = json.o("avatar_thumb").a("url_list").first().toString();
     }
@@ -99,7 +103,7 @@ struct NoticeInfo
         {
             MyJson digg = json.o("digg");
             aweme = AwemeInfo(digg.o("aweme"));
-            user = UserInfo(digg.o("from_user"));
+            user = UserInfo(digg.a("from_user").first().toObject());
         }
 
         if (json.contains("comment"))
@@ -130,7 +134,7 @@ struct NoticeInfo
         {
             MyJson interactive_notice = json.o("interactive_notice");
             content = interactive_notice.s("content"); // “推荐了你的视频”
-            user = UserInfo(interactive_notice.o("from_user"));
+            user = UserInfo(interactive_notice.a("from_user").first().toObject());
             aweme = AwemeInfo(interactive_notice.o("aweme"));
         }
 
@@ -183,7 +187,13 @@ struct NoticeInfo
 
     bool contains(const QRegularExpression& key) const
     {
-        return _text.contains(key) || aweme.desc.contains(key) || comment.text.contains(key) || user.nickname.contains(key);
+        return _text.contains(key)
+            || aweme.desc.contains(key)
+            || aweme.aweme_id.contains(key)
+            || aweme.author.uid.contains(key)
+            || comment.text.contains(key)
+            || user.nickname.contains(key)
+            || user.unique_id.contains(key);
     }
 };
 
