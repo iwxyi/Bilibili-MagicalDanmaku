@@ -2,6 +2,7 @@
 #define NOTICEBEAN_H
 
 #include "myjson.h"
+#include <QRegularExpression>
 
 enum NoticeType
 {
@@ -137,16 +138,16 @@ struct NoticeInfo
         switch (type)
         {
         case NoticeType_Comment:
-            _text = QString("%1 评论《%2》：%3").arg(user.nickname).arg(aweme.desc).arg(comment.text);
+            _text = QString("%1 评论：%2").arg(user.nickname).arg(comment.text);
             break;
         case NoticeType_Digg:
-            _text = QString("%1 点赞《%2》").arg(user.nickname).arg(aweme.desc);
+            _text = QString("%1 点赞了你的视频").arg(user.nickname);
             break;
         case NoticeType_Follow:
             _text = QString("%1 关注了你").arg(user.nickname);
             break;
         case NoticeType_At:
-            _text = QString("%1@了你：%2").arg(user.nickname).arg(aweme.desc);
+            _text = QString("%1@了你").arg(user.nickname);
             break;
         case NoticeType_Recommend:
             _text = QString("%1 推荐了你的视频").arg(user.nickname);
@@ -178,6 +179,11 @@ struct NoticeInfo
     QString toString() const
     {
         return _text;
+    }
+
+    bool contains(const QRegularExpression& key) const
+    {
+        return _text.contains(key) || aweme.desc.contains(key) || comment.text.contains(key) || user.nickname.contains(key);
     }
 };
 

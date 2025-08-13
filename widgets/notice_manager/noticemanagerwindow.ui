@@ -17,7 +17,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="startButton">
        <property name="text">
         <string>获取通知</string>
        </property>
@@ -29,6 +29,16 @@
         <string/>
        </property>
       </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>截止时间：</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDateTimeEdit" name="earliestTimeEdit"/>
      </item>
      <item>
       <spacer name="horizontalSpacer">
@@ -44,14 +54,18 @@
       </spacer>
      </item>
      <item>
-      <widget class="QLabel" name="label">
+      <widget class="QPushButton" name="filterButton">
        <property name="text">
-        <string>截止时间</string>
+        <string>筛选类型</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QDateTimeEdit" name="earliestTimeEdit"/>
+      <widget class="QLineEdit" name="filterKeyEdit">
+       <property name="placeholderText">
+        <string>关键词/正则表达式</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

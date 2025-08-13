@@ -36,11 +36,16 @@ public slots:
     void getNotice(qint64 startTime);
     void addTableRow(const NoticeInfo &notice);
     void clear();
+    void filter();
 
 private slots:
-    void on_pushButton_clicked();
+    void on_startButton_clicked();
 
     void on_earliestTimeEdit_dateTimeChanged(const QDateTime &dateTime);
+
+    void on_filterButton_clicked();
+
+    void on_filterKeyEdit_editingFinished();
 
 private:
     Ui::NoticeManagerWindow *ui;
@@ -49,6 +54,9 @@ private:
     SqlService *sqlService = nullptr;
 
     QList<NoticeInfo> noticeList;
+    QList<int> selectedRows;
+    QList<int> filterTypes;
+    QString filterKey;
 };
 
 #endif // NOTICEMANAGERWINDOW_H
