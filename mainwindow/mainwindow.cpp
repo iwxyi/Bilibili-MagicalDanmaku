@@ -39,6 +39,7 @@
 #include "douyin_liveservice.h"
 #include "webview_login/WebLoginUtil.h"
 #include "codeguieditor.h"
+#include "noticemanagerwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -834,6 +835,8 @@ void MainWindow::initLiveService()
 {
     // 平台
     rt->livePlatform = (LivePlatform)(us->value("global/live_platform", 0).toInt());
+    adjustWidgetsByPlatform();
+
     qInfo() << "初始化直播服务，平台：" << rt->livePlatform;
     switch (rt->livePlatform)
     {
@@ -884,6 +887,7 @@ void MainWindow::initLiveService()
     });
 
     connect(liveService, &LiveServiceBase::signalAutoAddCookie, this, [=](QList<QNetworkCookie> cookies) {
+        QString prevCookie = ac->browserCookie;
         QString ck = ac->browserCookie;
         if (!ck.isEmpty() && !ck.trimmed().endsWith(";"))
             ck += "; ";
@@ -905,7 +909,8 @@ void MainWindow::initLiveService()
             }
         }
         qDebug() << "自动添加Cookie：" << ck;
-        autoSetCookie(ck);
+        if (prevCookie.isEmpty()) // 第一次自动添加Cookie
+            autoSetCookie(ck);
     });
 
     connect(liveService, &LiveServiceBase::signalNewAccountSetted, this, [=]() {
@@ -1368,9 +1373,33 @@ void MainWindow::initLiveService()
 /// 根据不同的平台调整对应的控件
 void MainWindow::adjustWidgetsByPlatform()
 {
-    if (rt->livePlatform == Douyin)
+    if (rt->livePlatform == Bilibili)
+    {
+        ui->tenCardLabel4->setText(R"(
+<html><head/><body>
+<p>
+    <a href="this://gift_list"><span style="text-decoration: none; color:#8cc2d4;">礼物ID查看</span></a>&nbsp;
+    <a href="this://capture_manager"><span style=" text-decoration: none; color:#8cc2d4;">视频截图管理</span></a>&nbsp;
+    <a href="this://start_pk"><span style=" text-decoration: none; color:#8cc2d4;">开启大乱斗</span></a>
+</p>
+<p>
+    <a href="this://guard_catch"><span style=" text-decoration: none; color:#8cc2d4;">黑听舰长捕捉</span></a>&nbsp;
+    <a href="this://catch_you"><span style=" text-decoration: none; color:#8cc2d4;">跑骚抓人检测</span></a>
+</p>
+<p>
+    <a href="this://live_status"><span style=" text-decoration: none; color:#8cc2d4;">直播状态查询</span></a>&nbsp;
+    <a href="this://lyrics"><span style=" text-decoration: none; color:#8cc2d4;">歌词字幕投稿</span></a>
+</p></body></html>)");
+    }
+    else if (rt->livePlatform == Douyin)
     {
         ui->guardCountTextLabel->setText("在线");
+
+        ui->tenCardLabel4->setText(R"(
+<html><head/><body>
+<p>
+    <a href="this://notice_manager"><span style="text-decoration: none; color:#8cc2d4;">消息批量管理</span></a>&nbsp;
+</p></body></html>)");
     }
 }
 
@@ -8390,6 +8419,13 @@ void MainWindow::openLink(QString link)
     else if (link == "gift_list")
     {
         on_actionShow_Gift_List_triggered();
+    }
+    else if (link == "notice_manager")
+    {
+        NoticeManagerWindow* nmw = new NoticeManagerWindow(this);
+        nmw->setLiveService((DouyinLiveService*)liveService);
+        nmw->setSqlService(&sqlService);
+        nmw->show();
     }
 }
 

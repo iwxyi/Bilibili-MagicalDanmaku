@@ -201,6 +201,7 @@ void DouyinLiveService::getRoomInfo(bool reconnect, int reconnectCount)
 
             ac->cookieUid = uid;
             ac->cookieSecUid = secUid;
+            ac->cookieUniqueId = uniqueId;
             ac->cookieUname = nickname;
             qInfo() << "访问直播间的机器人账号：" << nickname << uid;
         }
@@ -490,8 +491,7 @@ void DouyinLiveService::getCookieAccount()
         ac->cookieUid = snum(id);
         ac->cookieSecUid = sec_uid;
         ac->cookieUname = nickname;
-        qInfo() << "当前登录的Cookie账号：" << id << nickname;
-
+        qInfo() << "当前登录的Cookie账号：" << id << nickname << sec_uid << webcast_uid;
         downloadRobotCover(avatar);
 
         emit signalRobotAccountChanged();

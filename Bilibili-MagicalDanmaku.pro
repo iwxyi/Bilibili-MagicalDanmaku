@@ -105,6 +105,7 @@ INCLUDEPATH += \
     third_party/ \
     widgets/editor/ \
     widgets/db_browser/ \
+    widgets/notice_manager/ \
     third_party/gif/ \
     third_party/picture_browser/ \
     third_party/notification/ \
@@ -246,6 +247,7 @@ SOURCES += \
     third_party/qrencode/split.c \
     mainwindow/server.cpp \
     third_party/utils/xfytts.cpp \
+    widgets/notice_manager/noticemanagerwindow.cpp \
     widgets/singleentrance.cpp \
     widgets/smooth_scroll/smoothlistwidget.cpp \
     widgets/smooth_scroll/waterfallscrollarea.cpp \
@@ -474,6 +476,8 @@ HEADERS += \
     third_party/qrencode/split.h \
     third_party/utils/myjson.h \
     third_party/utils/xfytts.h \
+    widgets/notice_manager/noticebean.h \
+    widgets/notice_manager/noticemanagerwindow.h \
     widgets/partimagewidget.h \
     widgets/singleentrance.h \
     widgets/smooth_scroll/smoothlistwidget.h \
@@ -519,6 +523,7 @@ FORMS += \
     order_player/orderplayerwindow.ui \
     third_party/picture_browser/picturebrowser.ui \
     third_party/utils/textinputdialog.ui \
+    widgets/notice_manager/noticemanagerwindow.ui \
     widgets/singleentrance.ui \
     widgets/video_player/livevideoplayer.ui \
     widgets/catch_you_dialog/catchyouwidget.ui \
