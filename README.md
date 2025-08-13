@@ -3709,6 +3709,5 @@ function readInfo(data) {
 > - 酷狗音乐下载地址：https://cloud.tencent.com/developer/article/1795030
 > - Star图标：https://www.behance.net/gallery/83133509/Logo-animations-collaboration
 > - 服务端模块：https://github.com/nikhilm/qhttpserver
-> - 数据库模块：https://blog.csdn.net/gongjianbo1992/article/details/88070605
-> - 计算器：https://github.com/nefuddos/Calculater
 > - 抖音API接口：https://github.com/skmcj/dycast
+> - 抖音a_bogus解析：https://github.com/ShilongLee/Crawler

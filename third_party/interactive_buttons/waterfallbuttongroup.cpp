@@ -15,6 +15,7 @@ WaterFallButtonGroup::WaterFallButtonGroup(QWidget *parent)
 
 void WaterFallButtonGroup::initStringList(QStringList list, QStringList selected)
 {
+    clear();
     foreach (QString s, list)
     {
         addButton(s, selected.contains(s));
