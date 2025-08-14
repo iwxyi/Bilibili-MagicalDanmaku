@@ -62,7 +62,7 @@ void LiveServiceBase::init()
     });
 
     connect(liveSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, [=](QAbstractSocket::SocketError error){
-        qWarning() << "连接错误：" << error << liveSocket;
+        qWarning() << "连接错误：" << error;
     });
 }
 

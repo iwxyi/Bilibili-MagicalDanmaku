@@ -1,4 +1,5 @@
 #include "livestatisticservice.h"
+#include <QRegularExpression>
 
 LiveStatisticService::LiveStatisticService(QObject *me) : me(me)
 {
@@ -37,11 +38,14 @@ void LiveStatisticService::startCalculateDailyData()
         dailySettings->deleteLater();
     }
 
+    QString fileRoomId = ac->roomId;
+    fileRoomId.replace(QRegularExpression("\\w+?://"), "");
+
     QDir dir;
     dir.mkdir(rt->dataPath + "live_daily");
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
-    dailySettings = new QSettings(rt->dataPath + "live_daily/" + ac->roomId + "_" + date + ".ini", QSettings::Format::IniFormat);
-    qInfo() << "保存每日直播统计：" << rt->dataPath + "live_daily/" + ac->roomId + "_" + date + ".ini";
+    dailySettings = new QSettings(rt->dataPath + "live_daily/" + fileRoomId + "_" + date + ".ini", QSettings::Format::IniFormat);
+    qInfo() << "保存每日直播统计：" << rt->dataPath + "live_daily/" + fileRoomId + "_" + date + ".ini";
 
     dailyCome = dailySettings->value("come", 0).toInt();
     dailyPeopleNum = dailySettings->value("people_num", 0).toInt();
@@ -86,6 +90,9 @@ void LiveStatisticService::startCalculateCurrentLiveData()
         currentLiveSettings->deleteLater();
     }
 
+    QString fileRoomId = ac->roomId;
+    fileRoomId.replace(QRegularExpression("\\w+?://"), "");
+
     QDir dir;
     dir.mkdir(rt->dataPath + "live_current");
     currentLiveStartTimestamp = ac->liveStartTime;
@@ -95,8 +102,8 @@ void LiveStatisticService::startCalculateCurrentLiveData()
         return ;
     }
     QString time = QDateTime::fromSecsSinceEpoch(currentLiveStartTimestamp).toString("yyyy-MM-dd HH-mm-ss");
-    currentLiveSettings = new QSettings(rt->dataPath + "live_current/" + ac->roomId + "_" + time + ".ini", QSettings::Format::IniFormat);
-    qInfo() << "保存本场直播统计：" << rt->dataPath + "live_current/" + ac->roomId + "_" + time + ".ini";
+    currentLiveSettings = new QSettings(rt->dataPath + "live_current/" + fileRoomId + "_" + time + ".ini", QSettings::Format::IniFormat);
+    qInfo() << "保存本场直播统计：" << rt->dataPath + "live_current/" + fileRoomId + "_" + time + ".ini";
 
     currentLiveCome = currentLiveSettings->value("come", 0).toInt();
     currentLivePeopleNum = currentLiveSettings->value("people_num", 0).toInt();
@@ -138,12 +145,15 @@ void LiveStatisticService::startSaveDanmakuToFile()
     if (danmuLogFile)
         finishSaveDanmuToFile();
 
+    QString fileRoomId = ac->roomId;
+    fileRoomId.replace(QRegularExpression("\\w+?://"), "");
+
     QDir dir;
     dir.mkdir(rt->dataPath+"danmaku_histories");
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
 
-    qInfo() << "开启弹幕记录：" << rt->dataPath+"danmaku_histories/" + ac->roomId + "_" + date + ".log";
-    danmuLogFile = new QFile(rt->dataPath+"danmaku_histories/" + ac->roomId + "_" + date + ".log");
+    qInfo() << "开启弹幕记录：" << rt->dataPath+"danmaku_histories/" + fileRoomId + "_" + date + ".log";
+    danmuLogFile = new QFile(rt->dataPath+"danmaku_histories/" + fileRoomId + "_" + date + ".log");
     danmuLogFile->open(QIODevice::WriteOnly | QIODevice::Append);
     danmuLogStream = new QTextStream(danmuLogFile);
     danmuLogStream->setGenerateByteOrderMark(true);

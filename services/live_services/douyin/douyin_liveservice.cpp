@@ -510,9 +510,9 @@ void DouyinLiveService::getCookieAccount()
 
         // 登录后websocket重新连接
         getDanmuInfo();
-        }, [=](QString s){
-            gettingUser = false;
-        });
+    }, [=](QString s){
+        gettingUser = false;
+    });
 }
 
 void DouyinLiveService::getAccountInfo(const QString &uid, NetJsonFunc func)

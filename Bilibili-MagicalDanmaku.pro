@@ -72,6 +72,7 @@ INCLUDEPATH += \
     services/live_services/base/ \
     services/live_services/bilibili/ \
     services/live_services/douyin/ \
+    services/live_services/keyu/ \
     services/entities/ \
     services/code_runner/ \
     services/sql_service/ \
@@ -144,6 +145,7 @@ SOURCES += \
     services/live_services/douyin/douyinsignatureabogus.cpp \
     services/live_services/douyin/douyinsignaturehelper.cpp \
     services/live_services/douyin/protobuf/douyin.pb.c \
+    services/live_services/keyu/keyu_liveservice.cpp \
     services/sql_service/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     services/voice_service/voiceservice.cpp \
@@ -317,6 +319,7 @@ HEADERS += \
     services/live_services/douyin/douyinsignaturehelper.h \
     services/live_services/douyin/protobuf/douyin.pb.h \
     services/live_services/douyin/silentwebenginepage.h \
+    services/live_services/keyu/keyu_liveservice.h \
     services/sql_service/sqlservice.h \
     order_player/importsongsdialog.h \
     services/voice_service/voiceservice.h \

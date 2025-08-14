@@ -42,6 +42,7 @@
 #include "noticemanagerwindow.h"
 #include "debounce.h"
 #include "CPU_ID/cpu_id_util.h"
+#include "keyu_liveservice.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -600,6 +601,11 @@ void MainWindow::initView()
             ui->liveStatusButton->setText(timeStr);
         }
     });
+
+    // 设置为默认界面
+    QTimer::singleShot(0, [=]{
+        setRoomCover(QPixmap(":/bg/bg"));
+    });
 }
 
 void MainWindow::initStyle()
@@ -886,6 +892,11 @@ void MainWindow::initLiveService()
         liveService = new DouyinLiveService(this);
         ui->platformButton->setIcon(QIcon(":/icons/platform/douyin"));
         pl->coinToRMB = 10; // 抖币比例
+        break;
+    case Keyu:
+        liveService = new KeyuLiveService(this);
+        ui->platformButton->setIcon(QIcon(":/icons/platform/keyu"));
+        pl->coinToRMB = 10;
         break;
     default:
         QMessageBox::critical(this, "直播服务", "当前平台暂不支持，使用默认的【哔哩哔哩】");
@@ -1551,12 +1562,6 @@ void MainWindow::readConfig()
 #ifdef ZUOQI_ENTRANCE
         fakeEntrance->setRoomId(ac->identityCode);
 #endif
-    }
-    else // 设置为默认界面
-    {
-        QTimer::singleShot(0, [=]{
-            setRoomCover(QPixmap(":/bg/bg"));
-        });
     }
 
     // 移除间隔
@@ -3987,6 +3992,7 @@ void MainWindow::on_roomIdEdit_editingFinished()
 
     releaseLiveData();
 
+    // B站身份码
     if (rt->livePlatform == Bilibili)
     {
         // 判断是身份码还是房间号
@@ -4002,7 +4008,6 @@ void MainWindow::on_roomIdEdit_editingFinished()
             return ;
         }
     }
-
 
     // 直接继续
     emit signalRoomChanged(ac->roomId);
@@ -5476,26 +5481,31 @@ void MainWindow::startConnectRoom()
         return ;
 
     // 判断是身份码还是房间号
-    bool isPureRoomId = (ac->roomId.contains(QRegularExpression("^\\d+$")));
-    if (!isPureRoomId)
+    if (rt->livePlatform == Bilibili)
     {
-        QTimer::singleShot(10, this, [=]{
-            liveService->startConnectIdentityCode(ac->identityCode);
-        });
-        return ;
+        bool isPureRoomId = (ac->roomId.contains(QRegularExpression("^\\d+$")));
+        if (!isPureRoomId)
+        {
+            QTimer::singleShot(10, this, [=]{
+                liveService->startConnectIdentityCode(ac->identityCode);
+            });
+            return ;
+        }
     }
 
     // 初始化主播数据
     ac->currentFans = 0;
     ac->currentFansClub = 0;
-    liveService->popularVal = 2;
+    liveService->popularVal = 0;
 
     // 准备房间数据
+    QString fileRoomId = ac->roomId;
+    fileRoomId.replace(QRegularExpression("\\w+?://"), "");
     if (us->danmakuCounts)
         us->danmakuCounts->deleteLater();
     QDir dir;
     dir.mkdir(rt->dataPath+"danmaku_counts");
-    us->danmakuCounts = new QSettings(rt->dataPath+"danmaku_counts/" + ac->roomId + ".ini", QSettings::Format::IniFormat);
+    us->danmakuCounts = new QSettings(rt->dataPath+"danmaku_counts/" + fileRoomId + ".ini", QSettings::Format::IniFormat);
     if (us->calculateDailyData)
         liveService->startCalculateDailyData();
 
@@ -5619,6 +5629,7 @@ int MainWindow::hasPermission()
 
 void MainWindow::setRoomCover(const QPixmap& pixmap)
 {
+    qInfo() << "更新房间封面";
     liveService->roomCover = pixmap; // 原图
     if (liveService->roomCover.isNull())
         return ;
@@ -12186,6 +12197,9 @@ void MainWindow::on_platformButton_clicked()
     menu->addAction(QIcon(":/icons/platform/douyin"), "抖音", [=]{
         switchToPlatform(Douyin);
     })->check(rt->livePlatform == Douyin);
+    menu->addAction(QIcon(":/icons/platform/keyu"), "可遇（抖音/快手/视频号/虎牙）", [=]{
+        switchToPlatform(Keyu);
+    })->check(rt->livePlatform == Keyu);
     menu->addAction(QIcon(":/icons/platform/huya"), "虎牙", [=]{
         switchToPlatform(Huya);
     })->check(rt->livePlatform == Huya)->disable();

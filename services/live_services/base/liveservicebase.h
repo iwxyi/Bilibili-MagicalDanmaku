@@ -200,7 +200,7 @@ public:
     virtual void getRobotInfo() {}
     virtual void downloadRobotCover(const QString& url);
     /// 获取直播间信息
-    virtual void getRoomInfo(bool reconnect, int reconnectCount = 0) = 0;
+    virtual void getRoomInfo(bool reconnect, int reconnectCount = 0) {};
     /// 获取直播间Host信息
     virtual void getDanmuInfo() {}
     /// 根据获得的Host信息，开始连接socket
