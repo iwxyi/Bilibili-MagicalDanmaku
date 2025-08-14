@@ -40,6 +40,8 @@
 #include "webview_login/WebLoginUtil.h"
 #include "codeguieditor.h"
 #include "noticemanagerwindow.h"
+#include "debounce.h"
+#include "CPU_ID/cpu_id_util.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -643,6 +645,41 @@ void MainWindow::initObject()
 
     us = new UserSettings(rt->dataPath + "settings.ini");
 
+    // 设备
+    {
+        rt->CPU_ID = CPUIDUtil::get_cpuId();
+        qInfo() << "CPU_ID:" << rt->CPU_ID;
+        QString prevStID = us->value("platform/cpu_id").toString();
+        if (!rt->CPU_ID.isEmpty())
+        {
+            if (!prevStID.isEmpty() && prevStID != rt->CPU_ID) // 使用这个字段在切换设备时保留Cookie，给别人调试或者调试好给别人的情况下
+            {
+                qInfo() << "检测到您已更换设备" << prevStID << "->" << rt->CPU_ID;
+                if (us->b("debug/keep_cookie", false))
+                {
+                    QTimer::singleShot(2000, this, [=]{
+                        showNotify("安全检测", "检测到您已更换设备");
+                    });
+                }
+                else // 清除Cookie
+                {
+                    if (!us->s("danmaku/browserCookie").isEmpty())
+                    {
+                        us->set("danmaku/browserCookie", "");
+                        QTimer::singleShot(2000, this, [=]{
+                            showNotify("安全检测", "已清除之前设备的Cookie");
+                        });
+                    }
+                }
+            }
+        }
+        else
+        {
+            qWarning() << "无法获取到CPU_ID";
+        }
+        us->setValue("platform/cpu_id", rt->CPU_ID);
+    }
+
     cr->setHeaps(new MySettings(rt->dataPath + "heaps.ini", QSettings::Format::IniFormat));
     cr->extSettings = new MySettings(rt->dataPath + "ext_settings.ini", QSettings::Format::IniFormat);
 
@@ -835,7 +872,7 @@ void MainWindow::initLiveService()
 {
     // 平台
     rt->livePlatform = (LivePlatform)(us->value("global/live_platform", 0).toInt());
-    adjustWidgetsByPlatform();
+    initLivePlatform();
 
     qInfo() << "初始化直播服务，平台：" << rt->livePlatform;
     switch (rt->livePlatform)
@@ -908,7 +945,7 @@ void MainWindow::initLiveService()
                 ck += name + "=" + value + ";";
             }
         }
-        qDebug() << "自动添加Cookie：" << ck;
+        qDebug() << "自动添加Cookie：" << ck.left(200) + "...";
         if (prevCookie.isEmpty()) // 第一次自动添加Cookie
             autoSetCookie(ck);
     });
@@ -1371,8 +1408,29 @@ void MainWindow::initLiveService()
 }
 
 /// 根据不同的平台调整对应的控件
-void MainWindow::adjustWidgetsByPlatform()
+void MainWindow::initLivePlatform()
 {
+    // 对应控件调整
+    if (rt->livePlatform == Bilibili)
+    {
+        ui->roomIdEdit->setPlaceholderText("房间号");
+    }
+    else if (rt->livePlatform == Douyin)
+    {
+        ui->roomIdEdit->setPlaceholderText("房间号");
+        ui->roomIdEdit->resize(ui->roomIdEdit->width() * 2, ui->roomIdEdit->height()); // 抖音的房间号更长
+        ui->guardCountTextLabel->setText("在线");
+    }
+    else if (rt->livePlatform == Keyu)
+    {
+        ui->roomIdEdit->setValidator(nullptr);
+        ui->roomIdEdit->setPlaceholderText("WebSocket地址");
+        ui->roomIdEdit->resize(ui->roomIdEdit->width() * 3, ui->roomIdEdit->height());
+
+        ac->cookieUid = rt->CPU_ID;
+    }
+
+    // 平台专属工具
     if (rt->livePlatform == Bilibili)
     {
         ui->tenCardLabel4->setText(R"(
@@ -1393,13 +1451,32 @@ void MainWindow::adjustWidgetsByPlatform()
     }
     else if (rt->livePlatform == Douyin)
     {
-        ui->guardCountTextLabel->setText("在线");
-
         ui->tenCardLabel4->setText(R"(
 <html><head/><body>
 <p>
     <a href="this://notice_manager"><span style="text-decoration: none; color:#8cc2d4;">消息批量管理</span></a>&nbsp;
 </p></body></html>)");
+    }
+
+    // 只有B站能用的功能
+    if (rt->livePlatform != Bilibili)
+    {
+        ui->battleInfoWidget->hide(); // 大乱斗信息
+        ui->danmakuBlockSettingsCard->setEnabled(false); // 禁言
+        ui->danmakuCuanmenSettingsCard->setEnabled(false); // PK串门
+        ui->liveGreetSettingsCard->setEnabled(false); // 开播问候
+        ui->timerConnectSettingsCard->setEnabled(false); // 定时连接
+        ui->autoOperatorSettingsCard->setEnabled(false); // 自动操作
+        ui->recordSettingsCard->setEnabled(false); // 录播
+        ui->privateMsgSettingsCard->setEnabled(false); // 私信
+        ui->toutaGiftSettingsCard->setEnabled(false); // 偷塔
+        ui->page_6->setEnabled(false); // 自动禁言页
+        ui->tabSubAccount->setEnabled(false); // 子账号页
+    }
+
+    // 已经失效的
+    {
+        ui->TxNLPSettingsCard->hide(); // 腾讯闲聊
     }
 }
 
@@ -5436,100 +5513,102 @@ void MainWindow::startConnectRoom()
 
 void MainWindow::updatePermission()
 {
-    qInfo() << "当前信息：房间=" << ac->roomId << "  主播ID=" << ac->upUid << "  机器人ID=" << ac->cookieUid;
-    static int retry_count = 0;
-    permissionLevel = 0;
-    if (liveService->gettingRoom || liveService->gettingUser)
-    {
-        qDebug() << "仍在获取信息：room=" << liveService->gettingRoom << ", user=" << liveService->gettingUser;
-        QTimer::singleShot(5000, this, [=]{
-            if (++retry_count > 3)
+    debounce->call("updatePermission"_shash, this, [=]{
+        qInfo() << "当前信息：房间=" << ac->roomId << "  主播ID=" << ac->upUid << "  机器人ID=" << ac->cookieUid;
+        static int retry_count = 0;
+        permissionLevel = 0;
+        if (liveService->gettingRoom || liveService->gettingUser)
+        {
+            qDebug() << "仍在获取信息：room=" << liveService->gettingRoom << ", user=" << liveService->gettingUser;
+            QTimer::singleShot(5000, this, [=]{
+                if (++retry_count > 3)
+                {
+                    retry_count = 0;
+                    return;
+                }
+                qDebug() << "尝试刷新信息" << retry_count;
+                updatePermission();
+            });
+            return ;
+        }
+        QString userId = ac->cookieUid;
+        get(serverPath + "pay/isVip", {"room_id", ac->roomId, "user_id", userId}, [=](MyJson json) {
+            MyJson jdata = json.data();
+            qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+            qint64 deadline = 0;
+            if (!jdata.value("RR").isNull())
             {
-                retry_count = 0;
-                return;
+                MyJson info = jdata.o("RR");
+                if (info.l("deadline") > timestamp)
+                {
+                    permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
+                    deadline = qMax(deadline, info.l("deadline"));
+                    permissionType[1] = true;
+                }
             }
-            qDebug() << "尝试刷新信息" << retry_count;
-            updatePermission();
+            if (!jdata.value("ROOM").isNull())
+            {
+                MyJson info = jdata.o("ROOM");
+                if (info.l("deadline") > timestamp)
+                {
+                    permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
+                    deadline = qMax(deadline, info.l("deadline"));
+                    permissionType[2] = true;
+                }
+            }
+            if (!jdata.value("ROBOT").isNull())
+            {
+                MyJson info = jdata.o("ROBOT");
+                if (info.l("deadline") > timestamp)
+                {
+                    permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
+                    deadline = qMax(deadline, info.l("deadline"));
+                    permissionType[3] = true;
+                }
+            }
+            if (!jdata.value("GIFT").isNull())
+            {
+                MyJson info = jdata.o("GIFT");
+                if (info.l("deadline") > timestamp)
+                {
+                    permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
+                    deadline = qMax(deadline, info.l("deadline"));
+                    permissionType[10] = true;
+                }
+            }
+
+            this->permissionDeadline = deadline;
+            if (permissionLevel)
+            {
+                ui->droplight->setText(permissionText);
+                ui->droplight->adjustMinimumSize();
+                ui->droplight->setNormalColor(themeSbg);
+                ui->droplight->setTextColor(themeSfg);
+                ui->droplight->setToolTip("剩余时长：" + snum((deadline - timestamp) / (24 * 3600)) + "天");
+                ui->vipExtensionButton->hide();
+                ui->vipDatabaseButton->hide();
+                ui->heartTimeSpin->setMaximum(1440); // 允许挂机24小时
+
+                qint64 tm = deadline - timestamp;
+                if (tm > 24 * 3600)
+                    tm = 24 * 3600;
+                permissionTimer->setInterval(tm * 1000);
+                permissionTimer->start();
+            }
+            else
+            {
+                ui->droplight->setText("免费版");
+                ui->droplight->setNormalColor(Qt::white);
+                ui->droplight->setTextColor(Qt::black);
+                ui->droplight->setToolTip("点击解锁新功能");
+                ui->vipExtensionButton->show();
+                ui->vipDatabaseButton->show();
+                ui->heartTimeSpin->setMaximum(120); // 仅允许刚好获取完小心心
+                permissionTimer->stop();
+            }
+
+            readConfig2();
         });
-        return ;
-    }
-    QString userId = ac->cookieUid;
-    get(serverPath + "pay/isVip", {"room_id", ac->roomId, "user_id", userId}, [=](MyJson json) {
-        MyJson jdata = json.data();
-        qint64 timestamp = QDateTime::currentSecsSinceEpoch();
-        qint64 deadline = 0;
-        if (!jdata.value("RR").isNull())
-        {
-            MyJson info = jdata.o("RR");
-            if (info.l("deadline") > timestamp)
-            {
-                permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
-                deadline = qMax(deadline, info.l("deadline"));
-                permissionType[1] = true;
-            }
-        }
-        if (!jdata.value("ROOM").isNull())
-        {
-            MyJson info = jdata.o("ROOM");
-            if (info.l("deadline") > timestamp)
-            {
-                permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
-                deadline = qMax(deadline, info.l("deadline"));
-                permissionType[2] = true;
-            }
-        }
-        if (!jdata.value("ROBOT").isNull())
-        {
-            MyJson info = jdata.o("ROBOT");
-            if (info.l("deadline") > timestamp)
-            {
-                permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
-                deadline = qMax(deadline, info.l("deadline"));
-                permissionType[3] = true;
-            }
-        }
-        if (!jdata.value("GIFT").isNull())
-        {
-            MyJson info = jdata.o("GIFT");
-            if (info.l("deadline") > timestamp)
-            {
-                permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
-                deadline = qMax(deadline, info.l("deadline"));
-                permissionType[10] = true;
-            }
-        }
-
-        this->permissionDeadline = deadline;
-        if (permissionLevel)
-        {
-            ui->droplight->setText(permissionText);
-            ui->droplight->adjustMinimumSize();
-            ui->droplight->setNormalColor(themeSbg);
-            ui->droplight->setTextColor(themeSfg);
-            ui->droplight->setToolTip("剩余时长：" + snum((deadline - timestamp) / (24 * 3600)) + "天");
-            ui->vipExtensionButton->hide();
-            ui->vipDatabaseButton->hide();
-            ui->heartTimeSpin->setMaximum(1440); // 允许挂机24小时
-
-            qint64 tm = deadline - timestamp;
-            if (tm > 24 * 3600)
-                tm = 24 * 3600;
-            permissionTimer->setInterval(tm * 1000);
-            permissionTimer->start();
-        }
-        else
-        {
-            ui->droplight->setText("免费版");
-            ui->droplight->setNormalColor(Qt::white);
-            ui->droplight->setTextColor(Qt::black);
-            ui->droplight->setToolTip("点击解锁新功能");
-            ui->vipExtensionButton->show();
-            ui->vipDatabaseButton->show();
-            ui->heartTimeSpin->setMaximum(120); // 仅允许刚好获取完小心心
-            permissionTimer->stop();
-        }
-
-        readConfig2();
     });
 }
 
@@ -10458,7 +10537,7 @@ void MainWindow::on_robotNameButton_clicked()
 #ifdef ENABLE_WEBENGINE
     menu->addAction(ui->actionWebViewLogin);
 #endif
-    menu->addAction(ui->actionSet_Cookie);
+    menu->addAction(ui->actionSet_Cookie)->hide(rt->livePlatform == Keyu);
     menu->addAction(QIcon(":/icons/user_agent"), "设置UserAgent", [=]{
         on_UAButton_clicked();
     })->hide(rt->livePlatform != Douyin);

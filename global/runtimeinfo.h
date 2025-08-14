@@ -29,12 +29,14 @@ enum LivePlatform
     Douyu,              // 斗鱼
     Kuaishou,           // 快手
     BilibiliOpen = 10,  // 哔哩哔哩开放平台
+    Keyu = 100,         // 可遇AI的通用弹幕
 };
 
 class RuntimeInfo
 {
 public:
     LivePlatform livePlatform = Bilibili;
+    QString CPU_ID;
     bool asPlugin = false;
     bool asFreeOnly = false;
     bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景

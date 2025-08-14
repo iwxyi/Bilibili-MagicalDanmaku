@@ -771,7 +771,7 @@ private:
     void initObject();
     void initPath();
     void initLiveService();
-    void adjustWidgetsByPlatform();
+    void initLivePlatform();
     void readConfig();
     void readConfig2();
     void initDanmakuWindow();

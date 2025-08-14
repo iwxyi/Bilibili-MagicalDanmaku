@@ -215,6 +215,7 @@ SOURCES += \
     third_party/notification/tipcard.cpp \
     third_party/qss_editor/qsseditdialog.cpp \
     third_party/qss_editor/qsshighlighteditor.cpp \
+    third_party/utils/CPU_ID/system_cpuid.cpp \
     third_party/utils/calculatorutil.cpp \
     third_party/utils/httpuploader.cpp \
     third_party/utils/microsofttts.cpp \
@@ -421,6 +422,9 @@ HEADERS += \
     third_party/notification/tipcard.h \
     third_party/qss_editor/qsseditdialog.h \
     third_party/qss_editor/qsshighlighteditor.h \
+    third_party/utils/CPU_ID/cpu_id_util.h \
+    third_party/utils/CPU_ID/imei_util.h \
+    third_party/utils/CPU_ID/system_cpuid.h \
     third_party/utils/ImageSimilarityUtil.h \
     third_party/utils/bili_api_util.h \
     third_party/utils/calculatorutil.h \

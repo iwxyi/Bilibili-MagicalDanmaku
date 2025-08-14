@@ -381,7 +381,7 @@ protected:
     // 连接信息
     int hostUseIndex = 0;
     QList<HostInfo> hostList;
-    QWebSocket* liveSocket;
+    QWebSocket* liveSocket = nullptr;
     QTimer* heartTimer;
     QTimer* connectServerTimer;
     int reconnectWSDuration = INTERVAL_RECONNECT_WS; // WS重连间隔，每次上播/下播重置

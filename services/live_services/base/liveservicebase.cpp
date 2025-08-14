@@ -37,6 +37,7 @@ void LiveServiceBase::init()
     initTimeTasks();
 
     // WebSocket
+    Q_ASSERT(!liveSocket);
     liveSocket = new QWebSocket();
 
     QSslConfiguration config = liveSocket->sslConfiguration();
@@ -61,7 +62,7 @@ void LiveServiceBase::init()
     });
 
     connect(liveSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, [=](QAbstractSocket::SocketError error){
-        qWarning() << "连接错误：" << error;
+        qWarning() << "连接错误：" << error << liveSocket;
     });
 }
 

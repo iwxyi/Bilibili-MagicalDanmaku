@@ -369,7 +369,13 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
 {
     QString roomId = ac->roomRid;
     QString uniqueId = ac->cookieUid;
-    QString serverUrl = "wss://webcast5-ws-web-lf.douyin.com/webcast/im/push/v2/";
+
+    if (roomId.isEmpty() || uniqueId.isEmpty())
+    {
+        gettingDanmu = false;
+        qWarning() << "房号或者账号为空，等待获取... 房号:" << roomId << " 账号:" << uniqueId;
+        return;
+    }
 
     // DouyinSignatureHelper helper;
     // QString signature = helper.getSignature(roomId, uniqueId);
@@ -418,6 +424,7 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
     QString paramsStr = toUrlParam(params);
 
     // 开始连接
+    QString serverUrl = "wss://webcast5-ws-web-lf.douyin.com/webcast/im/push/v2/";
     QString url = serverUrl + "?" + paramsStr;
     url.replace("webcast3-ws-web-lq", "webcast5-ws-web-lf");
     qInfo() << "开始连接：" << url;
@@ -436,6 +443,11 @@ void DouyinLiveService::imPush(QString cursor, QString internalExt)
 
 void DouyinLiveService::getCookieAccount()
 {
+    if (ac->browserCookie.isEmpty())
+    {
+        qInfo() << "未设置Cookie";
+        return;
+    }
     if (gettingUser)
     {
         qDebug() << "正在获取Cookie账号中...";
@@ -534,9 +546,12 @@ void DouyinLiveService::getAccountInfo(const QString &uid, NetJsonFunc func)
     get("https://live.douyin.com/webcast/user/profile/?" + paramsStr, [=](MyJson json) {
         if (json.i("status_code") != 0)
         {
-            qWarning() << json;
             QString msg = json.data().s("prompts");
-            return showError("获取账号信息" + uid, "状态不为0：" + snum(json.i("status_code")) + "\n" + msg);
+            if (msg.isEmpty())
+            {
+                qWarning() << "账号信息返回：" << json;
+            }
+            return showError("获取账号信息:" + uid, "状态不为0：" + snum(json.i("status_code")) + "\n" + msg);
         }
         func(json.data());
     });
