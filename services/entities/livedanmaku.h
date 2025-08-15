@@ -26,7 +26,8 @@ enum MessageType
     MSG_SHARE,
     MSG_PK_BEST,
     MSG_SUPER_CHAT,
-    MSG_EXTRA
+    MSG_EXTRA,
+    MSG_LIKE
 };
 
 class LiveDanmaku
@@ -220,7 +221,10 @@ public:
         danmaku.first = object.value("first").toInt();
         danmaku.special = object.value("special").toInt();
         danmaku.extraJson = object.value("extra").toObject();
-        danmaku.faceUrl = object.value("face_url").toString();
+        if (object.contains("face_url"))
+            danmaku.avatar = object.value("face_url").toString();
+        else if (object.contains("avatar"))
+            danmaku.avatar = object.value("avatar").toString();
         danmaku.show_reply = object.value("show_reply").toBool();
         danmaku.reply_mid = static_cast<qint64>(object.value("reply_mid").toDouble());
         danmaku.reply_uname = object.value("reply_uname").toString();
@@ -344,8 +348,8 @@ public:
             object.insert("prev_timestamp", prev_timestamp);
         if (!extraJson.isEmpty())
             object.insert("extra", extraJson);
-        if (!faceUrl.isEmpty())
-            object.insert("face_url", faceUrl);
+        if (!avatar.isEmpty())
+            object.insert("avatar", avatar);
         if (show_reply && reply_mid > 0)
         {
             object.insert("show_reply", show_reply);
@@ -477,6 +481,11 @@ public:
         attention = true;
     }
 
+    void setAttention(int attention)
+    {
+        this->attention = attention;
+    }
+
     void transToDanmu()
     {
         this->msgType = MSG_DANMAKU;
@@ -501,7 +510,7 @@ public:
     {
         this->nickname = name;
         this->uid = uid;
-        this->faceUrl = face;
+        this->avatar = face;
         this->uname_color = unameColor;
         this->text_color = textColor;
     }
@@ -595,6 +604,14 @@ public:
         this->pk_link = link;
     }
 
+    void setGift(qint64 giftId, QString giftName, int num, qint64 totalCoin)
+    {
+        this->giftId = giftId;
+        this->giftName = giftName;
+        this->number = num;
+        this->total_coin = totalCoin;
+    }
+
     void addGift(int count, qint64 total, qint64 discountPrice, QDateTime time)
     {
         this->number += count;
@@ -664,9 +681,9 @@ public:
                 && this->text == another.text;
     }
 
-    void setFaceUrl(const QString& url)
+    void setAvatar(const QString& url)
     {
-        this->faceUrl = url;
+        this->avatar = url;
     }
 
     void setAIReply(const QString& reply)
@@ -1027,9 +1044,9 @@ public:
         return retry > 0;
     }
 
-    QString getFaceUrl() const
+    QString getAvatar() const
     {
-        return faceUrl;
+        return avatar;
     }
 
     QString getAIReply() const
@@ -1112,7 +1129,7 @@ protected:
     int iphone = 0; // 手机实名
     bool no_reply = false; // 不需要处理的弹幕
     bool auto_send = false; // 自己发送的弹幕，同样也不需要处理
-    QString faceUrl;
+    QString avatar;
 
     QString anchor_roomid;
     int medal_level = 0;

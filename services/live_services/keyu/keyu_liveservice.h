@@ -12,6 +12,9 @@ public:
 protected:
     void startConnect() override;
 
+private slots:
+    void processMessage(const MyJson &json);
+
 private:
     void initWS();
 };

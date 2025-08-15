@@ -836,7 +836,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             MyJson detail = info.at(0).toArray().at(15).toObject();
             MyJson user = detail.o("user");
             MyJson base = user.o("base");
-            danmaku.setFaceUrl(base.s("face"));
+            danmaku.setAvatar(base.s("face"));
 
             QString extra_s = detail.s("extra");
             /*
@@ -1709,7 +1709,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         {
             receiveUserCome(danmaku);
 
-            triggerCmdEvent(cmd, danmaku.with(data));
+            triggerCmdEvent("WELCOME", danmaku.with(data));
         }
         else if (msgType == 2) // 2关注 4特别关注
         {
@@ -1745,6 +1745,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         {
             qWarning() << "~~~~~~~~~~~~~~~~~~~~~~~~新的进入msgType" << msgType << json;
         }
+        triggerCmdEvent(cmd, danmaku.with(data));
     }
     else if (cmd == "INTERACT_WORD_V2")
     {
@@ -1792,6 +1793,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             {
                 danmaku.setMsgType(MSG_WELCOME);
                 receiveUserCome(danmaku);
+                triggerCmdEvent("WELCOME", danmaku);
             }
             else if (msgType == 2) // 关注
             {
@@ -2722,6 +2724,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         MyJson data = json.value("data").toObject();
         int count = data.i("click_count");
         emit signalLikeChanged(count);
+        triggerCmdEvent("LIKE", LiveDanmaku().with(data));
     }
     else if (cmd == "USER_TASK_PROGRESS_V2")
     {
@@ -2869,7 +2872,7 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
             MyJson detail = info.at(0).toArray().at(15).toObject();
             MyJson user = detail.o("user");
             MyJson base = user.o("base");
-            danmaku.setFaceUrl(base.s("face"));
+            danmaku.setAvatar(base.s("face"));
         }
         appendNewLiveDanmaku(danmaku);
 

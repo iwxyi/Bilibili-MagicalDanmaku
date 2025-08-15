@@ -44,7 +44,7 @@ public:
     Q_INVOKABLE bool isReplyMystery() const { return danmaku.isReplyMystery(); }
     Q_INVOKABLE int getReplyTypeEnum() const { return danmaku.getReplyTypeEnum(); }
     Q_INVOKABLE QString getAIReply() const { return danmaku.getAIReply(); }
-    Q_INVOKABLE QString getFaceUrl() const { return danmaku.getFaceUrl()  ; }
+    Q_INVOKABLE QString getFaceUrl() const { return danmaku.getAvatar()  ; }
 
 private:
     LiveDanmaku danmaku;

@@ -5255,7 +5255,7 @@ void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
         {
             if (isValidDanmaku(danmaku, 0))
             {
-                qDebug() << "AI分析：等待中" << danmaku.toString();
+                qDebug() << "AI分析：等待中..." << danmaku.toString();
                 waiting = true;
                 waitDanmaku = danmaku;
             }
@@ -5275,9 +5275,15 @@ void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
             const LiveDanmaku& dmk = rt->allDanmakus.at(i);
             qint64 tm = dmk.getTimeline().toSecsSinceEpoch();
             if (tm != 0 && tm < lastTime)
+            {
+                qDebug() << "    截止时间" << dmk.getTimeline();
                 break;
+            }
             if (dmk == lastDanmaku)
+            {
+                qDebug() << "    截止上次的最后一条弹幕" << lastDanmaku.toString();
                 break;
+            }
             if (!dmk.is(MessageType::MSG_DANMAKU))
                 continue;
             if (!isValidDanmaku(dmk, 0))
@@ -5287,7 +5293,10 @@ void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
             if (lastTime < tm)
                 lastTime = tm;
             if (args.size() >= ANALYZE_MAX_COUNT)
+            {
+                qDebug() << "    截止最大数量" << args.szie();
                 break;
+            }
         }
 
         if (args.isEmpty())
@@ -5296,7 +5305,8 @@ void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
             clearWaiting();
             return;
         }
-        qDebug() << "AI分析：" << args;
+        lastDanmaku = args.last();
+        qDebug() << "AI分析.弹幕：" << args;
         
         // AI
         chatService->analyze(args, [=](QString answer){
@@ -5336,7 +5346,7 @@ void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
 
             // 处理结果
             auto processOne = [=](const MyJson& json, const LiveDanmaku& targetDanmaku){
-                qDebug() << "AI分析：" << targetDanmaku.toString() << json;
+                qDebug() << "AI分析.结果：" << targetDanmaku.toString() << json;
                 // 内置的一些AI功能
                 // 主播正在做什么。如果有多条，那么后面的会覆盖前面的
                 if (json.contains("live_content"))
@@ -5384,7 +5394,7 @@ void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
             QTimer::singleShot(1000, this, [=]{
                 if (waiting && !chatService->isAnalyzing())
                 {
-                    qDebug() << "AI分析：继续下一波  " << waitDanmaku.toString() ;
+                    qDebug() << "AI分析.继续下一波  " << waitDanmaku.toString() ;
                     slotAIReply(waitDanmaku, manual);
                 }
             });
@@ -6611,7 +6621,7 @@ void MainWindow::updateOnlineRankGUI()
         UIDT uid = danmaku.getUid();
         if (!pl->userHeaders.contains(uid))
         {
-            QString url = danmaku.getFaceUrl();
+            QString url = danmaku.getAvatar();
             if (rt->livePlatform == Bilibili)
             {
                 if (url.isEmpty())
@@ -8615,7 +8625,7 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
     // TODO: 这个URL的图片有些是不准确的
     QString url;
     if (pl->allGiftMap.contains(id))
-        url = pl->allGiftMap.value(id).getFaceUrl();
+        url = pl->allGiftMap.value(id).getAvatar();
     if (url.isEmpty())
     {
         url = "http://openapi.zbmate.com/gift_icons/b/";

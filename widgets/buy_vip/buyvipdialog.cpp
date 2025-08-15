@@ -331,19 +331,19 @@ void BuyVIPDialog::showEvent(QShowEvent *e)
             });
         }
 
-
+        if (types[1])
+            btns[0]->simulateStatePress();
+        else if (types[2])
+            btns[1]->simulateStatePress();
+        else if (types[3])
+            btns[2]->simulateStatePress();
+        else
+            btns.first()->simulateStatePress();
+        
         switch (rt->livePlatform)
         {
         case Bilibili:
         {
-            if (types[1])
-                btns[0]->simulateStatePress();
-            else if (types[2])
-                btns[1]->simulateStatePress();
-            else if (types[3])
-                btns[2]->simulateStatePress();
-            else
-                btns.first()->simulateStatePress();
             break;
         }
         case Douyin:
@@ -354,6 +354,16 @@ void BuyVIPDialog::showEvent(QShowEvent *e)
             btns[2]->setEnabled(hasLogin);
             ui->typeRRBgCard->setEnabled(hasLogin);
             ui->typeRobotBgCard->setEnabled(hasLogin);
+            break;
+        }
+        case Keyu:
+        {
+            btns[0]->setEnabled(false);
+            btns[1]->setEnabled(false);
+            ui->typeRRBgCard->setEnabled(false);
+            ui->typeRoomBgCard->setEnabled(false);
+            btns[2]->simulateStatePress();
+            ui->label_12->setText("单设备\n多直播间");
             break;
         }
         default:

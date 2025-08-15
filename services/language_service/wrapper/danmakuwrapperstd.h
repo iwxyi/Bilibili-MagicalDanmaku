@@ -44,7 +44,7 @@ public:
     Q_INVOKABLE bool isReplyMystery() const { return danmaku.isReplyMystery(); }
     Q_INVOKABLE int getReplyTypeEnum() const { return danmaku.getReplyTypeEnum(); }
     Q_INVOKABLE std::string getAIReply() const { return danmaku.getAIReply().toStdString(); }
-    Q_INVOKABLE std::string getFaceUrl() const { return danmaku.getFaceUrl().toStdString()  ; }
+    Q_INVOKABLE std::string getFaceUrl() const { return danmaku.getAvatar().toStdString()  ; }
 
     // 重载运算符，注册Lua对象要用到
     bool operator<(const DanmakuWrapperStd& other) const {

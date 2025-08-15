@@ -260,7 +260,7 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
                 avatar = QString::fromUtf8(user.AvatarMedium.uri);
             if (user.has_AvatarLarge)
                 avatar = QString::fromUtf8(user.AvatarLarge.uri);
-            danmaku.setFaceUrl(avatar);
+            danmaku.setAvatar(avatar);
         }
 
         // 关注与被关注
@@ -278,8 +278,9 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         }
 
         qInfo() << "[弹幕]" << uname << "(" + snum(uid) + ")" << ":" << content;
-        danmaku.setFaceUrl(avatar);
+        danmaku.setAvatar(avatar);
         receiveDanmaku(danmaku);
+        triggerCmdEvent("DANMU_MSG", danmaku);
     }
     else if (method == "WebcastGiftMessage") // 送礼
     {
@@ -313,6 +314,7 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         danmaku.setLogId(logId);
         receiveGift(danmaku);
         appendLiveGift(danmaku);
+        triggerCmdEvent("SEND_GIFT", danmaku);
     }
     else if (method == "WebcastMemberMessage") // 进房
     {
@@ -343,6 +345,7 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         danmaku.setAdmin(isAdmin);
         danmaku.setNumber(rankScore);
         receiveUserCome(danmaku);
+        triggerCmdEvent("WELCOME", danmaku);
     }
     else if (method == "WebcastSocialMessage") // 关注
     {
@@ -376,6 +379,14 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
         QString uname = like.has_user ? QString::fromUtf8(like.user.nickName) : "";
         qInfo() << "[点赞]" << uname << "点赞" << like.count << like.total;
         emit signalLikeChanged(like.total);
+
+        LiveDanmaku danmaku;
+        danmaku.setFromRoomId(ac->roomId);
+        danmaku.setUid(like.user.id);
+        danmaku.setNickname(uname);
+        danmaku.setMsgType(MSG_LIKE);
+        danmaku.setNumber(like.count);
+        triggerCmdEvent("LIKE", danmaku);
     }
     else if (method == "WebcastRoomUserSeqMessage") // 人气
     {
@@ -444,7 +455,7 @@ void DouyinLiveService::processMessage(const QString &method, const QByteArray &
             avatar = "https://p3.douyinpic.com/aweme/" + avatar;
 
             LiveDanmaku u(nickname, snum(uid));
-            u.setFaceUrl(avatar);
+            u.setAvatar(avatar);
             onlineGoldRank.append(u);
         }
         emit signalOnlineRankChanged();

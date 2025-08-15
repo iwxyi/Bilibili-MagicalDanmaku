@@ -3253,7 +3253,7 @@ void LiveDanmakuWindow::getUserInfo(LiveDanmaku danmaku, QListWidgetItem* item)
 
     hasGetUserHeader.insert(uid);
     QPixmap pixmap;
-    QString url = danmaku.getFaceUrl();
+    QString url = danmaku.getAvatar();
     if (url.isEmpty())
         url = liveService->getApiUrl(UserHead, uid);
     if (url == WAIT_INIT)

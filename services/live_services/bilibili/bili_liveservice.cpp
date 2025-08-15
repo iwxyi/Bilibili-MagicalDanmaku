@@ -1469,7 +1469,7 @@ void BiliLiveService::getGiftList()
                 QString desc = info.s("desc");
                 QString img = info.s("img_basic");
                 LiveDanmaku gift("", id, name, 1, 0, QDateTime(), coinType, coin);
-                gift.setFaceUrl(img);
+                gift.setAvatar(img);
                 gift.with(info);
                 pl->allGiftMap[id] = gift;
             }
@@ -1487,7 +1487,7 @@ void BiliLiveService::getGiftList()
                 QString desc = info.s("desc");
                 QString img = info.s("img_basic");
                 LiveDanmaku gift("", id, name, 1, 0, QDateTime(), coinType, coin);
-                gift.setFaceUrl(img);
+                gift.setAvatar(img);
                 gift.with(info);
                 pl->allGiftMap[id] = gift;
             }
@@ -5004,7 +5004,7 @@ void BiliLiveService::pullLiveDanmaku()
             danmaku.transToDanmu();
             danmaku.setTime(time);
             danmaku.setNoReply();
-            danmaku.setFaceUrl(dmk.o("user").o("base").s("face"));
+            danmaku.setAvatar(dmk.o("user").o("base").s("face"));
             appendNewLiveDanmaku(danmaku);
         }
         _loadingOldDanmakus = false;

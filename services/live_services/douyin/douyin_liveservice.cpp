@@ -678,7 +678,7 @@ void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const Q
         LiveDanmaku danmaku(nickname, content, uid, pay_level, QDateTime::fromSecsSinceEpoch(modify_time), "", "");
         danmaku.setFromRoomId(ac->roomId);
         danmaku.setLogId(snum(msg_id));
-        danmaku.setFaceUrl(avatar);
+        danmaku.setAvatar(avatar);
         danmaku.with(data);
         danmaku.setNoReply();
         receiveDanmaku(danmaku);
