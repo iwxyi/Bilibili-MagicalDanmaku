@@ -1057,7 +1057,7 @@ border-image: url(C:/Path/To/Image.png)
 | inGameNumbers(listId, num)                                  | 在游戏数值中     | listId可省略，程序重启数据仍在                               |
 | inGameTexts(listId, text)                                   | 在游戏文本中     | listId可省略，程序重启数据仍在                               |
 | getValue(key, def)                                          | 取变量值         | 等同于 `%{key}%`，默认值def可省略                            |
-| random(min, max)                                            | 取随机数         | 包含两端数字                                                 |
+| random(min, max)                                            | 取随机数         | 包含两端数字。一个参数时默认为0~max。允许超出2个参数，为了区分多个相同范围的不同随机数结果 |
 | randomArray(a, b, c, d...)                                  | 随机数组         | 任意多参数，随机返回其中一个                                 |
 | filterReject(filter)                                        | 过滤器拒绝       | 被对应filter拒绝则返回1,否则返回0（参考过滤器示例）          |
 | inFilterList(filter, content)                               | 在过滤列表中     | 包含在空格分隔的词库中则返回1（参考过滤器示例）              |

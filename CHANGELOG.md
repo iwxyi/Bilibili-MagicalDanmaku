@@ -1,4 +1,4 @@
-### v5.6.0 [AI分析、语法增强、实时档案](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.6.0)
+### v6.0.0 [多平台弹幕、AI分析、语法增强、实时档案](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v6.0.0)
 
 > 使用“功能型AI”的用户请注意：由于更改了AI分析的逻辑，请点击该项设置中“还原/升级”的按钮
 
