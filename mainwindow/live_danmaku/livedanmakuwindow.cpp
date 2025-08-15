@@ -3272,7 +3272,7 @@ void LiveDanmakuWindow::getUserInfo(LiveDanmaku danmaku, QListWidgetItem* item)
         qWarning() << "用户" << uid << "无法获取弹幕头像";
         // 一分钟后再试
         headerApiIsBanned = true;
-        QTimer::singleShot(60000, [=]{
+        QTimer::singleShot(60000, this, [=]{
             headerApiIsBanned = false;
         });
         return ;

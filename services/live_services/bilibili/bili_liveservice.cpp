@@ -1652,7 +1652,7 @@ void BiliLiveService::doSign()
     if (ac->csrf_token.isEmpty())
     {
         emit signalSignInfoChanged("机器人账号未登录");
-        QTimer::singleShot(10000, [=]{
+        QTimer::singleShot(10000, this, [=]{
             emit signalSignInfoChanged("每日自动签到");
         });
         return ;
@@ -1673,7 +1673,7 @@ void BiliLiveService::doSign()
             emit signalSignInfoChanged("签到成功");
             emit signalSignDescChanged("最近签到时间：" + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
         }
-        QTimer::singleShot(10000, [=]{
+        QTimer::singleShot(10000, this, [=]{
             emit signalSignInfoChanged("每日自动签到");
         });
     });
@@ -1686,7 +1686,7 @@ void BiliLiveService::joinLOT(qint64 id, bool follow)
     if (ac->csrf_token.isEmpty())
     {
         emit signalLOTInfoChanged("机器人账号未登录");
-        QTimer::singleShot(10000, [=]{
+        QTimer::singleShot(10000, this, [=]{
             emit signalLOTInfoChanged("自动参与活动");
         });
         return ;
@@ -1710,7 +1710,7 @@ void BiliLiveService::joinLOT(qint64 id, bool follow)
             qInfo() << "参与天选成功！";
             emit signalLOTDescChanged("最近参与时间：" + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
         }
-        QTimer::singleShot(10000, [=]{
+        QTimer::singleShot(10000, this, [=]{
             emit signalLOTInfoChanged("自动参与活动");
         });
     });
@@ -1723,7 +1723,7 @@ void BiliLiveService::joinStorm(qint64 id)
     if (ac->csrf_token.isEmpty())
     {
         emit signalLOTInfoChanged("机器人账号未登录");
-        QTimer::singleShot(10000, [=]{
+        QTimer::singleShot(10000, this, [=]{
             emit signalLOTInfoChanged("自动参与活动");
         });
         return ;
@@ -1750,7 +1750,7 @@ void BiliLiveService::joinStorm(qint64 id)
                                             QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")
                                             + "\n\n" + content);
         }
-        QTimer::singleShot(10000, [=]{
+        QTimer::singleShot(10000, this, [=]{
             emit signalLOTInfoChanged("自动参与活动");
         });
     });
@@ -2721,7 +2721,7 @@ void BiliLiveService::refreshPrivateMsg()
             {
                 showError("接收私信：" + snum(json.code()), "过于频繁，15分钟后自动重试");
                 emit signalRefreshPrivateMsgEnabled(false);
-                QTimer::singleShot(15 * 60000, [=]{
+                QTimer::singleShot(15 * 60000, this, [=]{
                     emit signalRefreshPrivateMsgEnabled(true);
                 });
             }
@@ -3220,7 +3220,7 @@ void BiliLiveService::getPkInfoById(const QString &roomId, const QString &pkId)
                 pkEndingTimer->start(int(deltaEnd*1000 - pkJudgeEarly));
 
                 // 怕刚好结束的一瞬间，没有收到大乱斗的消息
-                QTimer::singleShot(qMax(0, int(deltaEnd)), [=]{
+                QTimer::singleShot(qMax(0, int(deltaEnd)), this, [=]{
                     pkEnding = false;
                     pkVoting = 0;
                 });
@@ -3779,7 +3779,7 @@ void BiliLiveService::pkEnd(QJsonObject json)
     qInfo() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败")) << myVotes << matchVotes;
     myVotes = 0;
     matchVotes = 0;
-    QTimer::singleShot(60000, [=]{
+    QTimer::singleShot(60000, this, [=]{
         if (pking) // 下一把PK，已经清空了
             return ;
         cmAudience.clear();
@@ -3927,7 +3927,7 @@ void BiliLiveService::pkSettle(QJsonObject json)
     qInfo() << "大乱斗结束，结果：" << (winCode == 0 ? "平局" : (winCode > 0 ? "胜利" : "失败")) << myVotes << matchVotes;
     myVotes = 0;
     matchVotes = 0;
-    QTimer::singleShot(60000, [=]{
+    QTimer::singleShot(60000, this, [=]{
         if (pking) // 下一把PK，已经清空了
             return ;
         cmAudience.clear();

@@ -699,7 +699,7 @@ void MainWindow::initObject()
     {
         upgradeVersionToLastest(oldValue);
         us->setValue("runtime/appVersion", rt->appVersion);
-        QTimer::singleShot(1000, [=]{
+        QTimer::singleShot(1000, this, [=]{
             QString ch = QApplication::applicationDirPath() + "/CHANGELOG.md";
             if (!oldValue.isEmpty()
                     && ui->showChangelogCheck->isChecked()
@@ -770,7 +770,7 @@ void MainWindow::initObject()
     permissionText = us->value("mainwindow/permissionText", rt->asPlugin ? "Lite版" : permissionText).toString();
 
     // 10秒内不进行自动化操作
-    QTimer::singleShot(10000, [=]{
+    QTimer::singleShot(10000, this, [=]{
         rt->justStart = false;
         qInfo() << "启动等待时长结束，开始自动化操作";
     });
@@ -2778,7 +2778,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
     event->ignore();
     this->hide();
-    QTimer::singleShot(5000, [=]{
+    QTimer::singleShot(5000, this, [=]{
         if (!this->isHidden())
             return ;
         us->setValue("mainwindow/autoShow", false);
@@ -7876,7 +7876,7 @@ void MainWindow::getPositiveVote()
             && !us->value("ask/positiveVote", false).toBool()
             && liveService->getPositiveVoteCount() > 0)
     {
-        QTimer::singleShot(3000, [=]{
+        QTimer::singleShot(3000, this, [=]{
             if (!ac->cookieUid.isEmpty() && !liveService->isPositiveVote())
             {
                 auto noti = new NotificationEntry("positiveVote", "好评", "您是否觉得神奇弹幕好用？");
@@ -8803,7 +8803,7 @@ void MainWindow::upgradeOneVersionData(QString beforeVersion)
     }
     else if (beforeVersion == "4.10.3")
     {
-        QTimer::singleShot(3000, [=]{
+        QTimer::singleShot(3000, this, [=]{
             bool fixed = false;
             for (int row = 0; row < ui->eventListWidget->count(); row++)
             {
@@ -9534,7 +9534,7 @@ void MainWindow::slotStartWork()
 
     // 延迟操作（好像是有bug）
     QString ri = ac->roomId;
-    QTimer::singleShot(5000, [=]{
+    QTimer::singleShot(5000, this, [=]{
         if (ri != ac->roomId)
             return ;
 
