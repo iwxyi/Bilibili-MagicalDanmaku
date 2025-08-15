@@ -70,9 +70,9 @@ void KeyuLiveService::processMessage(const MyJson &json)
         danmaku.setMsgType(MSG_DANMAKU);
         danmaku.setText(json.s("content"));
         eventName = "DANMU_MSG";
-        receiveDanmaku(danmaku);
 
         qInfo() << "[弹幕]" << danmaku.getNickname() << ":" << danmaku.getText();
+        receiveDanmaku(danmaku);
     }
     else if (msgType == "礼物")
     {
@@ -81,29 +81,33 @@ void KeyuLiveService::processMessage(const MyJson &json)
         qint64 count = json.i("giftCount");
         qint64 diamondCount = json.l("diamondCount");
         danmaku.setGift(json.l("giftId"), json.s("giftName"), count, diamondCount * count);
+
+        qInfo() << "[礼物]" << danmaku.getNickname() << ":" << danmaku.getGiftName() << "x" << danmaku.getNumber() << "(" + snum(danmaku.getTotalCoin()) + ")";
         eventName = "SEND_GIFT";
         receiveGift(danmaku);
         appendLiveGift(danmaku);
 
-        qInfo() << "[礼物]" << danmaku.getNickname() << ":" << danmaku.getGiftName() << "x" << danmaku.getNumber() << "(" + snum(danmaku.getTotalCoin()) + ")";
+
+        if (count == 0)
+            qWarning() << "礼物数量为0：" << json;
     }
     else if (msgType == "点赞")
     {
         danmaku.setMsgType(MSG_LIKE);
         danmaku.setNumber(json.i("count"));
-        eventName = "LIKE";
 
         qInfo() << "[点赞]" << danmaku.getNickname() << "点赞" << danmaku.getNumber();
+        eventName = "LIKE";
     }
     else if (msgType == "关注")
     {
         danmaku.setMsgType(MSG_ATTENTION);
         danmaku.setAttention(1); // 0是取消关注
         danmaku.setNumber(json.i("followCount"));
-        eventName = "ATTENTION";
-        appendNewLiveDanmaku(danmaku);
 
         qInfo() << "[关注]" << danmaku.getNickname() << "关注";
+        eventName = "ATTENTION";
+        appendNewLiveDanmaku(danmaku);
     }
     else if (msgType == "进房")
     {
@@ -111,10 +115,10 @@ void KeyuLiveService::processMessage(const MyJson &json)
         int action = json.i("action"); // 进房动作类型
         Q_UNUSED(action);
         danmaku.setNumber(json.i("memberCount"));
-        eventName = "WELCOME";
-        receiveUserCome(danmaku);
 
         qInfo() << "[进房]" << danmaku.getNickname() << "进入直播间";
+        eventName = "WELCOME";
+        receiveUserCome(danmaku);
     }
     else if (msgType == "分享")
     {
@@ -122,6 +126,7 @@ void KeyuLiveService::processMessage(const MyJson &json)
         eventName = "SHARE";
 
         qInfo() << "[分享]" << danmaku.getNickname() << "分享";
+        appendNewLiveDanmaku(danmaku);
     }
     else
     {

@@ -6,6 +6,7 @@
 用户专属昵称=local_name
 用户简写昵称=simple_name
 直播间ID=room_id
+直播间RID=room_rid
 直播间标题=room_name
 主播ID=up_uid
 主播名字=up_uname

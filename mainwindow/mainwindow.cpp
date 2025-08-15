@@ -5274,29 +5274,18 @@ void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
         {
             const LiveDanmaku& dmk = rt->allDanmakus.at(i);
             qint64 tm = dmk.getTimeline().toSecsSinceEpoch();
-            if (tm != 0 && tm < lastTime)
-            {
-                qDebug() << "    截止时间" << dmk.getTimeline();
+            if (tm != 0 && tm < lastTime) // 时间并不精确，因为精确到秒
                 break;
-            }
             if (dmk == lastDanmaku)
-            {
-                qDebug() << "    截止上次的最后一条弹幕" << lastDanmaku.toString();
                 break;
-            }
             if (!dmk.is(MessageType::MSG_DANMAKU))
                 continue;
             if (!isValidDanmaku(dmk, 0))
                 continue;
-            args.append(QString("%1: %2").arg(dmk.getNickname()).arg(dmk.getText()));
+            args.insert(0, QString("%1: %2").arg(dmk.getNickname()).arg(dmk.getText()));
             targetDanmakus.append(dmk);
-            if (lastTime < tm)
-                lastTime = tm;
             if (args.size() >= ANALYZE_MAX_COUNT)
-            {
-                qDebug() << "    截止最大数量" << args.szie();
                 break;
-            }
         }
 
         if (args.isEmpty())
@@ -5305,8 +5294,9 @@ void MainWindow::slotAIReply(const LiveDanmaku &danmaku, bool manual)
             clearWaiting();
             return;
         }
-        lastDanmaku = args.last();
-        qDebug() << "AI分析.弹幕：" << args;
+        lastDanmaku = targetDanmakus.last();
+        lastTime = lastDanmaku.getTimestamp();
+        qDebug() << "AI分析.弹幕：" << args.size() << args << QDateTime::fromSecsSinceEpoch(lastTime);
         
         // AI
         chatService->analyze(args, [=](QString answer){

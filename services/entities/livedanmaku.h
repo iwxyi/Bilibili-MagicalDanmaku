@@ -989,6 +989,16 @@ public:
         return robot;
     }
 
+    QDateTime getTime() const
+    {
+        return timeline;
+    }
+
+    qint64 getTimestamp() const
+    {
+        return timeline.toSecsSinceEpoch();
+    }
+
     qint64 getPrevTimestamp() const
     {
         return prev_timestamp;

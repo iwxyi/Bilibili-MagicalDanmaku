@@ -180,7 +180,7 @@ public:
             }
             else
             {
-                qDebug() << ("ChatGPT回复文本：" + text.left(300));
+                qDebug() << ("ChatGPT回复文本：" + text.left(300) + "...(" + text.length() + ")");
                 emit signalResponseText(text);
             }
         }

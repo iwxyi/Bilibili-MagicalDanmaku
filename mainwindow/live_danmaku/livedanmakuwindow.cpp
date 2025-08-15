@@ -1001,6 +1001,12 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
                 .arg(danmaku.isAttention() ? "关注了主播" : "取消关注主播")
                 .arg(danmaku.getSpecial() ? "特别关注" : "关注");
     }
+    else if (msgType == MSG_SHARE)
+    {
+//        qint64 second = QDateTime::currentSecsSinceEpoch() - danmaku.getPrevTimestamp();
+        text = QString(simpleMode ? "[分享] %1 分享了直播间" : "<font color='gray'>[分享]</font> %1 分享了直播间")
+                .arg(nameText);
+    }
     else if (msgType == MSG_BLOCK)
     {
         text = QString(simpleMode ? "[禁言] %1 被房管禁言" : "<font color='gray'>[禁言]</font> %1 被房管禁言")

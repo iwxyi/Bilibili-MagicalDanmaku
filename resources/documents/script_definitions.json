@@ -12,6 +12,20 @@
             "description": "是一串数字，确定唯一用户"
         },
         {
+            "name": "web_id",
+            "zh_name": "用户WebID",
+            "catalog": "user",
+            "platform": "douyin",
+            "description": "是一串数字，确定唯一用户"
+        },
+        {
+            "name": "sec_id",
+            "zh_name": "用户secID",
+            "catalog": "user",
+            "platform": "douyin",
+            "description": "是一串字母，确定唯一用户，用于获取用户信息"
+        },
+        {
             "name": "uname",
             "zh_name": "用户昵称",
             "catalog": "user",
@@ -54,6 +68,13 @@
             "description": ""
         },
         {
+            "name": "room_rid",
+            "zh_name": "直播间RID",
+            "catalog": "live",
+            "platform": "douyin",
+            "description": "直播间ID，用于获取信息"
+        },
+        {
             "name": "room_name",
             "zh_name": "直播间标题",
             "catalog": "live",
@@ -64,6 +85,13 @@
             "zh_name": "主播ID",
             "catalog": "live",
             "description": ""
+        },
+        {
+            "name": "up_rid",
+            "zh_name": "主播RID",
+            "catalog": "live",
+            "platform": "douyin",
+            "description": "主播ID，用于获取信息"
         },
         {
             "name": "up_uname",
