@@ -1490,6 +1490,7 @@ void MainWindow::initLivePlatform()
         ui->toutaGiftSettingsCard->setEnabled(false); // 偷塔
         ui->page_6->setEnabled(false); // 自动禁言页
         ui->tabSubAccount->setEnabled(false); // 子账号页
+        ui->adjustDanmakuLongestCheck->setChecked(false); // 自动调整长度
     }
 
     // 已经失效的

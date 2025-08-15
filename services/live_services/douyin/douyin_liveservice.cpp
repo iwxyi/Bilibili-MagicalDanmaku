@@ -675,12 +675,12 @@ void DouyinLiveService::sendRoomMsg(QString roomRid, const QString &msg, const Q
         MyJson fans_club = user.o("fans_club").data(); // 因为我没加，这里是空数据
 
         // XXX: 实际上并没有发送成功，手动添加
-        LiveDanmaku danmaku(nickname, content, uid, pay_level, QDateTime::fromSecsSinceEpoch(modify_time), "", "");
+        /* LiveDanmaku danmaku(nickname, content, uid, pay_level, QDateTime::fromSecsSinceEpoch(modify_time), "", "");
         danmaku.setFromRoomId(ac->roomId);
         danmaku.setLogId(snum(msg_id));
         danmaku.setAvatar(avatar);
         danmaku.with(data);
         danmaku.setNoReply();
-        receiveDanmaku(danmaku);
+        receiveDanmaku(danmaku); */
     });
 }
