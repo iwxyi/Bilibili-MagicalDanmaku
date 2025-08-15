@@ -79,7 +79,7 @@ signals:
     void signalRoomIdChanged(const QString &roomId); // 房间号改变，例如通过解析身份码导致的房间ID变更
     void signalUpUidChanged(const UIDT &uid);
     void signalUpFaceChanged(const QPixmap& pixmap);
-    void signalUpInfoChanged();
+    void signalUpInfoChanged(); // 目前没有使用，通过roomInfoChanged代替
     void signalUpSignatureChanged(const QString& signature);
     void signalRoomInfoChanged();
     void signalImUpChanged(bool isUp);

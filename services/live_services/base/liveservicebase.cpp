@@ -568,7 +568,7 @@ void LiveServiceBase::appendNewLiveDanmaku(const LiveDanmaku &danmaku)
 
 void LiveServiceBase::autoSetCookie(const QString &s)
 {
-    us->setValue("danmaku/browserCookie", ac->browserCookie = s);
+    us->setValue("danmaku/browserCookie" + rt->getPlatformSuffix(), ac->browserCookie = s);
     if (ac->browserCookie.isEmpty())
         return ;
 

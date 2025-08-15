@@ -62,6 +62,13 @@ public:
     QString ffmpegPath;
     QWidget* mainwindow = nullptr;
     QWidget* danmakuWindow = nullptr;
+
+    QString getPlatformSuffix() const
+    {
+        if (livePlatform == 0)
+            return "";
+        return "_" + snum(livePlatform);
+    }
 };
 
 extern RuntimeInfo* rt;

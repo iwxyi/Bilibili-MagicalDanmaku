@@ -47,6 +47,10 @@ void KeyuLiveService::processMessage(const MyJson &json)
     if (type == "welcome")
     {
         qInfo() << "[启动]" << json.s("message");
+        ac->roomTitle = "已连接";
+        ac->upName = "可遇";
+        emit signalRoomInfoChanged();
+        emit signalUpFaceChanged(upFace = QPixmap(":/icons/platform/keyu"));
         return;
     }
     

@@ -1232,7 +1232,7 @@ void LiveDanmakuWindow::showMenu()
     
     menu->addAction(QIcon(":/icons/code"), "复制UID", [=]{
         QApplication::clipboard()->setText(uid);
-        })->disable(!hasUid)->text(hasUid, "复制UID：" + uid);
+        })->disable(!hasUid)->text(hasUid, "UID：" + (uid.length() > 10 ? uid.left(8) + "..." : uid));
     
     menu->addAction(QIcon(":/icons/at"), "@TA", [=]{
         lineEdit->setText(lineEdit->text() + "@" + uid + " ");

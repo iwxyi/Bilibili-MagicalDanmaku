@@ -651,6 +651,7 @@ void MainWindow::initObject()
 
     us = new UserSettings(rt->dataPath + "settings.ini");
 
+    rt->livePlatform = (LivePlatform)(us->value("global/live_platform", 0).toInt());
     // 设备
     {
         rt->CPU_ID = CPUIDUtil::get_cpuId();
@@ -669,9 +670,9 @@ void MainWindow::initObject()
                 }
                 else // 清除Cookie
                 {
-                    if (!us->s("danmaku/browserCookie").isEmpty())
+                    if (!us->s("danmaku/browserCookie" + rt->getPlatformSuffix()).isEmpty())
                     {
-                        us->set("danmaku/browserCookie", "");
+                        us->set("danmaku/browserCookie" + rt->getPlatformSuffix(), "");
                         QTimer::singleShot(2000, this, [=]{
                             showNotify("安全检测", "已清除之前设备的Cookie");
                         });
@@ -876,8 +877,7 @@ void MainWindow::initPath()
 
 void MainWindow::initLiveService()
 {
-    // 平台
-    rt->livePlatform = (LivePlatform)(us->value("global/live_platform", 0).toInt());
+    // 初始化平台
     initLivePlatform();
 
     qInfo() << "初始化直播服务，平台：" << rt->livePlatform;
@@ -1006,15 +1006,20 @@ void MainWindow::initLiveService()
 
     connect(liveService, &LiveServiceBase::signalUpFaceChanged, this, [=](const QPixmap& pixmap) {
         QPixmap circlePixmap = PixmapUtil::toCirclePixmap(pixmap); // 圆图
-
         // 设置到窗口图标
         QPixmap face = liveService->isLiving() ? PixmapUtil::toLivingPixmap(circlePixmap) : circlePixmap;
+        if (face.isNull() && !pixmap.isNull())
+        {
+            qWarning() << "转换为圆形头像失败";
+            face = pixmap;
+        }
         setWindowIcon(face);
         tray->setIcon(face);
 
         // 设置到UP头像
         face = liveService->upFace.scaled(ui->upHeaderLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
         QPixmap circle = PixmapUtil::toCirclePixmap(face);
+        ui->upHeaderLabel->setStyleSheet("");
         ui->upHeaderLabel->setPixmap(circle);
         if (musicWindow)
         {
@@ -1438,6 +1443,8 @@ void MainWindow::initLivePlatform()
         ui->roomIdEdit->setPlaceholderText("WebSocket地址");
         ui->roomIdEdit->resize(ui->roomIdEdit->width() * 3, ui->roomIdEdit->height());
 
+        ui->robotNameButton->setText(rt->CPU_ID);
+
         ac->cookieUid = rt->CPU_ID;
     }
 
@@ -1555,7 +1562,11 @@ void MainWindow::readConfig()
         ui->musicConfigStack->setCurrentIndex(musicStackIndex);
 
     // 房间号
-    ac->roomId = us->value("danmaku/roomId", "").toString();
+    ac->roomId = us->value("danmaku/roomId" + rt->getPlatformSuffix(), "").toString();
+    if (rt->livePlatform == Keyu && ac->roomId.isEmpty())
+    {
+        ac->roomId = "ws://localhost:12011"; // 设置可遇默认链接
+    }
     if (!ac->roomId.isEmpty())
     {
         ui->roomIdEdit->setText(ac->roomId);
@@ -1663,8 +1674,8 @@ void MainWindow::readConfig()
     recordTimer->setInterval(recordSplit * 60000); // 默认30分钟断开一次
 
     // 账号
-    ac->browserCookie = us->value("danmaku/browserCookie", "").toString();
-    ac->browserData = us->value("danmaku/browserData", "").toString();
+    ac->browserCookie = us->value("danmaku/browserCookie" + rt->getPlatformSuffix(), "").toString();
+    ac->browserData = us->value("danmaku/browserData" + rt->getPlatformSuffix(), "").toString();
     int posl = ac->browserCookie.indexOf("bili_jct=") + 9;
     int posr = ac->browserCookie.indexOf(";", posl);
     if (posr == -1) posr = ac->browserCookie.length();
@@ -3988,7 +3999,7 @@ void MainWindow::on_roomIdEdit_editingFinished()
     }
     ac->roomId = ui->roomIdEdit->text();
     ac->upUid = "";
-    us->setValue("danmaku/roomId", ac->roomId);
+    us->setValue("danmaku/roomId" + rt->getPlatformSuffix(), ac->roomId);
 
     releaseLiveData();
 
@@ -4773,7 +4784,7 @@ void MainWindow::addCodeSnippets(const QJsonDocument &doc)
 /// 用户手动更改了cookie
 void MainWindow::autoSetCookie(const QString &s)
 {
-    us->setValue("danmaku/browserCookie", ac->browserCookie = s);
+    us->setValue("danmaku/browserCookie" + rt->getPlatformSuffix(), ac->browserCookie = s);
     if (ac->browserCookie.isEmpty())
     {
         ac->userCookies = QVariant();
@@ -10553,7 +10564,10 @@ void MainWindow::on_robotNameButton_clicked()
         on_UAButton_clicked();
     })->hide(rt->livePlatform != Douyin);
     menu->addAction(ui->actionSet_Danmaku_Data_Format)->hide(rt->livePlatform != Bilibili);
-    menu->split()->addAction(ui->actionLogout)->disable(ac->browserCookie.isEmpty());
+    menu->split()->addAction(ui->actionLogout)->disable(ac->browserCookie.isEmpty())->hide(rt->livePlatform == Keyu);
+    menu->addAction("设备码：" + rt->CPU_ID, [=]{
+        on_actionBuy_VIP_triggered();
+    })->hide(rt->livePlatform != Keyu);
     menu->exec();
 }
 
@@ -11482,8 +11496,8 @@ void MainWindow::on_actionLogout_triggered()
                               QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) != QMessageBox::Yes)
         return ;
 
-    us->setValue("danmaku/browserCookie", ac->browserCookie = "");
-    us->setValue("danmaku/browserData", ac->browserData = "");
+    us->setValue("danmaku/browserCookie" + rt->getPlatformSuffix(), ac->browserCookie = "");
+    us->setValue("danmaku/browserData" + rt->getPlatformSuffix(), ac->browserData = "");
     ac->userCookies = QVariant();
     ac->csrf_token = "";
     ac->cookieUid = "";
@@ -12197,7 +12211,7 @@ void MainWindow::on_platformButton_clicked()
     menu->addAction(QIcon(":/icons/platform/douyin"), "抖音", [=]{
         switchToPlatform(Douyin);
     })->check(rt->livePlatform == Douyin);
-    menu->addAction(QIcon(":/icons/platform/keyu"), "可遇（抖音/快手/视频号/虎牙）", [=]{
+    menu->addAction(QIcon(":/icons/platform/keyu"), "可遇（TikTok/抖音/快手/视频号/虎牙）", [=]{
         switchToPlatform(Keyu);
     })->check(rt->livePlatform == Keyu);
     menu->addAction(QIcon(":/icons/platform/huya"), "虎牙", [=]{

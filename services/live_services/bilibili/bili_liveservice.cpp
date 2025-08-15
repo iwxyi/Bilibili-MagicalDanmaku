@@ -420,7 +420,7 @@ void BiliLiveService::getBuVID()
                     qInfo() << "旧Cookie自动添加b_nut:" << timestamp;
                 }
 
-                us->setValue("danmaku/browserCookie", ac->browserCookie);
+                us->setValue("danmaku/browserCookie" + rt->getPlatformSuffix(), ac->browserCookie);
                 ac->userCookies = getCookies();
                 rt->adjustCookie = true;
 
