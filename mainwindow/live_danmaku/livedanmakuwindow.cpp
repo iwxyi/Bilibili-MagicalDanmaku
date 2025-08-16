@@ -26,7 +26,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     {
 #ifdef Q_OS_MAC
 #else
-        this->setWindowFlags(Qt::FramelessWindowHint);
+        // this->setWindowFlags(Qt::FramelessWindowHint);
         this->setAttribute(Qt::WA_TranslucentBackground, false);
 #endif
     }
