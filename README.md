@@ -3711,3 +3711,4 @@ function readInfo(data) {
 > - 服务端模块：https://github.com/nikhilm/qhttpserver
 > - 抖音API接口：https://github.com/skmcj/dycast
 > - 抖音a_bogus解析：https://github.com/ShilongLee/Crawler
+> - TikTok/抖音/视频号/快手/虎牙的通用解析：可遇AI：https://mwmbav7xpt.feishu.cn/docx/CdIfdi7Vdo72skx7B8FcM2Twnmb

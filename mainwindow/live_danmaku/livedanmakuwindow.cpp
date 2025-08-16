@@ -22,7 +22,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
 #ifdef Q_OS_ANDROID
     this->setAttribute(Qt::WA_TranslucentBackground, false);
 #else
-    if (us->value("livedanmakuwindow/jiWindow", false).toBool())
+    if (us->value("livedanmakuwindow/jiWindow", true).toBool())
     {
 #ifdef Q_OS_MAC
 #else
@@ -186,8 +186,8 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
 
     // 颜色
     nameColor = qvariant_cast<QColor>(us->value("livedanmakuwindow/nameColor", QColor(247, 110, 158)));
-    msgColor = qvariant_cast<QColor>(us->value("livedanmakuwindow/msgColor", QColor(Qt::white)));
-    bgColor = qvariant_cast<QColor>(us->value("livedanmakuwindow/bgColor", QColor(0x88, 0x88, 0x88, 0x32)));
+    msgColor = qvariant_cast<QColor>(us->value("livedanmakuwindow/msgColor", QColor(Qt::black)));
+    bgColor = qvariant_cast<QColor>(us->value("livedanmakuwindow/bgColor", QColor(Qt::white)));
     hlColor = qvariant_cast<QColor>(us->value("livedanmakuwindow/hlColor", QColor(255, 0, 0)));
     QString fontString = us->value("livedanmakuwindow/font").toString();
     if (!fontString.isEmpty())
@@ -1815,7 +1815,7 @@ void LiveDanmakuWindow::showMenu()
     })->setChecked(chatMode);
     
     settingMenu->split()->addAction("窗口模式", [=]{
-        bool enable = !us->value("livedanmakuwindow/jiWindow", false).toBool();
+        bool enable = !us->value("livedanmakuwindow/jiWindow", true).toBool();
         us->setValue("livedanmakuwindow/jiWindow", enable);
         if (enable)
         {
@@ -1830,7 +1830,7 @@ void LiveDanmakuWindow::showMenu()
             this->setAttribute(Qt::WA_TranslucentBackground, true);
         }
         restart();
-    })->setChecked(us->value("livedanmakuwindow/jiWindow", false).toBool());
+    })->setChecked(us->value("livedanmakuwindow/jiWindow", true).toBool());
     
     settingMenu->addAction("置顶显示", [=]{
         bool onTop = !us->value("livedanmakuwindow/onTop", true).toBool();
@@ -1970,7 +1970,7 @@ void LiveDanmakuWindow::showMenu()
     actionChatMode->setCheckable(true);
     actionChatMode->setChecked(chatMode);
     actionWindow->setCheckable(true);
-    actionWindow->setChecked(us->value("livedanmakuwindow/jiWindow", false).toBool());
+    actionWindow->setChecked(us->value("livedanmakuwindow/jiWindow", true).toBool());
     actionOnTop->setCheckable(true);
     actionOnTop->setChecked(us->value("livedanmakuwindow/onTop", true).toBool());
     actionTransMouse->setCheckable(true);
@@ -2578,7 +2578,7 @@ void LiveDanmakuWindow::showMenu()
         us->setValue("livedanmakuwindow/sendOnce", enable);
     });
     connect(actionWindow, &QAction::triggered, this, [=]{
-        bool enable = !us->value("livedanmakuwindow/jiWindow", false).toBool();
+        bool enable = !us->value("livedanmakuwindow/jiWindow", true).toBool();
         us->setValue("livedanmakuwindow/jiWindow", enable);
         if (enable)
         {

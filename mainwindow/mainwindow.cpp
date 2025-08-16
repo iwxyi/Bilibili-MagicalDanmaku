@@ -5561,7 +5561,7 @@ void MainWindow::updatePermission()
             if (!jdata.value("RR").isNull())
             {
                 MyJson info = jdata.o("RR");
-                if (info.l("deadline") > timestamp)
+                if (info.l("deadline") > timestamp && !info.value("roomId").isNull() && !info.value("robotId").isNull())
                 {
                     permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
                     deadline = qMax(deadline, info.l("deadline"));
@@ -5571,7 +5571,7 @@ void MainWindow::updatePermission()
             if (!jdata.value("ROOM").isNull())
             {
                 MyJson info = jdata.o("ROOM");
-                if (info.l("deadline") > timestamp)
+                if (info.l("deadline") > timestamp && !info.value("roomId").isNull())
                 {
                     permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
                     deadline = qMax(deadline, info.l("deadline"));
@@ -5581,7 +5581,7 @@ void MainWindow::updatePermission()
             if (!jdata.value("ROBOT").isNull())
             {
                 MyJson info = jdata.o("ROBOT");
-                if (info.l("deadline") > timestamp)
+                if (info.l("deadline") > timestamp && !info.value("robotId").isNull())
                 {
                     permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
                     deadline = qMax(deadline, info.l("deadline"));
