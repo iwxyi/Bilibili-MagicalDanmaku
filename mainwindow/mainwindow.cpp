@@ -11768,6 +11768,7 @@ void MainWindow::on_GPTAnalysisDefaultButton_clicked()
         return;
     }
 
+    qInfo() << "恢复AI分析的提示词";
     MyJson aiConfig = us->dynamicConfigs.value("chatgpt").toObject();
 
     QString s = aiConfig.value("analysis_prompt").toString();

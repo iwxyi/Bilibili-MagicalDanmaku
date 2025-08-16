@@ -8,6 +8,7 @@
 #include "string_distance_util.h"
 #include "liveservicebase.h"
 #include "facilemenu.h"
+#include "textinputdialog.h"
 
 QT_BEGIN_NAMESPACE
     extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
@@ -1656,7 +1657,8 @@ void LiveDanmakuWindow::showMenu()
     
     settingMenu->addAction("标签样式", [=]{
         bool ok;
-        QString ss = QInputDialog::getText(this, "标签样式", "请输入标签样式，支持CSS，将影响所有弹幕\n可通过CSS选择器来筛选特定样式", QLineEdit::Normal, labelStyleSheet, &ok);
+        // QString ss = QInputDialog::getText(this, "标签样式", "请输入标签样式，支持CSS，将影响所有弹幕\n可通过CSS选择器来筛选特定样式", QLineEdit::Normal, labelStyleSheet, &ok);
+        QString ss = TextInputDialog::getText(this, "标签样式", "请输入标签样式，支持CSS，将影响所有弹幕\n可通过CSS选择器来筛选特定样式", labelStyleSheet, &ok);
         if (!ok)
             return ;
         labelStyleSheet = ss;
