@@ -314,12 +314,23 @@ void BiliLiveService::getNavInfo(NetVoidFunc finalFunc)
 QString BiliLiveService::toWbiParam(QString params) const
 {
     if (wbiMixinKey.isEmpty())
+    {
+        qWarning() << "未获取到 wbiMixinKey";
         return params;
+    }
+
+    // 添加WTS
     if (!params.contains("wts"))
         params += "&wts=" + snum(QDateTime::currentSecsSinceEpoch());
-    QString md5 = QCryptographicHash::hash((params + wbiMixinKey).toLocal8Bit(), QCryptographicHash::Md5).toHex().toLower();
-    params += "&w_rid=" + md5;
-    return params;
+
+    // 按键名排序
+    QStringList paramList = params.split("&");
+    paramList.sort();
+    QString sortedParams = paramList.join("&");
+
+    // 计算
+    QString md5 = QCryptographicHash::hash((sortedParams + wbiMixinKey).toLocal8Bit(), QCryptographicHash::Md5).toHex().toLower();
+    return params + "&w_rid=" + md5;
 }
 
 void BiliLiveService::getAccountInfo(const QString &uid, NetJsonFunc func)

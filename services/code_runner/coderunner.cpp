@@ -11,6 +11,7 @@
 #include "ImageSimilarityUtil.h"
 #include "netutil.h"
 #include "signaltransfer.h"
+#include "bili_liveservice.h"
 
 CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
 {
@@ -2785,6 +2786,22 @@ QString CodeRunner::replaceDynamicVariants(const QString &funcName, const QStrin
         {
             liveService->showError(funcName, "无法识别的输出类型：" + type);
         }
+    }
+    else if (funcName.contains("toWbiParam"))
+    {
+        if (argList.size() < 1)
+            return errorArg("urlParams");
+        BiliLiveService* biliLiveService = static_cast<BiliLiveService*>(liveService);
+        if (!biliLiveService)
+        {
+            showError("WBI签名", "只有B站需要使用");
+            return "";
+        }
+        QString params = argList.at(0);
+        QString wbiParams = biliLiveService->toWbiParam(params);
+
+        qInfo() << "WBI签名" << params << wbiParams;
+        return wbiParams;
     }
 
     return "";
