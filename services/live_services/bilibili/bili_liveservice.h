@@ -75,6 +75,7 @@ public:
     void myLiveSetDescription() override;
     void myLiveSetCover(QString path = "") override;
     void myLiveSetTags() override;
+    void fetchWebUpStreamAddr();
 
     void showPkMenu() override;
     void showPkAssists() override;

@@ -2261,28 +2261,53 @@ void BiliLiveService::myLiveStartLive()
         showError("一键开播", "必须选择分类才能开播");
         return ;
     }
-    post("https://api.live.bilibili.com/room/v1/Room/startLive",
-    {"room_id", ac->roomId, "platform", "pc", "area_v2", snum(lastAreaId),
-         "csrf_token", ac->csrf_token, "csrf", ac->csrf_token},
-         [=](MyJson json) {
-        qInfo() << "开播：" << json;
+    
+    QString url = "https://api.live.bilibili.com/xlive/app-blink/v1/streaming/WebLiveCenterStartLive";
+    url += "?" + toWbiParam(QString("room_id=%1&platform=pc&area_v2=%2&backup_stream=0&csrf_token=%3&csrf=%3").arg(ac->roomId).arg(lastAreaId).arg(ac->csrf_token));
+    post(url, QByteArray(), [=](MyJson json) {
         if (json.code() != 0)
             return showError("一键开播失败", json.msg());
-        MyJson rtmp = json.data().o("rtmp");
-        myLiveRtmp = rtmp.s("addr");
-        myLiveCode = rtmp.s("code");
+        QString message = json.s("message"); // "0"
+        if (message != "0")
+            return showError("一键开播失败", message);
+        MyJson data = json.data();
+        int change = data.i("change"); // 1。如果是重复开播，显示0
+        QString status = data.s("status"); // "LIVE"
+        if (status == "LIVE")
+        {
+            localNotify("开播成功");
+            fetchWebUpStreamAddr();
+        }
     });
 }
 
 void BiliLiveService::myLiveStopLive()
 {
     post("https://api.live.bilibili.com/room/v1/Room/stopLive",
-    {"room_id", ac->roomId, "platform", "pc",
-         "csrf_token", ac->csrf_token, "csrf", ac->csrf_token},
+        {"room_id", ac->roomId, "platform", "pc", "csrf_token", ac->csrf_token, "csrf", ac->csrf_token},
          [=](MyJson json) {
         qInfo() << "下播：" << json;
         if (json.code() != 0)
             return showError("一键下播失败", json.msg());
+        
+        myLiveRtmp.clear();
+        myLiveCode.clear();
+    });
+}
+
+void BiliLiveService::fetchWebUpStreamAddr()
+{
+    post("https://api.live.bilibili.com/xlive/app-blink/v1/live/FetchWebUpStreamAddr",
+        {"platform", "pc", "backup_stream", "0", "csrf_token", ac->csrf_token, "csrf", ac->csrf_token},
+         [=](MyJson json) {
+        qInfo() << "获取推流地址：" << json;
+        if (json.code() != 0)
+            return showError("获取推流地址失败", json.msg());
+        MyJson data = json.data();
+        MyJson addr = data.o("addr");
+        myLiveRtmp = addr.s("addr");
+        myLiveCode = addr.s("code");
+        qInfo() << "推流地址：" << myLiveRtmp << "，推流码：" << myLiveCode;
     });
 }
 
