@@ -1517,6 +1517,9 @@ tips：
 | sendWindowMessage(hwnd, text)                      | 发送窗口消息     | 向指定窗口发送文字类的消息，模拟文字输入，如社交软件聊天界面。需要输入框获取到焦点才能输入 |
 | moveWindow(hwnd, x, y, w, h)                       | 移动窗口         | 移动窗口至指定的坐标和尺寸                                   |
 | sendEmail(address, subject, body)                  | 发送邮件         | 使用设置的账户向指定邮件地址发送邮件                         |
+| startLive()                                        | 一键开播         | Web版一键开播                                                |
+| stopLive()                                         | 一键下播         | Web版一键下播                                                |
+| setLiveArea(areaId)                                | 设置直播分区     | 修改当前直播间的分区，areaId为分区数字，例如192              |
 
 
 

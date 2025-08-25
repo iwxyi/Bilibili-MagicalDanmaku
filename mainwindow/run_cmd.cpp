@@ -3054,6 +3054,35 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         }
     }
 
+    if (msg.contains("startLive"))
+    {
+        re = RE("startLive\\s*\\(\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            liveService->myLiveStartLive();
+            return true;
+        }
+    }   
+    
+    if (msg.contains("stopLive"))
+    {
+        re = RE("stopLive\\s*\\(\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            liveService->myLiveStopLive();
+            return true;
+        }
+    }
+    
+    if (msg.contains("setLiveArea"))
+    {
+        re = RE("setLiveArea\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            liveService->myLiveUpdateArea(match.captured(1));
+            return true;
+        }
+    }
 
     return false;
 }

@@ -1597,7 +1597,7 @@
             "name": "appointAdmin",
             "zh_name": "任命房管",
             "catalog": "live",
-            "description": "任命用户为房管，仅主播可用",
+            "description": "任命用户为房管（主播专用）",
             "parameters": [
                 {
                     "name": "uid",
@@ -1610,7 +1610,7 @@
             "name": "dismissAdmin",
             "zh_name": "撤销房管",
             "catalog": "live",
-            "description": "取消用户的房管身份，仅主播可用",
+            "description": "取消用户的房管身份（主播专用）",
             "parameters": [
                 {
                     "name": "uid",
@@ -3221,6 +3221,33 @@
                 {
                     "name": "body",
                     "description": "正文",
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "startLive",
+            "zh_name": "一键开播",
+            "catalog": "live",
+            "description": "Web版一键开播（主播专用）",
+            "parameters": []
+        },
+        {
+            "name": "stopLive",
+            "zh_name": "一键下播",
+            "catalog": "live",
+            "description": "Web版一键下播（主播专用）",
+            "parameters": []
+        },
+        {
+            "name": "setLiveArea",
+            "zh_name": "设置直播分区",
+            "catalog": "live",
+            "description": "修改当前直播间的分区（主播专用）",
+            "parameters": [
+                {
+                    "name": "areaId",
+                    "description": "分区",
                     "optional": false
                 }
             ]

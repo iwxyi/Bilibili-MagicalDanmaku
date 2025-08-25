@@ -1,3 +1,12 @@
+### v6.1.0 [一键开播、下播](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v6.1.0)
+
+- 新增Web版一键开播、下播
+- 新增命令：开播：`>startLive()`、下播：`>stopLive()`、设置分区：`>setLiveArea(areaId)`
+
+
+
+
+
 ### v6.0.0 [多平台弹幕、AI分析、语法增强、实时档案](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v6.0.0)
 
 > 使用“功能型AI”的用户请注意：由于更改了AI分析的逻辑，请点击该项设置中“还原/升级”的按钮

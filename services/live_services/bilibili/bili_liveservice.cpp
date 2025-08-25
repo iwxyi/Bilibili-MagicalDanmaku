@@ -2289,9 +2289,19 @@ void BiliLiveService::myLiveStopLive()
         qInfo() << "下播：" << json;
         if (json.code() != 0)
             return showError("一键下播失败", json.msg());
-        
-        myLiveRtmp.clear();
-        myLiveCode.clear();
+
+        QString message = json.s("message"); // "0"
+        if (message != "0")
+            return showError("一键下播失败", message);
+        MyJson data = json.data();
+        int change = data.i("change"); // 1
+        QString status = data.s("status"); // "PREPARING"
+        if (status == "PREPARING")
+        {
+            localNotify("下播成功");
+            myLiveRtmp.clear();
+            myLiveCode.clear();
+        }
     });
 }
 

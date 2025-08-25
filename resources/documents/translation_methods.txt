@@ -96,3 +96,6 @@ GPT聊天=ChatGPT
 发送窗口消息=sendWindowMessage
 移动窗口=moveWindow
 发送邮件=sendEmail
+一键开播=startLive
+一键下播=stopLive
+设置分区=setLiveArea
