@@ -1,7 +1,9 @@
 ### v6.1.0 [一键开播、下播](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v6.1.0)
 
 - 新增Web版一键开播、下播
-- 新增命令：开播：`>startLive()`、下播：`>stopLive()`、设置分区：`>setLiveArea(areaId)`
+- 新增开播相关命令：开播：`>startLive()`、下播：`>stopLive()`、设置分区：`>setLiveArea(areaId)`
+- 新增可连接至任意WebSocket类型
+- 新增向直播WebSocket发送消息的命令：`>sendToLiveSocket(data)`
 
 
 

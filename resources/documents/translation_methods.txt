@@ -36,6 +36,7 @@ post头数据=postHeaderData
 下载文件=downloadFile
 发送至socket=sendToSockets
 发送至最后socket=sendToLastSocket
+发送至直播WS=sendToLiveSocket
 运行命令行=runCommandLine
 运行程序=startProgram
 设置值=setValue

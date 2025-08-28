@@ -361,6 +361,7 @@ void BuyVIPDialog::showEvent(QShowEvent *e)
             break;
         }
         case Keyu:
+        case AnyWS:
         {
             btns[0]->setEnabled(false);
             btns[1]->setEnabled(false);

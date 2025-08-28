@@ -1,22 +1,16 @@
 #ifndef KEYULIVESERVICE_H
 #define KEYULIVESERVICE_H
 
-#include "liveservicebase.h"
+#include "anywebsocketservice.h"
 
-class KeyuLiveService : public LiveServiceBase
+class KeyuLiveService : public AnyWebSocketService
 {
     Q_OBJECT
 public:
     KeyuLiveService(QObject* parent = nullptr);
 
-protected:
-    void startConnect() override;
-
 private slots:
-    void processMessage(const MyJson &json);
-
-private:
-    void initWS();
+    void processMessage(const QString &message) override;
 };
 
 #endif // KEYULIVESERVICE_H

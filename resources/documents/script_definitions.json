@@ -882,6 +882,7 @@
                 {
                     "name": "uname",
                     "description": "用户昵称（可部分匹配）",
+                    "long": true,
                     "optional": false
                 }
             ],
@@ -896,6 +897,7 @@
                 {
                     "name": "text",
                     "description": "待判断文本",
+                    "long": true,
                     "optional": false
                 }
             ],
@@ -915,6 +917,7 @@
                 {
                     "name": "default",
                     "description": "默认值",
+                    "long": true,
                     "optional": true
                 }
             ],
@@ -929,6 +932,7 @@
                 {
                     "name": "text",
                     "description": "要计算长度的文本",
+                    "long": true,
                     "optional": false
                 }
             ],
@@ -943,6 +947,7 @@
                 {
                     "name": "text",
                     "description": "要处理的文本",
+                    "long": true,
                     "optional": false
                 }
             ],
@@ -957,6 +962,7 @@
                 {
                     "name": "text",
                     "description": "原始文本",
+                    "long": true,
                     "optional": false
                 },
                 {
@@ -981,6 +987,7 @@
                 {
                     "name": "name",
                     "description": "昵称",
+                    "long": true,
                     "optional": false
                 }
             ],
@@ -1052,6 +1059,7 @@
                 {
                     "name": "text",
                     "description": "文本",
+                    "long": true,
                     "optional": false
                 }
             ],
@@ -1071,6 +1079,7 @@
                 {
                     "name": "def",
                     "description": "默认值",
+                    "long": true,
                     "optional": true
                 }
             ],
@@ -1137,6 +1146,7 @@
                 {
                     "name": "content",
                     "description": "内容",
+                    "long": true,
                     "optional": false
                 }
             ],
@@ -1156,6 +1166,7 @@
                 {
                     "name": "content",
                     "description": "内容",
+                    "long": true,
                     "optional": false
                 }
             ],
@@ -1315,6 +1326,7 @@
                 {
                     "name": "text",
                     "description": "回复内容",
+                    "long": true,
                     "optional": false
                 }
             ],
@@ -1680,8 +1692,8 @@
                     "optional": true
                 },
                 {
-                    "name": "uid",
-                    "description": "用户ID",
+                    "name": "value",
+                    "description": "数值",
                     "optional": false
                 }
             ]
@@ -1698,8 +1710,8 @@
                     "optional": true
                 },
                 {
-                    "name": "uid",
-                    "description": "用户ID",
+                    "name": "value",
+                    "description": "数值",
                     "optional": false
                 }
             ]
@@ -1716,8 +1728,8 @@
                     "optional": true
                 },
                 {
-                    "name": "uid",
-                    "description": "用户ID",
+                    "name": "text",
+                    "description": "文本",
                     "optional": false
                 }
             ]
@@ -1734,8 +1746,8 @@
                     "optional": true
                 },
                 {
-                    "name": "uid",
-                    "description": "用户ID",
+                    "name": "text",
+                    "description": "文本",
                     "optional": false
                 }
             ]
@@ -1785,6 +1797,7 @@
                 {
                     "name": "cmd",
                     "description": "命令",
+                    "long": true,
                     "optional": false
                 },
                 {
@@ -1808,6 +1821,7 @@
                 {
                     "name": "msg",
                     "description": "消息内容",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -1826,6 +1840,7 @@
                 {
                     "name": "msg",
                     "description": "消息内容",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -1870,6 +1885,7 @@
                 {
                     "name": "text",
                     "description": "弹幕内容",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -1888,6 +1904,7 @@
                 {
                     "name": "msg",
                     "description": "弹幕内容或命令",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -1906,6 +1923,7 @@
                 {
                     "name": "msg",
                     "description": "消息内容",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -1919,6 +1937,7 @@
                 {
                     "name": "msg",
                     "description": "文本内容",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -1932,6 +1951,7 @@
                 {
                     "name": "ssml",
                     "description": "SSML内容",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -1945,6 +1965,7 @@
                 {
                     "name": "url",
                     "description": "语音URL",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2059,6 +2080,7 @@
                 {
                     "name": "data",
                     "description": "数据",
+                    "long": true,
                     "optional": false
                 },
                 {
@@ -2082,6 +2104,7 @@
                 {
                     "name": "data",
                     "description": "数据",
+                    "long": true,
                     "optional": false
                 },
                 {
@@ -2110,6 +2133,7 @@
                 {
                     "name": "data",
                     "description": "数据",
+                    "long": true,
                     "optional": false
                 },
                 {
@@ -2156,6 +2180,7 @@
                 {
                     "name": "data",
                     "description": "数据",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2174,6 +2199,21 @@
                 {
                     "name": "data",
                     "description": "数据",
+                    "long": true,
+                    "optional": false
+                }
+            ]
+        },
+        {
+            "name": "sendToLiveSocket",
+            "zh_name": "发送直播间WS",
+            "catalog": "network",
+            "description": "通过直播的WebSocket渠道发送数据",
+            "parameters": [
+                {
+                    "name": "data",
+                    "description": "数据",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2187,6 +2227,7 @@
                 {
                     "name": "cmd",
                     "description": "命令",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2226,6 +2267,7 @@
                 {
                     "name": "val",
                     "description": "值",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2262,6 +2304,7 @@
                 {
                     "name": "val",
                     "description": "值",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2370,6 +2413,7 @@
                 {
                     "name": "condition",
                     "description": "条件",
+                    "long": true,
                     "optional": true
                 }
             ]
@@ -2487,6 +2531,7 @@
                 {
                     "name": "text",
                     "description": "文本内容",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2503,8 +2548,9 @@
                     "optional": false
                 },
                 {
-                    "name": "format",
-                    "description": "格式",
+                    "name": "line_text",
+                    "description": "行文本",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2528,6 +2574,7 @@
                 {
                     "name": "content",
                     "description": "插入内容",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2546,6 +2593,7 @@
                 {
                     "name": "text",
                     "description": "文本内容",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2600,6 +2648,7 @@
                 {
                     "name": "newText",
                     "description": "新文本",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2623,6 +2672,7 @@
                 {
                     "name": "code",
                     "description": "执行命令",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2646,6 +2696,7 @@
                 {
                     "name": "code",
                     "description": "执行命令",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2682,6 +2733,7 @@
                 {
                     "name": "code",
                     "description": "执行命令",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2701,6 +2753,7 @@
                 {
                     "name": "code",
                     "description": "执行命令",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2724,6 +2777,7 @@
                 {
                     "name": "code",
                     "description": "执行命令",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2794,6 +2848,7 @@
                 {
                     "name": "msg",
                     "description": "消息内容",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2820,6 +2875,7 @@
                 {
                     "name": "msg",
                     "description": "消息内容",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2887,6 +2943,7 @@
                 {
                     "name": "anchor",
                     "description": "锚点",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2913,6 +2970,7 @@
                 {
                     "name": "keys",
                     "description": "按键组合",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2926,6 +2984,7 @@
                 {
                     "name": "keys",
                     "description": "按键组合",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -2939,6 +2998,7 @@
                 {
                     "name": "keys",
                     "description": "按键组合",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -3011,6 +3071,7 @@
                 {
                     "name": "path",
                     "description": "脚本路径",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -3024,6 +3085,7 @@
                 {
                     "name": "text",
                     "description": "文本内容",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -3086,14 +3148,28 @@
             "zh_name": "SQL执行",
             "catalog": "program",
             "description": "需要开启数据库。执行SQL语句，如创建表格、插入记录",
-            "parameters": []
+            "parameters": [
+                {
+                    "name": "sql",
+                    "description": "SQL语句",
+                    "long": true,
+                    "optional": false
+                }
+            ]
         },
         {
             "name": "SQLQuery",
             "zh_name": "SQL查询",
             "catalog": "program",
             "description": "需要开启数据库。执行SQL语句并显示查询结果，如查找弹幕记录",
-            "parameters": []
+            "parameters": [
+                {
+                    "name": "sql",
+                    "description": "SQL语句",
+                    "long": true,
+                    "optional": false
+                }
+            ]
         },
         {
             "name": "saveScreenShot",
@@ -3221,6 +3297,7 @@
                 {
                     "name": "body",
                     "description": "正文",
+                    "long": true,
                     "optional": false
                 }
             ]
@@ -3267,6 +3344,7 @@
                 {
                     "name": "code",
                     "description": "要执行的代码，需要进行转义：\"%\" 写作 \"\\%\"，\"\\n\" 写作 \"%n%\" 等",
+                    "long": true,
                     "optional": false
                 }
             ]
