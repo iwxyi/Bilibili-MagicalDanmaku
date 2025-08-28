@@ -30,6 +30,7 @@ enum LivePlatform
     Kuaishou,           // 快手
     BilibiliOpen = 10,  // 哔哩哔哩开放平台
     Keyu = 100,         // 可遇AI的通用弹幕
+    AnyWS = 101,        // 通用WebSocket
 };
 
 class RuntimeInfo

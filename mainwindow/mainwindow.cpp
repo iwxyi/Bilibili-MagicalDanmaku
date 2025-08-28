@@ -43,6 +43,7 @@
 #include "debounce.h"
 #include "CPU_ID/cpu_id_util.h"
 #include "keyu_liveservice.h"
+#include "anywebsocketservice.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -898,8 +899,14 @@ void MainWindow::initLiveService()
         ui->platformButton->setIcon(QIcon(":/icons/platform/keyu"));
         pl->coinToRMB = 10;
         break;
+    case AnyWS:
+        liveService = new AnyWebSocketService(this);
+        ui->platformButton->setIcon(QIcon(":/icons/platform/websocket"));
+        pl->coinToRMB = 10;
+        break;
     default:
         QMessageBox::critical(this, "直播服务", "当前平台暂不支持，使用默认的【哔哩哔哩】");
+        Q_ASSERT(false);
         break;
     }
 
@@ -1437,7 +1444,7 @@ void MainWindow::initLivePlatform()
         ui->roomIdEdit->resize(ui->roomIdEdit->width() * 2, ui->roomIdEdit->height()); // 抖音的房间号更长
         ui->guardCountTextLabel->setText("在线");
     }
-    else if (rt->livePlatform == Keyu)
+    else if (rt->livePlatform == Keyu || rt->livePlatform == AnyWS)
     {
         ui->roomIdEdit->setValidator(nullptr);
         ui->roomIdEdit->setPlaceholderText("WebSocket地址");
@@ -1473,6 +1480,14 @@ void MainWindow::initLivePlatform()
 <html><head/><body>
 <p>
     <a href="this://notice_manager"><span style="text-decoration: none; color:#8cc2d4;">消息批量管理</span></a>&nbsp;
+</p></body></html>)");
+    }
+    else
+    {
+        ui->tenCardLabel4->setText(R"(
+<html><head/><body>
+<p>
+    <a href="this://"><span style="text-decoration: none; color:#8cc2d4;">无可用工具</span></a>&nbsp;
 </p></body></html>)");
     }
 
@@ -12216,7 +12231,10 @@ void MainWindow::on_platformButton_clicked()
     menu->addAction(QIcon(":/icons/platform/keyu"), "可遇（TikTok/抖音/快手/视频号/虎牙）", [=]{
         switchToPlatform(Keyu);
     })->check(rt->livePlatform == Keyu);
-    menu->addAction(QIcon(":/icons/platform/huya"), "虎牙", [=]{
+    menu->addAction(QIcon(":/icons/platform/websocket"), "通用WebSocket", [=]{
+        switchToPlatform(AnyWS);
+    })->check(rt->livePlatform == AnyWS);
+    menu->split()->addAction(QIcon(":/icons/platform/huya"), "虎牙", [=]{
         switchToPlatform(Huya);
     })->check(rt->livePlatform == Huya)->disable();
     menu->addAction(QIcon(":/icons/platform/douyu"), "斗鱼", [=]{

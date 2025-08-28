@@ -73,6 +73,7 @@ INCLUDEPATH += \
     services/live_services/bilibili/ \
     services/live_services/douyin/ \
     services/live_services/keyu/ \
+    services/live_services/anyws/ \
     services/entities/ \
     services/code_runner/ \
     services/sql_service/ \
@@ -133,6 +134,7 @@ SOURCES += \
     services/language_service/lua/luaengine.cpp \
     services/language_service/python/pythonengine.cpp \
     services/language_service/qml/qmlengine.cpp \
+    services/live_services/anyws/anywebsocketservice.cpp \
     services/live_services/bilibili/bili_livecmds.cpp \
     services/live_services/bilibili/bili_liveopen_cmds.cpp \
     services/live_services/bilibili/bili_liveopenservice.cpp \
@@ -306,6 +308,7 @@ HEADERS += \
     services/language_service/wrapper/danmakuwrapperstd.h \
     services/language_service/wrapper/settingswrapper.h \
     services/language_service/wrapper/settingswrapperstd.h \
+    services/live_services/anyws/anywebsocketservice.h \
     services/live_services/bilibili/bili_liveopenservice.h \
     services/live_services/bilibili/bili_liveservice.h \
     services/live_services/bilibili/protobuf/interact_word_v2.pb.h \

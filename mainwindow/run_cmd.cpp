@@ -1374,6 +1374,21 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         }
     }
 
+    // 发送websocket消息
+    if (msg.contains("sendToLiveSocket"))
+    {
+        re = RE("sendToLiveSocket\\s*\\(\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString data = caps.at(1);
+            data = cr->toMultiLine(data);
+            qInfo() << "执行命令：" << caps;
+            liveService->sendSocketMessage(data.toUtf8());
+            return true;
+        }
+    }
+
     // 命令行
     if (msg.contains("runCommandLine"))
     {

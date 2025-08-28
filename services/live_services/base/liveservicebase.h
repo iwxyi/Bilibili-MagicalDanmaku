@@ -157,6 +157,8 @@ public slots:
     virtual void slotBinaryMessageReceived(const QByteArray& message) {}
     /// 接收到 PK 的 WS CMD 数据包
     virtual void slotPkBinaryMessageReceived(const QByteArray& message) {}
+    /// 发送 WS 数据包
+    virtual void sendSocketMessage(const QByteArray& message) { if (liveSocket) liveSocket->sendBinaryMessage(message); }
 
     /// 发送弹幕
     virtual void sendMsg(const QString& msg, const QString& cookie = "") {}

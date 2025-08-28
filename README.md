@@ -296,6 +296,20 @@ QQ群：**427436529**，欢迎交流反馈与研究新功能~
 - 录播、直播画面
 - “事件动作”中与该平台相关的都无法获取数据，但可响应
 
+### 通用弹幕
+
+
+
+### 通用WebSocket
+
+可以连接至任意 WebSocket！
+
+此时连接的 URL 相当于房间号（包含前缀 `ws://` 或 `wss://`）。
+
+收到消息时，会直接触发“WS_MSG”事件。消息原本内容使用 `%text%` 来读取，如果可以解析为 JSON 格式，那么可以通过本程序脚本中 JSON 的方式读取其中的一些字段，例如 `%.data.nickname%`。
+
+通过 WebSocket 相关的命令来发送消息
+
 
 
 ## 运行与升级
@@ -1410,14 +1424,14 @@ tips：
 | addGameUser(uid)                                   | 添加游戏用户     | 同上，默认listId使用0，可使用 `[%in_game_users%]`快速判断    |
 | removeGameUser(listId, uid)                        | 移除游戏用户     | 从游戏队列中移除用户                                         |
 | removeGameUser(uid)                                | 移除游戏用户     | 同上，默认listId使用0                                        |
-| addGameNumber(listId, uid)                         | 添加游戏数值     | 添加用户至游戏队列，listId从0到99，使用 `%>inGameNumbers(listId, uid)%`。 |
-| addGameNumber(uid)                                 | 添加游戏数值     | 同上，默认listId使用0，可使用 `[%in_game_numbers%]`判断      |
-| removeGameNumber(listId, uid)                      | 移除游戏数值     | 从游戏队列中移除数值                                         |
-| removeGameNumber(uid)                              | 移除游戏数值     | 同上，默认listId使用0                                        |
-| addGameText(listId, uid)                           | 添加游戏文本     | 添加用户至游戏队列，listId从0到99，使用 `%>inGameTexts(listId, uid)%`。 |
+| addGameNumber(listId, value)                       | 添加游戏数值     | 添加数值至游戏队列，listId从0到99，使用 `%>inGameNumbers(listId, value)%`。 |
+| addGameNumber(value)                               | 添加游戏数值     | 同上，默认listId使用0，可使用 `[%in_game_numbers%]`判断      |
+| removeGameNumber(listId, value)                    | 移除游戏数值     | 从游戏队列中移除数值                                         |
+| removeGameNumber(value)                            | 移除游戏数值     | 同上，默认listId使用0                                        |
+| addGameText(listId, text)                          | 添加游戏文本     | 添加用户至游戏队列，listId从0到99，使用 `%>inGameTexts(listId, text)%`。 |
 | addGameText(uid)                                   | 添加游戏文本     | 同上，默认listId使用0，可使用 `[%in_game_texts%]`判断        |
-| removeGameText(listId, uid)                        | 移除游戏文本     | 从游戏队列中移除用户                                         |
-| removeGameText(uid)                                | 移除游戏文本     | 同上，默认listId使用0                                        |
+| removeGameText(listId, text)                       | 移除游戏文本     | 从游戏队列中移除用户                                         |
+| removeGameText(text)                               | 移除游戏文本     | 同上，默认listId使用0                                        |
 | showValueTable(caption, key, field1, field2, ....) | 显示值表格       | 显示多个值的表格，详见下方示例                               |
 | sendGift(giftId, num)                              | 赠送礼物         | 赠送礼物，只支持 id 的方式                                   |
 | execRemoteCommand(cmd)                             | 执行远程命令     | 执行远程控制（见下面）                                       |
@@ -1446,6 +1460,7 @@ tips：
 | downloadFile(url, path, [callback])                | 下载文件         | 下载网络文件至本地，成功后触发自定义事件。回调中的 `%text%`为文件路径 |
 | sendToSockets(cmd, data)                           | 发送至socket     | 发送给所有包含cmd的已连接的WebSocket，如果cmd为空，则发送给所有WebSocket |
 | sendToLastSocket(cmd, data)                        | 发送至最后socket | 发送给最后连上的WebSocket，无视cmd（甚至没收到cmds也行）     |
+| sendToLiveSocket(data)                             | 发送至直播WS     | 通过直播的WebSocket渠道发送数据                              |
 | runCommandLine(cmd)                                | 运行命令行       | 运行操作系统的命令行                                         |
 | startProgram                                       | 运行程序         | 打开外部程序（例如守护进程）                                 |
 | setSetting                                         | 设置某项配置     | 等同于v3.7之前的setValue，已不建议使用                       |
@@ -2696,6 +2711,14 @@ tips：
 | 事件命令      | 说明                                                     |
 | ------------- | -------------------------------------------------------- |
 | NOT_FIND_USER | 未找到 `%>unameToUid(昵称)%` 的用户，%text% 获取原昵称 |
+
+#### 消息事件
+
+仅在“通用WebSocket”中会响应，收到消息时触发。
+
+| 事件命令 | 说明                                                         |
+| -------- | ------------------------------------------------------------ |
+| WS_MSG   | 收到 WebSocket 的消息。使用 `%text%` 获取原本内容，如果是 JSON，那么可以通过解析 JSON 的方式来获取其中某些字段的值。 |
 
 #### 服务端事件
 

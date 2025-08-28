@@ -224,6 +224,7 @@
         <file alias="douyin">icons/platform/douyin.png</file>
         <file alias="bilibili">icons/platform/bilibili.png</file>
         <file alias="keyu">icons/platform/keyu.png</file>
+        <file alias="websocket">icons/platform/websocket.png</file>
     </qresource>
     <qresource prefix="/scripts">
         <file alias="douyin_signature">scripts/douyin_signature.js</file>
